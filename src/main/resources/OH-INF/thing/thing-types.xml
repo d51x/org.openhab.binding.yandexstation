@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="yandexstation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<!-- Sample Thing Type -->
+	<thing-type id="sample">
+		<!-- Comment this in for Things which need a Bridge to function.
+			<supported-bridge-type-refs>
+			<bridge-type-ref id="YandexStationBridge" />
+			</supported-bridge-type-refs>
+		-->
+
+		<label>YandexStation Binding Thing</label>
+		<description>Sample thing for YandexStation Binding</description>
+
+		<channels>
+			<channel id="voice" typeId="voice-channel"/>
+			<channel id="tts" typeId="tts-channel"/>
+		</channels>
+
+		<config-description>
+			<parameter name="hostname" type="text" required="true">
+				<context>network-address</context>
+				<label>Hostname</label>
+				<description>Hostname or IP address of the device</description>
+			</parameter>
+			<parameter name="password" type="text" required="true">
+				<context>password</context>
+				<label>Password</label>
+				<description>Password to access the device</description>
+			</parameter>
+			<parameter name="device_token" type="text" required="true">
+				<context>password</context>
+				<label>Device Token</label>
+				<description>Device token to access the device</description>
+			</parameter>
+			<parameter name="refreshInterval" type="integer" unit="s" min="1">
+				<label>Refresh Interval</label>
+				<description>Interval the device is polled in sec.</description>
+				<default>600</default>
+				<advanced>true</advanced>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+	<!-- Voice Channel Type -->
+	<channel-type id="voice-channel">
+		<item-type>String</item-type>
+		<label>Voice command</label>
+		<description></description>
+	</channel-type>
+	<channel-type id="tts-channel">
+		<item-type>String</item-type>
+		<label>TTS command</label>
+		<description>Text To Speech</description>
+	</channel-type>
+</thing:thing-descriptions>

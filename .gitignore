@@ -1,0 +1,5 @@
+/target/
+/compile.txt
+/.idea/
+/target/**
+/.github/
