@@ -25,7 +25,7 @@ import com.google.gson.annotations.SerializedName;
  */
 public class YandexStationCommand {
     private String command;
-    private Long position;
+    private Integer position;
     private Double volume;
     private String text;
     @SerializedName("serverActionEventPayload")
@@ -41,7 +41,7 @@ public class YandexStationCommand {
     public YandexStationCommand(YandexStationCommandTypes command, Object value) {
         this.command = command.getCommand();
         if (command == YandexStationCommandTypes.CMD_REWIND) {
-            this.position = (Long) value;
+            this.position = (Integer) value;
         } else if (command == YandexStationCommandTypes.CMD_SET_VOLUME) {
             this.volume = (Double) value;
         } else if (command == YandexStationCommandTypes.CMD_SENT_TEXT) {

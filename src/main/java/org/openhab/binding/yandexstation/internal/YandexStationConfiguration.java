@@ -28,5 +28,5 @@ public class YandexStationConfiguration {
     public String hostname = "";
     public String password = "";
     public String device_token = "";
-    public int refreshInterval = 600;
+    public int reconnectInterval = 60;
 }
