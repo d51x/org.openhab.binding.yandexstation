@@ -14,6 +14,8 @@ package org.openhab.binding.yandexstation.internal;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.WSS_PORT;
+
 /**
  * The {@link YandexStationConfiguration} class contains fields mapping thing configuration parameters.
  *
@@ -26,6 +28,7 @@ public class YandexStationConfiguration {
      * Sample configuration parameters. Replace with your own.
      */
     public String hostname = "";
+    public String port = WSS_PORT;
     public String password = "";
     public String platform = "";
     public String device_token = "";
@@ -33,4 +36,7 @@ public class YandexStationConfiguration {
     public String yandex_token = "";
 
     public int reconnectInterval = 60;
+
+    public String server_certificate = "";
+    public String server_private_key = "";
 }

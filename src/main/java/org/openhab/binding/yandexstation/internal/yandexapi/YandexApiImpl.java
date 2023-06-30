@@ -1,7 +1,8 @@
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
@@ -10,10 +11,13 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.Fields;
-import org.openhab.binding.yandexstation.internal.YandexStationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -29,28 +33,35 @@ public class YandexApiImpl  implements YandexApi {
     public static final String API_PATH_DEVICE_TOKEN = "/token";
     public static final String API_PATH_DEVICE_LIST = "/device_list";
 
-    public YandexApiImpl(HttpClient httpClient) throws ApiException {
+    public YandexApiImpl(HttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
     @Override
-    public void update() throws ApiException {
+    public void update() {
 
     }
 
     @Override
-    public void initialize() throws ApiException {
+    public void initialize() {
 
     }
 
     @Override
-    public ApiResponse sendGetRequest(String path, String params, String token) throws ApiException {
+    public ApiResponse sendGetRequest(String path, @NonNull String params, String token) throws ApiException {
+        String pathWithParams = path;
+        if (!params.isEmpty()) {
+            pathWithParams += "?" + params;
+        }
+        return sendGetRequest(pathWithParams,token);
+    }
+
+    @Override
+    public ApiResponse sendGetRequest(String path, String token) throws ApiException {
+        String url = API_URL + path;
         ApiResponse result = new ApiResponse();
         httpClient.setConnectTimeout(60*1000);
-        String url = API_URL + path;
-        if (!params.isEmpty()) {
-            url += "?" + params;
-        }
+
         Request request = httpClient.newRequest(url);
         setHeaders(request, token);
         request.method(HttpMethod.GET);
@@ -78,17 +89,15 @@ public class YandexApiImpl  implements YandexApi {
     }
 
     @Override
-    public ApiResponse sendPostRequest(String path, String data, String token) throws ApiException {
-        ApiResponse result = new ApiResponse();
+    public ApiResponse sendPostRequest(String path, String data, String token) {
 
-        return result;
+        return new ApiResponse();
     }
 
     @Override
-    public ApiResponse sendPostRequest(String path, Fields fields, String token) throws ApiException {
-        ApiResponse result = new ApiResponse();
+    public ApiResponse sendPostRequest(String path, Fields fields, String token) {
 
-        return result;
+        return new ApiResponse();
     }
 
     private void setHeaders(Request request, @Nullable String token) {
@@ -126,5 +135,34 @@ public class YandexApiImpl  implements YandexApi {
         } catch (JsonSyntaxException e) {
             throw new ApiException("JsonSyntaxException:{}", e);
         }
+    }
+
+    public List<ApiDeviceResponse> getDevices(@NonNull String yandexToken) throws ApiException {
+        logger.info("Try to get device list");
+        try {
+            ApiResponse response = sendGetRequest(API_PATH_DEVICE_LIST, yandexToken);
+            if (response.httpCode == 200) {
+                JsonObject json = JsonParser.parseString(response.response).getAsJsonObject();
+                JsonArray deviceList = json.getAsJsonArray("devices");
+                Type listType = new TypeToken<ArrayList<ApiDeviceResponse>>(){}.getType();
+                List<ApiDeviceResponse> devices = new Gson().fromJson(deviceList, listType);
+                logger.info("Device list is: {}", devices);
+                if (!devices.isEmpty()) {
+
+                    return devices;
+                } else {
+                    return new ArrayList<>();
+                }
+            } else {
+                throw new ApiException(String.format("YandexApi get device list error: httpCode = %d", response.httpCode));
+            }
+        } catch (JsonSyntaxException e) {
+            throw new ApiException("JsonSyntaxException:{}", e);
+        }
+    }
+
+    public ApiDeviceResponse findDevice(@NonNull String deviceId, @NonNull String yandexToken)  throws ApiException {
+        List<ApiDeviceResponse> devices = getDevices(yandexToken);
+        return devices.stream().filter(dev -> dev.id.equals(deviceId) ).findFirst().orElse(new ApiDeviceResponse());
     }
 }

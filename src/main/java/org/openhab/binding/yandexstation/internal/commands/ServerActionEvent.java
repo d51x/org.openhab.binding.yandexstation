@@ -27,12 +27,6 @@ public class ServerActionEvent {
 
     private ServerActionPayload payload;
 
-    /**
-     * Instantiates a new Server action event.
-     *
-     * @param name    the name
-     * @param payload the payload
-     */
     public ServerActionEvent(String name, ServerActionPayload payload) {
         this.type = "server_action";
         this.name = name;

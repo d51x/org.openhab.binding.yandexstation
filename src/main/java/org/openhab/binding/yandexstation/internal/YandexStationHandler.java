@@ -13,6 +13,9 @@
 package org.openhab.binding.yandexstation.internal;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.internal.LinkedTreeMap;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -21,10 +24,7 @@ import org.openhab.binding.yandexstation.internal.commands.*;
 import org.openhab.binding.yandexstation.internal.response.YandexStationPlayerState;
 import org.openhab.binding.yandexstation.internal.response.YandexStationResponse;
 import org.openhab.binding.yandexstation.internal.response.YandexStationState;
-import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApi;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
+import org.openhab.binding.yandexstation.internal.yandexapi.*;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.*;
 import org.openhab.core.thing.ChannelUID;
@@ -196,21 +196,16 @@ public class YandexStationHandler extends BaseThingHandler {
             if (config == null) {
                 updateStatus(ThingStatus.UNINITIALIZED, ThingStatusDetail.CONFIGURATION_ERROR);
             } else {
+                updateStatus(ThingStatus.OFFLINE);
                 if (config.device_token.isEmpty()) {
-                    try {
-                        logger.warn("Device token is empty");
-                        receiveDeviceToken();
-                    } catch (ApiException e) {
-                        throw new RuntimeException(e);
-                    }
+                    logger.warn("Device token is empty");
+                    receiveDeviceToken();
                 }
                 boolean thingReachable = connectStation(config);
                 logger.warn("thingReachable: {}", thingReachable);
                 // when done do:
                 if (thingReachable) {
                     updateStatus(ThingStatus.ONLINE);
-                } else {
-                    updateStatus(ThingStatus.OFFLINE);
                 }
             }
         }, wait, TimeUnit.SECONDS);
@@ -218,7 +213,7 @@ public class YandexStationHandler extends BaseThingHandler {
 
     private boolean connectStation(@Nullable YandexStationConfiguration config) {
         try {
-            websocketAddress = new URI("wss://" + config.hostname + ":" + WSS_PORT);
+            websocketAddress = new URI("wss://" + config.hostname + ":" + config.port);
         } catch (URISyntaxException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.CONFIGURATION_ERROR,
                     "Initialize web socket failed: " + e.getMessage());
@@ -499,13 +494,42 @@ public class YandexStationHandler extends BaseThingHandler {
         super.updateProperty(name, value);
     }
 
-    private void receiveDeviceToken() throws ApiException {
+    private void receiveDeviceToken()  {
         // get device token from https://quasar.yandex.net/glagol/token
-        String token = api.getDeviceToken(config.yandex_token, config.device_id, config.platform);
-        config.device_token = token;
-        Configuration configuration = thing.getConfiguration();
-        logger.info("Configuration is: {}", configuration);
-        configuration.put("device_token", token);
-        updateProperty("device_token:", token);
+        try {
+            ApiDeviceResponse device = api.findDevice(config.device_id, config.yandex_token);
+            String token = api.getDeviceToken(config.yandex_token, config.device_id, device.platform);
+
+            config.platform = device.platform;
+            config.device_token = token;
+
+            config.hostname = device.networkInfo.ipAdresses.get(0);
+            config.port = String.valueOf(device.networkInfo.port); //double
+
+            Configuration configuration = thing.getConfiguration();
+            logger.info("Configuration is: {}", configuration);
+            configuration.put("device_token", token);
+            configuration.put("platform", device.platform);
+            configuration.put("hostname", config.hostname);
+            configuration.put("port", config.port);
+
+            configuration.put("server_certificate", device.glagol.security.serverCertificate);
+            configuration.put("server_private_key", device.glagol.security.serverPrivateKey);
+
+            updateProperty("device_token:", token);
+            updateProperty("Friendly Name:", device.name);
+            updateProperty("Device Name:", YandexStationTypes.getNameByPlatform(device.platform));
+            updateProperty("Platform:", device.platform);
+            updateProperty("IP Address:", config.hostname);
+            updateProperty("Wifi SSID:", device.networkInfo.wifiSSID);
+            updateProperty("Support Local API:", YandexStationTypes.isLocalApi(device.platform) ? "Supported" : "Not Supported");
+
+            if (Boolean.FALSE.equals(YandexStationTypes.isLocalApi(device.platform))) {
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Device doesn't support Local API");
+                throw new RuntimeException(String.format("Device %s not supported local api", device.name));
+            }
+        } catch (ApiException e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+        }
     }
 }
