@@ -93,34 +93,38 @@ public class YandexStationHandler extends BaseThingHandler {
                 sendTrackPositionCommand(((DecimalType) command).intValue());
             }
         } else if (CHANNEL_PLAYER_CONTROL.getName().equals(channelUID.getId())) {
-            if (command instanceof PlayPauseType cmd) {
+            //if (command instanceof PlayPauseType cmd) {
+            if (command instanceof PlayPauseType) {
+                PlayPauseType cmd = (PlayPauseType) command;
                 switch (cmd) {
-                    case PLAY -> {
+                    case PLAY:
                         sendPlayCommand();
-                        return;
-                    }
-                    case PAUSE -> {
+                        break;
+                    case PAUSE:
                         sendStopCommand();
-                        return;
-                    }
+                        break;
                 }
             }
-            if (command instanceof NextPreviousType cmd) {
+            if (command instanceof NextPreviousType) {
+                NextPreviousType cmd = (NextPreviousType) command;
                 switch (cmd) {
-                    case NEXT -> {
+                    case NEXT:
                         sendPlayNextCommand();
-                        return;
-                    }
-                    case PREVIOUS -> {
+                        break;
+                case PREVIOUS:
                         sendPlayPrevCommand();
-                        return;
-                    }
+                        break;
                 }
             }
-            if (command instanceof RewindFastforwardType cmd) {
+            if (command instanceof RewindFastforwardType) {
+                RewindFastforwardType cmd = (RewindFastforwardType) command;
                 switch (cmd) {
-                    case FASTFORWARD -> fastForward();
-                    case REWIND -> fastRewind();
+                    case FASTFORWARD:
+                        fastForward();
+                        break;
+                    case REWIND:
+                        fastRewind();
+                        break;
                 }
             }
             if (command instanceof StringType) {
