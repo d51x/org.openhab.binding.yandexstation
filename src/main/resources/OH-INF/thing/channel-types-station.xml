@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<thing:thing-descriptions bindingId="yandexstation"
+                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                          xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+                          xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+    <channel-type id="aliceState-channel">
+        <item-type>String</item-type>
+        <label>Alice State</label>
+        <description>Alice State: IDLE, LISTENING , SPEAKING, BUSY </description>
+        <category>if:mdi:speaker</category>
+        <state readOnly="true">
+            <options>
+                <option value="IDLE">Idle</option>
+                <option value="LISTENING">Listening</option>
+                <option value="SPEAKING">Speaking</option>
+                <option value="BUSY">Busy</option>
+            </options>
+        </state>
+    </channel-type>
+    <channel-type id="software_version-channel" advanced="true">
+        <item-type>String</item-type>
+        <label>Software Version</label>
+        <description>Software Version</description>
+        <category>if:mdi:numeric</category>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="playing-channel">
+        <item-type>String</item-type>
+        <label>Playing</label>
+        <description>Playing state</description>
+        <category>if:mdi:speaker-play</category>
+        <state readOnly="true">
+            <options>
+                <option value="PLAY">Playing</option>
+                <option value="PAUSE">Paused</option>
+            </options>
+        </state>
+    </channel-type>
+    <channel-type id="volume-channel">
+        <item-type>Dimmer</item-type>
+        <label>Volume</label>
+        <description>Volume from 0.0 to 1.0, step 0.1</description>
+        <category>if:mdi:volume-high</category>
+        <state pattern="%.1f %unit%" min="0" max="1" step="0.1" readOnly="true"/>
+    </channel-type>
+</thing:thing-descriptions>

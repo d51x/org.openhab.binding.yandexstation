@@ -29,27 +29,19 @@ public class YandexStationBindingConstants {
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_SAMPLE = new ThingTypeUID(BINDING_ID, "station");
 
+    public static final String CHANNEL_GROUP_STATION = "station";
+    public static final String CHANNEL_GROUP_SPEECH = "speech";
+    public static final String CHANNEL_GROUP_VOLUME = "volume";
+    public static final String CHANNEL_GROUP_PLAYER_PROPERTIES = "player-properties";
+    public static final String CHANNEL_GROUP_PLAYER_CONTROL = "player-control";
+    public static final String CHANNEL_GROUP_TRACK = "track-info";
+
     // List of all Channel ids
-    public static final String CHANNEL_COMMAND_VOICE = "voice";
-    public static final String CHANNEL_COMMAND_TTS = "tts";
 
     public static final String CHANNEL_COMMAND_CHANGE_VOLUME = "volume_change";
-    public static final String CHANNEL_STATE_ALICE = "aliceState";
-    public static final String CHANNEL_STATE_PLAYING = "playing";
-    public static final String CHANNEL_VOLUME = "volume";
-    public static final String CHANNEL_STATE_TRACK_DURATION = "duration";
-    public static final String CHANNEL_STATE_TRACK_POSITION = "progress";
-    public static final String CHANNEL_STATE_TRACK_PLAYLIST_ID = "playlistId";
-    public static final String CHANNEL_STATE_TRACK_ID = "trackId";
-    public static final String CHANNEL_STATE_PLAYLIST_TYPE = "playlistType";
-    public static final String CHANNEL_STATE_TRACK_SUBTITLE = "subtitle";
-    public static final String CHANNEL_STATE_TRACK_TITLE = "title";
-    public static final String CHANNEL_STATE_TRACK_TYPE = "trackType";
-    public static final String CHANNEL_STATE_TRACK_COVER_URI = "coverURI";
-    public static final String CHANNEL_STATE_TRACK_NEXT_ID = "nextId";
-    public static final String CHANNEL_STATE_TRACK_PREV_ID = "prevId";
-    public static final String CHANNEL_PLAYER_CONTROL = "player_control";
-    public static final String CHANNEL_VOLUME_CONTROL = "volume_control";
+
+
+
 
     public static final String WSS_PORT = "1961";
 

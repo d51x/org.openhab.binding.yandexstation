@@ -21,9 +21,8 @@ import org.openhab.binding.yandexstation.internal.commands.*;
 import org.openhab.binding.yandexstation.internal.response.YandexStationPlayerState;
 import org.openhab.binding.yandexstation.internal.response.YandexStationResponse;
 import org.openhab.binding.yandexstation.internal.response.YandexStationState;
-import org.openhab.core.library.types.DecimalType;
-import org.openhab.core.library.types.OnOffType;
-import org.openhab.core.library.types.StringType;
+import org.openhab.core.library.items.PlayerItem;
+import org.openhab.core.library.types.*;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
@@ -40,6 +39,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.*;
+import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
 import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
 
 /**
@@ -70,24 +70,54 @@ public class YandexStationHandler extends BaseThingHandler {
     private Double prevVolume = 0.0;
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if (CHANNEL_COMMAND_VOICE.equals(channelUID.getId())) {
+        if (CHANNEL_COMMAND_VOICE.getName().equals(channelUID.getId())) {
             if (command instanceof StringType) {
                 sendVoiceCommand(command.toString());
             }
 
-        } else if (CHANNEL_COMMAND_TTS.equals(channelUID.getId())) {
+        } else if (CHANNEL_COMMAND_TTS.getName().equals(channelUID.getId())) {
             if (command instanceof StringType) {
                 sendTtsCommand(command.toString());
             }
-        } else if (CHANNEL_VOLUME.equals(channelUID.getId())) {
+        } else if (CHANNEL_VOLUME.getName().equals(channelUID.getId())) {
             if (command instanceof DecimalType) {
                 sendSetVolumeCommand(((DecimalType) command).doubleValue());
             }
-        } else if (CHANNEL_STATE_TRACK_POSITION.equals(channelUID.getId())) {
+        } else if (CHANNEL_STATE_TRACK_POSITION.getName().equals(channelUID.getId())) {
             if (command instanceof DecimalType) {
                 sendTrackPositionCommand(((DecimalType) command).intValue());
             }
-        } else if (CHANNEL_PLAYER_CONTROL.equals(channelUID.getId())) {
+        } else if (CHANNEL_PLAYER_CONTROL.getName().equals(channelUID.getId())) {
+            if (command instanceof PlayPauseType cmd) {
+                switch (cmd) {
+                    case PLAY -> {
+                        sendPlayCommand();
+                        return;
+                    }
+                    case PAUSE -> {
+                        sendStopCommand();
+                        return;
+                    }
+                }
+            }
+            if (command instanceof NextPreviousType cmd) {
+                switch (cmd) {
+                    case NEXT -> {
+                        sendPlayNextCommand();
+                        return;
+                    }
+                    case PREVIOUS -> {
+                        sendPlayPrevCommand();
+                        return;
+                    }
+                }
+            }
+            if (command instanceof RewindFastforwardType cmd) {
+                switch (cmd) {
+                    case FASTFORWARD -> fastForward();
+                    case REWIND -> fastRewind();
+                }
+            }
             if (command instanceof StringType) {
                 if (command.toString().equals("PLAY")) {
                     sendPlayCommand();
@@ -103,7 +133,7 @@ public class YandexStationHandler extends BaseThingHandler {
                     fastRewind();
                 }
             }
-        } else if (CHANNEL_VOLUME_CONTROL.equals(channelUID.getId())) {
+        } else if (CHANNEL_VOLUME_CONTROL.getName().equals(channelUID.getId())) {
             if (command instanceof StringType) {
                 if (command.toString().equals("MUTE")) {
                     volumeMute();
@@ -302,14 +332,14 @@ public class YandexStationHandler extends BaseThingHandler {
     }
 
     private void fastForward() {
-        Double position = stationState.playerState.getProgress() + 5.0;
+        Double position = stationState.playerState.getProgress() + 15.0;
         if (stationState.playerState.getDuration() > position) {
             sendTrackPositionCommand(position.intValue());
         }
     }
 
     private void fastRewind() {
-        Double position = stationState.playerState.getProgress() - 5.0;
+        Double position = stationState.playerState.getProgress() - 15.0;
         if (position > 0) {
             sendTrackPositionCommand(position.intValue());
         }
@@ -358,18 +388,26 @@ public class YandexStationHandler extends BaseThingHandler {
     }
 
     private void processReceivedData(YandexStationResponse response) {
+        if (response == null) {
+          logger.error("Empty response from socket");
+        }
+        if (response.getSoftwareVersion() != null) {
+            updateState(CHANNEL_STATE_SOFTWARE.getName(), new StringType(response.getSoftwareVersion()));
+        }
         if (response.getState() != null) {
             stationState = response.getState();
             if (stationState.aliceState != null) {
-                updateState(CHANNEL_STATE_ALICE, new StringType(stationState.aliceState.toString()));
+                updateState(CHANNEL_STATE_ALICE.getName(), new StringType(stationState.aliceState.toString()));
             }
             if (stationState.playing != null) {
-                updateState(CHANNEL_STATE_PLAYING, OnOffType.from(stationState.playing));
+                updateState(CHANNEL_STATE_PLAYING.getName(), new StringType(stationState.playing?"PLAY":"PAUSE"));
             }
             if (stationState.volume != null) {
-                updateState(CHANNEL_VOLUME, new DecimalType(stationState.volume.doubleValue()));
+                updateState(CHANNEL_VOLUME.getName(), new DecimalType(stationState.volume.doubleValue()));
             }
-
+            if (stationState.playing != null) {
+                updateState(CHANNEL_STATE_PLAYING.getName(), OnOffType.from(stationState.playing));
+            }
             processPlayerState(stationState.playerState);
         }
     }
@@ -377,33 +415,33 @@ public class YandexStationHandler extends BaseThingHandler {
     private void processPlayerState(YandexStationPlayerState playerState) {
         if (playerState != null) {
             if (playerState.getDuration() != null) {
-                updateState(CHANNEL_STATE_TRACK_DURATION, new DecimalType(playerState.getDuration()));
+                updateState(CHANNEL_STATE_TRACK_DURATION.getName(), new DecimalType(playerState.getDuration()));
             }
             if (playerState.getHasProgressBar() != null && playerState.getHasProgressBar()
                     && playerState.getProgress() != null) {
-                updateState(CHANNEL_STATE_TRACK_POSITION, new DecimalType(playerState.getProgress()));
+                updateState(CHANNEL_STATE_TRACK_POSITION.getName(), new DecimalType(playerState.getProgress()));
             }
             if (playerState.getPlaylistId() != null) {
-                updateState(CHANNEL_STATE_TRACK_PLAYLIST_ID, new StringType(playerState.getPlaylistId()));
+                updateState(CHANNEL_STATE_TRACK_PLAYLIST_ID.getName(), new StringType(playerState.getPlaylistId()));
             }
             if (playerState.getId() != null) {
-                updateState(CHANNEL_STATE_TRACK_ID, new DecimalType(playerState.getId()));
+                updateState(CHANNEL_STATE_TRACK_ID.getName(), new DecimalType(playerState.getId()));
             }
             if (playerState.getPlaylistType() != null) {
-                updateState(CHANNEL_STATE_PLAYLIST_TYPE, new StringType(playerState.getPlaylistType()));
+                updateState(CHANNEL_STATE_PLAYLIST_TYPE.getName(), new StringType(playerState.getPlaylistType()));
             }
             if (playerState.getSubtitle() != null) {
-                updateState(CHANNEL_STATE_TRACK_SUBTITLE, new StringType(playerState.getSubtitle()));
+                updateState(CHANNEL_STATE_TRACK_SUBTITLE.getName(), new StringType(playerState.getSubtitle()));
             }
             if (playerState.getTitle() != null) {
-                updateState(CHANNEL_STATE_TRACK_TITLE, new StringType(playerState.getTitle()));
+                updateState(CHANNEL_STATE_TRACK_TITLE.getName(), new StringType(playerState.getTitle()));
             }
             if (playerState.getType() != null) {
-                updateState(CHANNEL_STATE_TRACK_TYPE, new StringType(playerState.getType()));
+                updateState(CHANNEL_STATE_TRACK_TYPE.getName(), new StringType(playerState.getType()));
             }
             if (playerState.getExtra() != null) {
                 if (playerState.getExtra().coverURI != null) {
-                    updateState(CHANNEL_STATE_TRACK_COVER_URI, new StringType(playerState.getExtra().coverURI));
+                    updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(), new StringType(playerState.getExtra().coverURI));
                 }
             }
             if (playerState.getEntityInfo() != null) {
@@ -411,14 +449,14 @@ public class YandexStationHandler extends BaseThingHandler {
                         && playerState.getEntityInfo().next.containsKey("id")) {
                     String sId = playerState.getEntityInfo().next.get("id");
                     if (sId != null) {
-                        updateState(CHANNEL_STATE_TRACK_NEXT_ID, new DecimalType(DecimalType.valueOf(sId)));
+                        updateState(CHANNEL_STATE_TRACK_NEXT_ID.getName(), new DecimalType(DecimalType.valueOf(sId)));
                     }
                 }
                 if (playerState.getEntityInfo().prev != null && !playerState.getEntityInfo().prev.isEmpty()
                         && playerState.getEntityInfo().prev.containsKey("id")) {
                     String sId = playerState.getEntityInfo().prev.get("id");
                     if (sId != null) {
-                        updateState(CHANNEL_STATE_TRACK_PREV_ID, new DecimalType(DecimalType.valueOf(sId)));
+                        updateState(CHANNEL_STATE_TRACK_PREV_ID.getName(), new DecimalType(DecimalType.valueOf(sId)));
                     }
                 }
             }

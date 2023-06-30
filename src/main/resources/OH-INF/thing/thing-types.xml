@@ -15,26 +15,15 @@
 		<label>YandexStation</label>
 		<description>YandexStation thing for YandexStation Binding</description>
 
-		<channels>
-			<channel id="voice" typeId="voice-channel"/>
-			<channel id="tts" typeId="tts-channel"/>
-			<channel id="aliceState" typeId="aliceState-channel"/>
-			<channel id="playing" typeId="playing-channel"/>
-			<channel id="volume" typeId="volume-channel"/>
-			<channel id="duration" typeId="duration-channel"/>
-			<channel id="progress" typeId="progress-channel"/>
-			<channel id="playlistId" typeId="playlistId-channel"/>
-			<channel id="trackId" typeId="trackId-channel"/>
-			<channel id="playlistType" typeId="playlistType-channel"/>
-			<channel id="subtitle" typeId="subtitle-channel"/>
-			<channel id="title" typeId="title-channel"/>
-			<channel id="trackType" typeId="trackType-channel"/>
-			<channel id="coverURI" typeId="coverURI-channel"/>
-			<channel id="nextId" typeId="nextId-channel"/>
-			<channel id="prevId" typeId="prevId-channel"/>
-			<channel id="player_control" typeId="player-control-command"/>
-			<channel id="volume_control" typeId="volume-control-command"/>
-		</channels>
+		<channel-groups>
+			<channel-group id="station" typeId="station"/>
+			<channel-group id="speech" typeId="speech"/>
+			<channel-group id="volume" typeId="volume"/>
+			<channel-group id="player-control" typeId="player-control"/>
+			<channel-group id="player-properties" typeId="player-properties"/>
+			<channel-group id="track-info" typeId="track-info"/>
+
+		</channel-groups>
 
 		<config-description>
 			<parameter name="hostname" type="text" required="true">
@@ -60,157 +49,4 @@
 			</parameter>
 		</config-description>
 	</thing-type>
-
-	<!-- Voice Channel Type -->
-	<channel-type id="voice-channel">
-		<item-type>String</item-type>
-		<label>Voice command</label>
-		<description></description>
-	</channel-type>
-	<channel-type id="tts-channel">
-		<item-type>String</item-type>
-		<label>TTS command</label>
-		<description>Text To Speech</description>
-	</channel-type>
-
-	<channel-type id="aliceState-channel">
-		<item-type>String</item-type>
-		<label>Alice State</label>
-		<description>Alice State: IDLE, LISTENING , SPEAKING, BUSY </description>
-		<state readOnly="true">
-			<options>
-				<option value="IDLE">Idle</option>
-				<option value="LISTENING">Listening</option>
-				<option value="SPEAKING">Speaking</option>
-				<option value="BUSY">Busy</option>
-			</options>
-		</state>
-	</channel-type>
-
-	<channel-type id="playing-channel">
-		<item-type>Switch</item-type>
-		<label>Playing</label>
-		<description>Playing state</description>
-		<state readOnly="true">
-			<options>
-				<option value="ON">On</option>
-				<option value="OFF">Off</option>
-			</options>
-		</state>
-	</channel-type>
-
-	<channel-type id="volume-channel">
-		<item-type>Number</item-type>
-		<label>Volume</label>
-		<description>Volume from 0.0 to 1.0, step 0.1</description>
-		<state pattern="%.1f" readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="duration-channel">
-		<item-type>Number</item-type>
-		<label>Duration</label>
-		<description>Track duration in sec</description>
-		<state pattern="%.0f" readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="progress-channel">
-		<item-type>Number</item-type>
-		<label>Position</label>
-		<description>Track playing position in sec</description>
-		<state pattern="%.0f"/>
-	</channel-type>
-
-	<channel-type id="playlistId-channel">
-		<item-type>String</item-type>
-		<label>Playlist Id</label>
-		<description>Yandex playlist id</description>
-		<state readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="trackId-channel">
-		<item-type>Number</item-type>
-		<label>Track Id</label>
-		<description>Yandex track id</description>
-		<state readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="playlistType-channel">
-		<item-type>String</item-type>
-		<label>Playlist Type</label>
-		<description>Yandex playlist type</description>
-		<state readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="subtitle-channel">
-		<item-type>String</item-type>
-		<label>Track SubTitle</label>
-		<description></description>
-		<state readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="title-channel">
-		<item-type>String</item-type>
-		<label>Track Title</label>
-		<description></description>
-		<state readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="trackType-channel">
-		<item-type>String</item-type>
-		<label>Track Type</label>
-		<description></description>
-		<state readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="coverURI-channel">
-		<item-type>String</item-type>
-		<label>Cover URI</label>
-		<description></description>
-		<state readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="nextId-channel">
-		<item-type>Number</item-type>
-		<label>Track Next Id</label>
-		<description>Yandex next track id</description>
-		<state readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="prevId-channel">
-		<item-type>Number</item-type>
-		<label>Track Prev Id</label>
-		<description>Yandex previous track id</description>
-		<state readOnly="true"/>
-	</channel-type>
-
-	<channel-type id="player-control-command">
-		<item-type>Player</item-type>
-		<label>Player Control</label>
-		<description>Command to control player</description>
-		<state>
-			<options>
-				<option value="play">Play</option>
-				<option value="pause">Pause</option>
-				<option value="next">Next</option>
-				<option value="previous">Previous</option>
-				<option value="ffwd">Fast Forward</option>
-				<option value="rewind">Rewind</option>
-			</options>
-		</state>
-	</channel-type>
-
-	<channel-type id="volume-control-command">
-		<item-type>String</item-type>
-		<label>Volume Control</label>
-		<description>Command to control sound volume</description>
-		<state>
-			<options>
-				<option value="mute">Mute</option>
-				<option value="unmute">UnMute</option>
-				<option value="up">Volume Up</option>
-				<option value="down">Volume Down</option>
-			</options>
-		</state>
-	</channel-type>
-
 </thing:thing-descriptions>
