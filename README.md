@@ -1,94 +1,39 @@
+![](src/main/resources/yandex-mini.jpg)
 # YandexStation Binding
 
-_Give some details about what this binding is meant for - a protocol, system, specific device._
+Binding для локального управления устройствами Яндекс:
 
-_If possible, provide some resources like pictures (only PNG is supported currently), a video, etc. to give an impression of what can be done with this binding._
-_You can place such resources into a `doc` folder next to this README.md._
-
-_Put each sentence in a separate line to improve readability of diffs._
-
-## Supported Things
-
-_Please describe the different supported things / devices including their ThingTypeUID within this section._
-_Which different types are supported, which models were tested etc.?_
-_Note that it is planned to generate some part of this based on the XML files within ```src/main/resources/OH-INF/thing``` of your binding._
-
-- `bridge`: Short description of the Bridge, if any
-- `sample`: Short description of the Thing with the ThingTypeUID `sample`
+- Яндекс Станция
+- Яндекс Станция мини
+- Яндекс Станция мини 2
+- Яндекс Станция лайт
+- Яндекс Станци Макс
+- Яндекс Модуль
+- Яндекс Модуль - 2
+- JBL Link Music
+- JBL Link Portable
 
 ## Discovery
 
-_Describe the available auto-discovery features here._
-_Mention for what it works and what needs to be kept in mind when using it._
+Пока не доступно, но планируется
 
 ## Binding Configuration
 
-_If your binding requires or supports general configuration settings, please create a folder ```cfg``` and place the configuration file ```<bindingId>.cfg``` inside it._
-_In this section, you should link to this file and provide some information about the options._
-_The file could e.g. look like:_
+Для работы биндинга через локальное API требуется знать токен устройства `device_token`.
 
-```
-# Configuration for the YandexStation Binding
-#
-# Default secret key for the pairing of the YandexStation Thing.
-# It has to be between 10-40 (alphanumeric) characters.
-# This may be changed by the user for security reasons.
-secret=openHABSecret
-```
+Токен устройства получается автоматически биндингом.
 
-_Note that it is planned to generate some part of this based on the information that is available within ```src/main/resources/OH-INF/binding``` of your binding._
+Для того, чтобы все это заработало, но заполнить следующие поля:
 
-_If your binding does not offer any generic configurations, you can remove this section completely._
+- IP адрес устройства
+- Идентификатор устройства (можно взять в приложении Яндекс Умный Дом). Может выглядеть как `LP0000001232134200124`
+- выбрать тип устройства из выпадающего списка
+- яндекс-токен (oAuth token) (это токен от яндекс музыки)
 
-## Thing Configuration
+Как получить яндекс-токен
 
-_Describe what is needed to manually configure a thing, either through the UI or via a thing-file._
-_This should be mainly about its mandatory and optional configuration parameters._
+Вариант1:
+- использовать https://music-yandex-bot.ru
+- на страничке ввести логин и пароль
+- в старых чужих инструкциях информация отличается, на текущий момент, надо жать кнопку Войти, но не переходит в бота, так же появиться кнопка Скопировать токен
 
-_Note that it is planned to generate some part of this based on the XML files within ```src/main/resources/OH-INF/thing``` of your binding._
-
-### `sample` Thing Configuration
-
-| Name            | Type    | Description                           | Default | Required | Advanced |
-|-----------------|---------|---------------------------------------|---------|----------|----------|
-| hostname        | text    | Hostname or IP address of the device  | N/A     | yes      | no       |
-| password        | text    | Password to access the device         | N/A     | yes      | no       |
-| refreshInterval | integer | Interval the device is polled in sec. | 600     | no       | yes      |
-
-## Channels
-
-_Here you should provide information about available channel types, what their meaning is and how they can be used._
-
-_Note that it is planned to generate some part of this based on the XML files within ```src/main/resources/OH-INF/thing``` of your binding._
-
-| Channel | Type   | Read/Write | Description                 |
-|---------|--------|------------|-----------------------------|
-| control | Switch | RW         | This is the control channel |
-
-## Full Example
-
-_Provide a full usage example based on textual configuration files._
-_*.things, *.items examples are mandatory as textual configuration is well used by many users._
-_*.sitemap examples are optional._
-
-### Thing Configuration
-
-```java
-Example thing configuration goes here.
-```
-### Item Configuration
-
-```java
-Example item configuration goes here.
-```
-
-### Sitemap Configuration
-
-```perl
-Optional Sitemap configuration goes here.
-Remove this section, if not needed.
-```
-
-## Any custom content here!
-
-_Feel free to add additional sections for whatever you think should also be mentioned about your binding!_
