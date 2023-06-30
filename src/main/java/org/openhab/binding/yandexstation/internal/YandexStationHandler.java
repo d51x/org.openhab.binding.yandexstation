@@ -516,13 +516,12 @@ public class YandexStationHandler extends BaseThingHandler {
             configuration.put("server_certificate", device.glagol.security.serverCertificate);
             configuration.put("server_private_key", device.glagol.security.serverPrivateKey);
 
-            updateProperty("device_token:", token);
-            updateProperty("Friendly Name:", device.name);
-            updateProperty("Device Name:", YandexStationTypes.getNameByPlatform(device.platform));
-            updateProperty("Platform:", device.platform);
-            updateProperty("IP Address:", config.hostname);
-            updateProperty("Wifi SSID:", device.networkInfo.wifiSSID);
             updateProperty("Support Local API:", YandexStationTypes.isLocalApi(device.platform) ? "Supported" : "Not Supported");
+            updateProperty("Wifi SSID:", device.networkInfo.wifiSSID);
+            updateProperty("IP Address:", config.hostname);
+            updateProperty("Platform:", device.platform);
+            updateProperty("Device Name:", YandexStationTypes.getNameByPlatform(device.platform));
+            updateProperty("Friendly Name:", device.name);
 
             if (Boolean.FALSE.equals(YandexStationTypes.isLocalApi(device.platform))) {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Device doesn't support Local API");
