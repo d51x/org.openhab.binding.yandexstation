@@ -14,6 +14,7 @@
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
 import com.google.gson.annotations.SerializedName;
+
 /**
  * The {@link ApiFailResponse} is describing api fail response.
  *
@@ -29,5 +30,5 @@ public class ApiFailResponse extends ApiResponse {
     /**
      * The Status.
      */
-    public String status; //error
+    public String status; // error
 }

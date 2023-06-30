@@ -15,6 +15,7 @@
 package org.openhab.binding.yandexstation.internal;
 
 import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.*;
+
 /**
  * The {@link YandexStationChannels} is responsible for channels definition.
  *
@@ -39,8 +40,8 @@ public enum YandexStationChannels {
     CHANNEL_STATE_TRACK_SUBTITLE("subtitle", CHANNEL_GROUP_TRACK),
     CHANNEL_STATE_TRACK_TITLE("title", CHANNEL_GROUP_TRACK),
     CHANNEL_STATE_TRACK_TYPE("trackType", CHANNEL_GROUP_TRACK),
-    CHANNEL_STATE_TRACK_COVER_URI("coverURI", CHANNEL_GROUP_TRACK)
-    ;
+    CHANNEL_STATE_TRACK_COVER_URI("coverURI", CHANNEL_GROUP_TRACK);
+
     private String channelId;
     private String groupId;
 

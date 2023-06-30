@@ -13,10 +13,10 @@
 
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
  * The {@link ApiDeviceResponse} is describing api response with devices info.
@@ -34,6 +34,7 @@ public class ApiDeviceResponse extends ApiSuccessResponse {
     public class Config {
         public String name;
     }
+
     public class Glagol {
         public Security security;
 
@@ -44,6 +45,7 @@ public class ApiDeviceResponse extends ApiSuccessResponse {
             public String serverPrivateKey;
         }
     }
+
     public class NetworkInfo {
         @SerializedName("external_port")
         public Integer port;

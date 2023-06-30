@@ -33,6 +33,7 @@ public class YandexStationCommand {
 
     @Expose(serialize = false)
     private Object extra;
+
     public void setCommand(YandexStationCommandTypes command) {
         this.command = command.getCommand();
         this.extra = command.getExtra();
@@ -51,13 +52,10 @@ public class YandexStationCommand {
         }
     }
 
-
-
     public YandexStationCommand(YandexStationCommandTypes command) {
         this.command = command.getCommand();
     }
 
     public YandexStationCommand() {
     }
-
 }

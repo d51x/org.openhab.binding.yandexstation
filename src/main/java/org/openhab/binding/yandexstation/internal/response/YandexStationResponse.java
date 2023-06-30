@@ -13,10 +13,10 @@
 
 package org.openhab.binding.yandexstation.internal.response;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
  * The {@link YandexStationResponse} is describing api response with station state entity

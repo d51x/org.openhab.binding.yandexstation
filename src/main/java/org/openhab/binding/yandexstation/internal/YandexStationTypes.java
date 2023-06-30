@@ -66,17 +66,12 @@ public enum YandexStationTypes {
     }
 
     public static String getNameByPlatform(String platform) {
-        return Arrays.stream(YandexStationTypes.values())
-                .filter(v->v.getPlatform().equals(platform))
-                .findFirst()
-                .orElse(PLATFORM_UNKNOWN)
-                .getName();
+        return Arrays.stream(YandexStationTypes.values()).filter(v -> v.getPlatform().equals(platform)).findFirst()
+                .orElse(PLATFORM_UNKNOWN).getName();
     }
+
     public static Boolean isLocalApi(String platform) {
-        return Arrays.stream(YandexStationTypes.values())
-                .filter(v->v.getPlatform().equals(platform))
-                .findFirst()
-                .orElse(PLATFORM_UNKNOWN)
-                .getLocalApi();
+        return Arrays.stream(YandexStationTypes.values()).filter(v -> v.getPlatform().equals(platform)).findFirst()
+                .orElse(PLATFORM_UNKNOWN).getLocalApi();
     }
 }

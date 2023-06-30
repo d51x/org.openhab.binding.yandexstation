@@ -32,9 +32,9 @@ public class YandexStationPlayerState {
     private String playlistId;
     private String playlistType;
     private Double progress;
-    private String subtitle;  //FENDA
-    private String title;  //Sunrise Falling
-    private String type;  //Track
+    private String subtitle;
+    private String title;
+    private String type;
     private YandexStationPlayerStateExtra extra;
     private YandexStationPlayerEntity entityInfo;
 
@@ -170,9 +170,10 @@ public class YandexStationPlayerState {
         public String id;
         public String repeatMode;
         public String type;
-        public Map<String, String> next;  // id and type
-        public Map<String, String> prev;  // id and type
+        public Map<String, String> next;
+        public Map<String, String> prev;
     }
+
     public class YandexStationPlayerStateExtra {
         public String coverURI;
         public String requestID;

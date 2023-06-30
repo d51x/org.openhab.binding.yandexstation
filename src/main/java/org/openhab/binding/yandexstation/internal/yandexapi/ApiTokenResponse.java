@@ -12,6 +12,7 @@
  */
 
 package org.openhab.binding.yandexstation.internal.yandexapi;
+
 /**
  * The {@link ApiTokenResponse} is describing api token response.
  *

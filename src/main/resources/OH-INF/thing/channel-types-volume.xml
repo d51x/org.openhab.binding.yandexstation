@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <thing:thing-descriptions bindingId="yandexstation"
-                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                          xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
-                          xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
-    <channel-type id="volume-control-command">
-        <item-type>String</item-type>
-        <label>Volume Control</label>
-        <description>Command to control sound volume</description>
-        <category>if:mdi:volume-high</category>
-        <state>
-            <options>
-                <option value="MUTE">Mute</option>
-                <option value="UNMUTE">UnMute</option>
-                <option value="VOLUME_UP">Volume Up</option>
-                <option value="VOLUME_DOWN">Volume Down</option>
-            </options>
-        </state>
-    </channel-type>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+	<channel-type id="volume-control-command">
+		<item-type>String</item-type>
+		<label>Volume Control</label>
+		<description>Command to control sound volume</description>
+		<category>if:mdi:volume-high</category>
+		<state>
+			<options>
+				<option value="MUTE">Mute</option>
+				<option value="UNMUTE">UnMute</option>
+				<option value="VOLUME_UP">Volume Up</option>
+				<option value="VOLUME_DOWN">Volume Down</option>
+			</options>
+		</state>
+	</channel-type>
 </thing:thing-descriptions>

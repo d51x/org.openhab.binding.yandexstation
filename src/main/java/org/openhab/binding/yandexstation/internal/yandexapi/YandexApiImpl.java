@@ -13,8 +13,13 @@
 
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
-import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -27,12 +32,8 @@ import org.eclipse.jetty.util.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * The {@link YandexApiImpl} is describing implementaion of api interface.
@@ -40,7 +41,7 @@ import java.util.concurrent.TimeoutException;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 @NonNullByDefault
-public class YandexApiImpl  implements YandexApi {
+public class YandexApiImpl implements YandexApi {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected final HttpClient httpClient;
 
@@ -56,12 +57,10 @@ public class YandexApiImpl  implements YandexApi {
 
     @Override
     public void update() {
-
     }
 
     @Override
     public void initialize() {
-
     }
 
     @Override
@@ -70,14 +69,14 @@ public class YandexApiImpl  implements YandexApi {
         if (!params.isEmpty()) {
             pathWithParams += "?" + params;
         }
-        return sendGetRequest(pathWithParams,token);
+        return sendGetRequest(pathWithParams, token);
     }
 
     @Override
     public ApiResponse sendGetRequest(String path, String token) throws ApiException {
         String url = API_URL + path;
         ApiResponse result = new ApiResponse();
-        httpClient.setConnectTimeout(60*1000);
+        httpClient.setConnectTimeout(60 * 1000);
 
         Request request = httpClient.newRequest(url);
         setHeaders(request, token);
@@ -86,8 +85,7 @@ public class YandexApiImpl  implements YandexApi {
         try {
             ContentResponse contentResponse = request.send();
             result.httpCode = contentResponse.getStatus();
-            if (result.httpCode == 200 ||
-                    result.httpCode >= 400 && result.httpCode < 500) {
+            if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
                 result.response = contentResponse.getContentAsString();
                 return result;
             } else {
@@ -126,7 +124,7 @@ public class YandexApiImpl  implements YandexApi {
         request.header(HttpHeader.ACCEPT, "*/*");
         request.header(HttpHeader.ACCEPT_ENCODING, null);
         request.header(HttpHeader.ACCEPT_ENCODING, "gzip, deflate, br");
-        //request.header(HttpHeader.CACHE_CONTROL, "no-cache");
+
         if (token != null) {
             request.header(HttpHeader.AUTHORIZATION, "Bearer " + token);
         }
@@ -168,7 +166,8 @@ public class YandexApiImpl  implements YandexApi {
             if (response.httpCode == 200) {
                 JsonObject json = JsonParser.parseString(response.response).getAsJsonObject();
                 JsonArray deviceList = json.getAsJsonArray("devices");
-                Type listType = new TypeToken<ArrayList<ApiDeviceResponse>>(){}.getType();
+                Type listType = new TypeToken<ArrayList<ApiDeviceResponse>>() {
+                }.getType();
                 List<ApiDeviceResponse> devices = new Gson().fromJson(deviceList, listType);
                 logger.debug("Device list is: {}", devices);
                 if (!devices.isEmpty()) {
@@ -177,15 +176,16 @@ public class YandexApiImpl  implements YandexApi {
                     return new ArrayList<>();
                 }
             } else {
-                throw new ApiException(String.format("YandexApi get device list error: httpCode = %d", response.httpCode));
+                throw new ApiException(
+                        String.format("YandexApi get device list error: httpCode = %d", response.httpCode));
             }
         } catch (JsonSyntaxException e) {
             throw new ApiException("JsonSyntaxException:{}", e);
         }
     }
 
-    public ApiDeviceResponse findDevice(@NonNull String deviceId, @NonNull String yandexToken)  throws ApiException {
+    public ApiDeviceResponse findDevice(@NonNull String deviceId, @NonNull String yandexToken) throws ApiException {
         List<ApiDeviceResponse> devices = getDevices(yandexToken);
-        return devices.stream().filter(dev -> dev.id.equals(deviceId) ).findFirst().orElse(new ApiDeviceResponse());
+        return devices.stream().filter(dev -> dev.id.equals(deviceId)).findFirst().orElse(new ApiDeviceResponse());
     }
 }

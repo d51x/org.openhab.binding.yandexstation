@@ -21,7 +21,7 @@ import java.util.Map;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 public class YandexStationState {
-    public String aliceState; //IDLE LISTENING SPEAKING BUSY
+    public String aliceState; // IDLE LISTENING SPEAKING BUSY
     public Boolean canStop;
     public Map<String, Boolean> hdmi;
     public Boolean playing;

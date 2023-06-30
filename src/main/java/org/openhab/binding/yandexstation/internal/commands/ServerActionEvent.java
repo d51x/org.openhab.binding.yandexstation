@@ -32,5 +32,4 @@ public class ServerActionEvent {
         this.name = name;
         this.payload = payload;
     }
-
 }

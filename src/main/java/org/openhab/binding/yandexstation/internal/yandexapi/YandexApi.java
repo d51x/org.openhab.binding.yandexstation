@@ -25,10 +25,14 @@ import org.eclipse.jetty.util.Fields;
 @NonNullByDefault
 public interface YandexApi {
     void update() throws ApiException;
-    void initialize() throws ApiException;
-    ApiResponse sendGetRequest(String path, @NonNull String params, String token) throws ApiException;
-    ApiResponse sendGetRequest(String path, String token) throws ApiException;
-    ApiResponse sendPostRequest(String path, String data, String token) throws ApiException;
-    ApiResponse sendPostRequest(String path, Fields fields, String token) throws ApiException;
 
+    void initialize() throws ApiException;
+
+    ApiResponse sendGetRequest(String path, @NonNull String params, String token) throws ApiException;
+
+    ApiResponse sendGetRequest(String path, String token) throws ApiException;
+
+    ApiResponse sendPostRequest(String path, String data, String token) throws ApiException;
+
+    ApiResponse sendPostRequest(String path, Fields fields, String token) throws ApiException;
 }

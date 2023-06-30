@@ -1,62 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <thing:thing-descriptions bindingId="yandexstation"
-                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                          xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
-                          xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
-    <channel-group-type id="station">
-        <label>Station properties</label>
-        <description>Station properties</description>
-        <channels>
-            <channel id="aliceState" typeId="aliceState-channel"/>
-            <channel id="software_version" typeId="software_version-channel"/>
-            <channel id="playing" typeId="playing-channel"/>
-            <channel id="volume" typeId="volume-channel"/>
-        </channels>
-    </channel-group-type>
-    <channel-group-type id="speech">
-        <label>Speech commands</label>
-        <description>Speech commands</description>
-        <channels>
-            <channel id="voice" typeId="voice-channel"/>
-            <channel id="tts" typeId="tts-channel"/>
-        </channels>
-    </channel-group-type>
-    <channel-group-type id="volume">
-        <label>Volume Control</label>
-        <description>Volume control</description>
-        <channels>
-            <channel id="volume_control" typeId="volume-control-command"/>
-        </channels>
-    </channel-group-type>
-    <channel-group-type id="player-properties">
-        <label>Player properties</label>
-        <description>Player properties</description>
-        <channels>
-            <channel id="duration" typeId="duration-channel"/>
-            <channel id="progress" typeId="progress-channel"/>
-            <channel id="playlistId" typeId="playlistId-channel"/>
-            <channel id="playlistType" typeId="playlistType-channel"/>
-            <channel id="nextId" typeId="nextId-channel"/>
-            <channel id="prevId" typeId="prevId-channel"/>
-        </channels>
-    </channel-group-type>
-    <channel-group-type id="track-info">
-        <label>Track properties</label>
-        <description>Track properties</description>
-        <channels>
-            <channel id="trackId" typeId="trackId-channel"/>
-            <channel id="subtitle" typeId="subtitle-channel"/>
-            <channel id="title" typeId="title-channel"/>
-            <channel id="trackType" typeId="trackType-channel"/>
-            <channel id="coverURI" typeId="coverURI-channel"/>
-        </channels>
-    </channel-group-type>
-    <channel-group-type id="player-control">
-        <label>Player Control</label>
-        <description>Player control</description>
-        <channels>
-            <channel id="player_control" typeId="player-control-command"/>
-        </channels>
-    </channel-group-type>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+	<channel-group-type id="station">
+		<label>Station properties</label>
+		<description>Station properties</description>
+		<channels>
+			<channel id="aliceState" typeId="aliceState-channel"/>
+			<channel id="software_version" typeId="software_version-channel"/>
+			<channel id="playing" typeId="playing-channel"/>
+			<channel id="volume" typeId="volume-channel"/>
+		</channels>
+	</channel-group-type>
+	<channel-group-type id="speech">
+		<label>Speech commands</label>
+		<description>Speech commands</description>
+		<channels>
+			<channel id="voice" typeId="voice-channel"/>
+			<channel id="tts" typeId="tts-channel"/>
+		</channels>
+	</channel-group-type>
+	<channel-group-type id="volume">
+		<label>Volume Control</label>
+		<description>Volume control</description>
+		<channels>
+			<channel id="volume_control" typeId="volume-control-command"/>
+		</channels>
+	</channel-group-type>
+	<channel-group-type id="player-properties">
+		<label>Player properties</label>
+		<description>Player properties</description>
+		<channels>
+			<channel id="duration" typeId="duration-channel"/>
+			<channel id="progress" typeId="progress-channel"/>
+			<channel id="playlistId" typeId="playlistId-channel"/>
+			<channel id="playlistType" typeId="playlistType-channel"/>
+			<channel id="nextId" typeId="nextId-channel"/>
+			<channel id="prevId" typeId="prevId-channel"/>
+		</channels>
+	</channel-group-type>
+	<channel-group-type id="track-info">
+		<label>Track properties</label>
+		<description>Track properties</description>
+		<channels>
+			<channel id="trackId" typeId="trackId-channel"/>
+			<channel id="subtitle" typeId="subtitle-channel"/>
+			<channel id="title" typeId="title-channel"/>
+			<channel id="trackType" typeId="trackType-channel"/>
+			<channel id="coverURI" typeId="coverURI-channel"/>
+		</channels>
+	</channel-group-type>
+	<channel-group-type id="player-control">
+		<label>Player Control</label>
+		<description>Player control</description>
+		<channels>
+			<channel id="player_control" typeId="player-control-command"/>
+		</channels>
+	</channel-group-type>
 </thing:thing-descriptions>

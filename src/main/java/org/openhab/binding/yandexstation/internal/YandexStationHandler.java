@@ -12,7 +12,16 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import com.google.gson.Gson;
+import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
+import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -37,15 +46,7 @@ import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
-import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
+import com.google.gson.Gson;
 
 /**
  * The {@link YandexStationHandler} is responsible for handling commands, which are
@@ -71,7 +72,7 @@ public class YandexStationHandler extends BaseThingHandler {
     /**
      * Instantiates a new Yandex station handler.
      *
-     * @param thing      the thing
+     * @param thing the thing
      * @param apiFactory the api factory
      * @throws ApiException the api exception
      */
@@ -81,6 +82,7 @@ public class YandexStationHandler extends BaseThingHandler {
     }
 
     private Double prevVolume = 0.0;
+
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (CHANNEL_COMMAND_VOICE.getName().equals(channelUID.getId())) {
@@ -118,7 +120,7 @@ public class YandexStationHandler extends BaseThingHandler {
                     case NEXT:
                         sendPlayNextCommand();
                         break;
-                case PREVIOUS:
+                    case PREVIOUS:
                         sendPlayPrevCommand();
                         break;
                 }
@@ -153,9 +155,9 @@ public class YandexStationHandler extends BaseThingHandler {
             if (command instanceof StringType) {
                 if (command.toString().equals("MUTE")) {
                     volumeMute();
-                }  else if (command.toString().equals("UNMUTE")) {
+                } else if (command.toString().equals("UNMUTE")) {
                     volumeMute();
-                }else if (command.toString().equals("VOLUME_UP")) {
+                } else if (command.toString().equals("VOLUME_UP")) {
                     volumeUp();
                 } else if (command.toString().equals("VOLUME_DOWN")) {
                     volumeDown();
@@ -261,8 +263,7 @@ public class YandexStationHandler extends BaseThingHandler {
             @Override
             public void onError(Throwable cause) {
                 logger.error("Websocket error: {}", cause.getMessage());
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR,
-                        cause.getMessage());
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, cause.getMessage());
                 reconnectWebsocket();
             }
         });
@@ -412,7 +413,7 @@ public class YandexStationHandler extends BaseThingHandler {
                 updateState(CHANNEL_STATE_ALICE.getName(), new StringType(stationState.aliceState.toString()));
             }
             if (stationState.playing != null) {
-                updateState(CHANNEL_STATE_PLAYING.getName(), new StringType(stationState.playing?"PLAY":"PAUSE"));
+                updateState(CHANNEL_STATE_PLAYING.getName(), new StringType(stationState.playing ? "PLAY" : "PAUSE"));
             }
             if (stationState.volume != null) {
                 updateState(CHANNEL_VOLUME.getName(), new DecimalType(stationState.volume));
@@ -483,7 +484,7 @@ public class YandexStationHandler extends BaseThingHandler {
         super.updateProperty(name, value);
     }
 
-    private void receiveDeviceToken()  {
+    private void receiveDeviceToken() {
         // get device token from https://quasar.yandex.net/glagol/token
         try {
             ApiDeviceResponse device = api.findDevice(config.device_id, config.yandex_token);
@@ -506,7 +507,8 @@ public class YandexStationHandler extends BaseThingHandler {
             setThingProperties(device);
 
             if (Boolean.FALSE.equals(YandexStationTypes.isLocalApi(device.platform))) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Device doesn't support Local API");
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                        "Device doesn't support Local API");
                 throw new RuntimeException(String.format("Device %s not supported local api", device.name));
             }
         } catch (ApiException e) {
@@ -516,7 +518,8 @@ public class YandexStationHandler extends BaseThingHandler {
 
     private void setThingProperties(ApiDeviceResponse device) {
         Map<String, String> properties = new HashMap<>();
-        properties.put("Support Local API:", YandexStationTypes.isLocalApi(device.platform) ? "Supported" : "Not Supported");
+        properties.put("Support Local API:",
+                YandexStationTypes.isLocalApi(device.platform) ? "Supported" : "Not Supported");
         properties.put("Wifi SSID:", device.networkInfo.wifiSSID);
         properties.put("IP Address:", device.networkInfo.ipAdresses.get(0));
         properties.put("Platform:", device.platform);
