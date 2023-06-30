@@ -15,9 +15,9 @@
 package org.openhab.binding.yandexstation.internal.commands;
 
 import com.google.gson.annotations.SerializedName;
+
 /**
- * The {@link ServerActionPayload} is responsible for ServerActionPayload action, which are
- * sent to one of the channels.
+ * The {@link ServerActionPayload} is describing server action payload entity
  *
  * @author "Dmintry P (d51x)" - Initial contribution
  */

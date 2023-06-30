@@ -1,10 +1,28 @@
-package org.openhab.binding.yandexstation.internal.response;
+/*
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
+ *
+ *  See the NOTICE file(s) distributed with this work for additional
+ *  information.
+ *
+ * This program and the accompanying materials are made available under the
+ *  terms of the Eclipse Public License 2.0 which is available at
+ *  http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
 
-import com.google.gson.annotations.SerializedName;
+package org.openhab.binding.yandexstation.internal.response;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.annotations.SerializedName;
+
+/**
+ * The {@link YandexStationResponse} is describing api response with station state entity
+ *
+ * @author "Dmintry P (d51x)" - Initial contribution
+ */
 public class YandexStationResponse {
     @SerializedName("id")
     private String responseId;
@@ -12,7 +30,7 @@ public class YandexStationResponse {
     private String softwareVersion;
     private Long requestSentTime;
     private Long processingTime;
-    private String status; // SUCCESS - возможно, это ответ на команду
+    private String status;
     private YandexStationState state;
 
     private YandexStationResponseExtra extra;
@@ -101,5 +119,12 @@ public class YandexStationResponse {
 
     public void setUnSupportedFeatures(List<String> unSupportedFeatures) {
         this.unSupportedFeatures = unSupportedFeatures;
+    }
+
+    public class YandexStationResponseExtra {
+        public String appState;
+        public String environmentState;
+        public String watchedVideoState;
+        public String softwareVersion;
     }
 }

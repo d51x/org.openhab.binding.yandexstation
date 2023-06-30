@@ -1,7 +1,25 @@
+/*
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
+ *
+ *  See the NOTICE file(s) distributed with this work for additional
+ *  information.
+ *
+ * This program and the accompanying materials are made available under the
+ *  terms of the Eclipse Public License 2.0 which is available at
+ *  http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 package org.openhab.binding.yandexstation.internal.response;
 
 import java.util.Map;
 
+/**
+ * The {@link YandexStationPlayerState} is describing Player State Entity
+ *
+ * @author "Dmintry P (d51x)" - Initial contribution
+ */
 public class YandexStationPlayerState {
     private Double duration;
     private Boolean hasNext;
@@ -14,9 +32,9 @@ public class YandexStationPlayerState {
     private String playlistId;
     private String playlistType;
     private Double progress;
-    private String subtitle;  //FENDA
-    private String title;  //Sunrise Falling
-    private String type;  //Track
+    private String subtitle;
+    private String title;
+    private String type;
     private YandexStationPlayerStateExtra extra;
     private YandexStationPlayerEntity entityInfo;
 
@@ -152,9 +170,10 @@ public class YandexStationPlayerState {
         public String id;
         public String repeatMode;
         public String type;
-        public Map<String, String> next;  // id and type
-        public Map<String, String> prev;  // id and type
+        public Map<String, String> next;
+        public Map<String, String> prev;
     }
+
     public class YandexStationPlayerStateExtra {
         public String coverURI;
         public String requestID;

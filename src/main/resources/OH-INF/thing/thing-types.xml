@@ -26,41 +26,10 @@
 		</channel-groups>
 
 		<config-description>
-			<parameter name="hostname" type="text" required="true">
-				<context>network-address</context>
-				<label>IP Address</label>
-				<description>IP address of the Yandex device</description>
-			</parameter>
 			<parameter name="device_id" type="text" required="true">
 				<context>service</context>
 				<label>Device Id</label>
 				<description>Identifier of the yandex device</description>
-			</parameter>
-			<parameter name="platform" type="text" required="true">
-				<context>service</context>
-				<label>Platform</label>
-				<!--<default>yandexmicro</default>-->
-				<options>
-					<option value="yandexstation">Яндекс Станция</option>
-					<option value="yandexstation_2">Яндекс Станция Макс</option>
-					<option value="yandexmidi">Яндекс Станция 2</option>
-					<option value="yandexmini">Яндекс Станция Мини</option>
-					<option value="yandexmini_2">Яндекс Станция Мини 2</option>
-					<option value="yandexmicro">Яндекс Станция Лайт</option>
-					<option value="yandexmodule">Яндекс Модуль</option>
-					<option value="yandexmodule_2">Яндекс Модуль 2</option>
-					<option value="yandex_tv">Яндекс ТВ</option>
-					<!--<option value="lightcomm">DEXP Smartbox</option>-->
-					<!--<option value="elari_a98">Elari SmartBeat</option>-->
-					<!--<option value="linkplay_a98">IRBIS A</option>-->
-					<!--<option value="wk7y">LG XBOOM AI ThinQ WK7Y</option>-->
-					<!--<option value="prestigio_smart_mate">Prestigio Smartmate</option>-->
-					<option value="jbl_link_music">JBL Link Music</option>
-					<option value="jbl_link_portable">JBL Link Portable</option>
-				</options>
-				<limitToOptions>false</limitToOptions>
-
-				<description>Platform of the yandex device</description>
 			</parameter>
 			<parameter name="yandex_token" type="text" required="true">
 				<context>password</context>
@@ -77,13 +46,45 @@
 					]]>
 				</description>
 			</parameter>
-			<parameter name="device_token" type="text">
+			<!--
+				<parameter name="hostname" type="text" required="false">
+				<context>network-address</context>
+				<label>IP Address</label>
+				<description>IP address of the Yandex device</description>
+				<advanced>true</advanced>
+				</parameter>
+			-->
+			<!--
+				<parameter name="platform" type="text" required="false">
+				<context>service</context>
+				<label>Platform</label>
+				<options>
+				<option value="yandexstation">Яндекс Станция</option>
+				<option value="yandexstation_2">Яндекс Станция Макс</option>
+				<option value="yandexmidi">Яндекс Станция 2</option>
+				<option value="yandexmini">Яндекс Станция Мини</option>
+				<option value="yandexmini_2">Яндекс Станция Мини 2</option>
+				<option value="yandexmicro">Яндекс Станция Лайт</option>
+				<option value="yandexmodule">Яндекс Модуль</option>
+				<option value="yandexmodule_2">Яндекс Модуль 2</option>
+				<option value="yandex_tv">Яндекс ТВ</option>
+				<option value="jbl_link_music">JBL Link Music</option>
+				<option value="jbl_link_portable">JBL Link Portable</option>
+				</options>
+				<limitToOptions>false</limitToOptions>
+				<description>Platform of the yandex device</description>
+				<advanced>true</advanced>
+				</parameter>
+			-->
+			<!--
+				<parameter name="device_token" type="text">
 				<context>password</context>
 				<label>Device Token</label>
-				<description>Device token to access the device. No need to fill it yourself. It will be filled automatically. But you can do it yourself</description>
+				<description>Device token to access the device. No need to fill it yourself. It will be filled automatically. But you
+				can do it yourself</description>
 				<advanced>true</advanced>
-
-			</parameter>
+				</parameter>
+			-->
 			<parameter name="reconnectInterval" type="integer" unit="s" min="15">
 				<label>Reconnect Interval</label>
 				<description>Interval the device is reconnected in sec after lose connection.</description>

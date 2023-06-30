@@ -14,12 +14,12 @@
 
 package org.openhab.binding.yandexstation.internal.commands;
 
+import java.util.Date;
+import java.util.UUID;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
-
-import java.util.Date;
-import java.util.UUID;
 
 /**
  * The {@link YandexStationSendPacket} is responsible for YandexStationCommandTypes action, which are

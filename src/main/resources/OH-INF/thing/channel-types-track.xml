@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <thing:thing-descriptions bindingId="yandexstation"
-                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                          xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
-                          xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
-    <channel-type id="trackId-channel" advanced="true">
-        <item-type>Number</item-type>
-        <label>Track Id</label>
-        <description>Yandex track id</description>
-        <category>if:mdi:identifier</category>
-        <state readOnly="true"/>
-    </channel-type>
-    <channel-type id="subtitle-channel">
-        <item-type>String</item-type>
-        <label>Track SubTitle</label>
-        <description></description>
-        <category>if:mdi:account-music-outline</category>
-        <state readOnly="true"/>
-    </channel-type>
-    <channel-type id="title-channel">
-        <item-type>String</item-type>
-        <label>Track Title</label>
-        <description></description>
-        <category>if:mdi:subtitles-outline</category>
-        <state readOnly="true"/>
-    </channel-type>
-    <channel-type id="trackType-channel" advanced="true">
-        <item-type>String</item-type>
-        <label>Track Type</label>
-        <description></description>
-        <category>if:mdi:select</category>
-        <state readOnly="true"/>
-    </channel-type>
-    <channel-type id="coverURI-channel">
-        <item-type>String</item-type>
-        <label>Cover URI</label>
-        <description></description>
-        <category>if:mdi:panorama-variant-outline</category>
-        <state readOnly="true"/>
-    </channel-type>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+	<channel-type id="trackId-channel" advanced="true">
+		<item-type>Number</item-type>
+		<label>Track Id</label>
+		<description>Yandex track id</description>
+		<category>if:mdi:identifier</category>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="subtitle-channel">
+		<item-type>String</item-type>
+		<label>Track SubTitle</label>
+		<description></description>
+		<category>if:mdi:account-music-outline</category>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="title-channel">
+		<item-type>String</item-type>
+		<label>Track Title</label>
+		<description></description>
+		<category>if:mdi:subtitles-outline</category>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="trackType-channel" advanced="true">
+		<item-type>String</item-type>
+		<label>Track Type</label>
+		<description></description>
+		<category>if:mdi:select</category>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="coverURI-channel">
+		<item-type>String</item-type>
+		<label>Cover URI</label>
+		<description></description>
+		<category>if:mdi:panorama-variant-outline</category>
+		<state readOnly="true"/>
+	</channel-type>
 
 </thing:thing-descriptions>

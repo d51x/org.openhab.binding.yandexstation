@@ -1,16 +1,18 @@
 /**
  * Copyright (c) 2010-2023 Contributors to the openHAB project
- *
+ * <p>
  * See the NOTICE file(s) distributed with this work for additional
  * information.
- *
+ * <p>
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
  * http://www.eclipse.org/legal/epl-2.0
- *
+ * <p>
  * SPDX-License-Identifier: EPL-2.0
  */
 package org.openhab.binding.yandexstation.internal;
+
+import java.io.IOException;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -19,8 +21,6 @@ import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * The {@link YandexStationWebsocket} is responsible for the Websocket Connection
@@ -57,7 +57,7 @@ public class YandexStationWebsocket {
     @OnWebSocketError
     public void onError(Throwable cause) {
         logger.error("YandexStationWebSocketError {}", cause.getMessage());
-        if(websocketHandler != null) {
+        if (websocketHandler != null) {
             websocketHandler.onError(cause);
         }
     }
@@ -66,7 +66,6 @@ public class YandexStationWebsocket {
     public void onClose(int statusCode, String reason) throws Exception {
         if (statusCode != StatusCode.NORMAL) {
             logger.error("YandexStationWebSocket Connection closed: {} - {}", statusCode, reason);
-            // 4000 - Invalid token - по питанию была перезагрузка
         }
 
         if (session != null) {

@@ -34,6 +34,7 @@ public enum YandexStationCommandTypes {
 
     private String command;
     private String extra;
+
     YandexStationCommandTypes(String command) {
         this.command = command;
         this.extra = null;

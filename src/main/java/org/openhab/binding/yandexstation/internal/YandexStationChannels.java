@@ -1,7 +1,26 @@
+
+/*
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
+ *
+ *  See the NOTICE file(s) distributed with this work for additional
+ *  information.
+ *
+ * This program and the accompanying materials are made available under the
+ *  terms of the Eclipse Public License 2.0 which is available at
+ *  http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 package org.openhab.binding.yandexstation.internal;
 
 import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.*;
 
+/**
+ * The {@link YandexStationChannels} is responsible for channels definition.
+ *
+ * @author "Dmintry P (d51x)" - Initial contribution
+ */
 public enum YandexStationChannels {
     CHANNEL_STATE_ALICE("aliceState", CHANNEL_GROUP_STATION),
     CHANNEL_STATE_SOFTWARE("sw_version", CHANNEL_GROUP_STATION),
@@ -21,8 +40,8 @@ public enum YandexStationChannels {
     CHANNEL_STATE_TRACK_SUBTITLE("subtitle", CHANNEL_GROUP_TRACK),
     CHANNEL_STATE_TRACK_TITLE("title", CHANNEL_GROUP_TRACK),
     CHANNEL_STATE_TRACK_TYPE("trackType", CHANNEL_GROUP_TRACK),
-    CHANNEL_STATE_TRACK_COVER_URI("coverURI", CHANNEL_GROUP_TRACK)
-    ;
+    CHANNEL_STATE_TRACK_COVER_URI("coverURI", CHANNEL_GROUP_TRACK);
+
     private String channelId;
     private String groupId;
 
