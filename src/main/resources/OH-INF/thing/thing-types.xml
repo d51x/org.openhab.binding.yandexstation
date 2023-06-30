@@ -14,7 +14,7 @@
 
 		<label>YandexStation</label>
 		<description>YandexStation thing for YandexStation Binding</description>
-
+		<category>Speaker</category>
 		<channel-groups>
 			<channel-group id="station" typeId="station"/>
 			<channel-group id="speech" typeId="speech"/>

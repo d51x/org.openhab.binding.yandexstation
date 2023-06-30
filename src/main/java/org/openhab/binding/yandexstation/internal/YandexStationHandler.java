@@ -21,7 +21,6 @@ import org.openhab.binding.yandexstation.internal.commands.*;
 import org.openhab.binding.yandexstation.internal.response.YandexStationPlayerState;
 import org.openhab.binding.yandexstation.internal.response.YandexStationResponse;
 import org.openhab.binding.yandexstation.internal.response.YandexStationState;
-import org.openhab.core.library.items.PlayerItem;
 import org.openhab.core.library.types.*;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -59,7 +58,7 @@ public class YandexStationHandler extends BaseThingHandler {
     private YandexStationWebsocket yandexStationWebsocket = new YandexStationWebsocket();
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     private @Nullable URI websocketAddress;
-    public String receivedMessage = "";
+
 
     private YandexStationState stationState = new YandexStationState();
 
@@ -158,6 +157,29 @@ public class YandexStationHandler extends BaseThingHandler {
         initJob = connect(0);
     }
 
+    @Override
+    public void dispose() {
+        super.dispose();
+
+        //disposeWebsocketPollingJob();
+        //disposeWebSocketReconnectionPollingJob();
+        try {
+            webSocketClient.stop();
+            Future<?> job = initJob;
+            if (job != null) {
+                job.cancel(true);
+                initJob = null;
+            }
+        } catch (Exception e) {
+            logger.error("Could not stop webSocketClient,  message {}", e.getMessage());
+        }
+    }
+
+    @Override
+    protected void updateState(String channelID, State state) {
+        super.updateState(channelID, state);
+    }
+
     private Future<?> connect(int wait) {
         logger.warn("Try connect after: {} sec", wait);
         return scheduler.schedule(() -> {
@@ -243,24 +265,6 @@ public class YandexStationHandler extends BaseThingHandler {
             return false;
         }
         //return true;
-    }
-
-    @Override
-    public void dispose() {
-        super.dispose();
-
-        //disposeWebsocketPollingJob();
-        //disposeWebSocketReconnectionPollingJob();
-        try {
-            webSocketClient.stop();
-            Future<?> job = initJob;
-            if (job != null) {
-                job.cancel(true);
-                initJob = null;
-            }
-        } catch (Exception e) {
-            logger.error("Could not stop webSocketClient,  message {}", e.getMessage());
-        }
     }
 
     private void reconnectWebsocket() {
@@ -462,8 +466,5 @@ public class YandexStationHandler extends BaseThingHandler {
             }
         }
     }
-    @Override
-    protected void updateState(String channelID, State state) {
-        super.updateState(channelID, state);
-    }
+
 }
