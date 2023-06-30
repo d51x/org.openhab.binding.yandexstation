@@ -1,3 +1,16 @@
+/*
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
+ *
+ *  See the NOTICE file(s) distributed with this work for additional
+ *  information.
+ *
+ * This program and the accompanying materials are made available under the
+ *  terms of the Eclipse Public License 2.0 which is available at
+ *  http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
 import com.google.gson.*;
@@ -17,11 +30,15 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * The {@link YandexApiImpl} is describing implementaion of api interface.
+ *
+ * @author "Dmintry P (d51x)" - Initial contribution
+ */
 @NonNullByDefault
 public class YandexApiImpl  implements YandexApi {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -117,7 +134,7 @@ public class YandexApiImpl  implements YandexApi {
     }
 
     public String getDeviceToken(String yandexToken, String device_id, String platform) throws ApiException {
-        logger.info("Try to get device token for {}", platform);
+        logger.debug("Try to get device token for {}", platform);
         StringBuilder params = new StringBuilder();
         params.append("device_id=");
         params.append(device_id);
@@ -127,7 +144,7 @@ public class YandexApiImpl  implements YandexApi {
             ApiResponse response = sendGetRequest(API_PATH_DEVICE_TOKEN, params.toString(), yandexToken);
             if (response.httpCode == 200) {
                 ApiTokenResponse tokenResponse = new Gson().fromJson(response.response, ApiTokenResponse.class);
-                logger.info("Device token is: {}", tokenResponse.token);
+                logger.debug("Device token is: {}", tokenResponse.token);
                 return tokenResponse.token;
             } else {
                 throw new ApiException(String.format("YandexApi get token error: httpCode = %d", response.httpCode));
@@ -137,8 +154,15 @@ public class YandexApiImpl  implements YandexApi {
         }
     }
 
+    /**
+     * Gets devices.
+     *
+     * @param yandexToken the yandex token
+     * @return the devices
+     * @throws ApiException the api exception
+     */
     public List<ApiDeviceResponse> getDevices(@NonNull String yandexToken) throws ApiException {
-        logger.info("Try to get device list");
+        logger.debug("Try to get device list");
         try {
             ApiResponse response = sendGetRequest(API_PATH_DEVICE_LIST, yandexToken);
             if (response.httpCode == 200) {
@@ -146,9 +170,8 @@ public class YandexApiImpl  implements YandexApi {
                 JsonArray deviceList = json.getAsJsonArray("devices");
                 Type listType = new TypeToken<ArrayList<ApiDeviceResponse>>(){}.getType();
                 List<ApiDeviceResponse> devices = new Gson().fromJson(deviceList, listType);
-                logger.info("Device list is: {}", devices);
+                logger.debug("Device list is: {}", devices);
                 if (!devices.isEmpty()) {
-
                     return devices;
                 } else {
                     return new ArrayList<>();

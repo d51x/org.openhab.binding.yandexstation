@@ -26,7 +26,6 @@ public class YandexStationBindingConstants {
 
     private static final String BINDING_ID = "yandexstation";
 
-    // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_STATION = new ThingTypeUID(BINDING_ID, "station");
 
     public static final String CHANNEL_GROUP_STATION = "station";
@@ -36,12 +35,7 @@ public class YandexStationBindingConstants {
     public static final String CHANNEL_GROUP_PLAYER_CONTROL = "player-control";
     public static final String CHANNEL_GROUP_TRACK = "track-info";
 
-    // List of all Channel ids
-
     public static final String CHANNEL_COMMAND_CHANGE_VOLUME = "volume_change";
-
-
-
 
     public static final String WSS_PORT = "1961";
 

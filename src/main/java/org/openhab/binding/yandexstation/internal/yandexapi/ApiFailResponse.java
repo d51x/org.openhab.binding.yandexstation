@@ -1,14 +1,31 @@
+/*
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
+ *
+ *  See the NOTICE file(s) distributed with this work for additional
+ *  information.
+ *
+ * This program and the accompanying materials are made available under the
+ *  terms of the Eclipse Public License 2.0 which is available at
+ *  http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
 import com.google.gson.annotations.SerializedName;
-
+/**
+ * The {@link ApiFailResponse} is describing api fail response.
+ *
+ * @author "Dmintry P (d51x)" - Initial contribution
+ */
 public class ApiFailResponse extends ApiResponse {
     /**
      * The message text.
      */
     @SerializedName("message")
-    public String message;  // AUTH_TOKEN_INVALID or
-                            // Unknown device LP000000000000120345000067089123
+    public String message;
+
     /**
      * The Status.
      */

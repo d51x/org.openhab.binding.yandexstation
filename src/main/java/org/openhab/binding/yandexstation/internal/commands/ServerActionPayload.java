@@ -16,6 +16,11 @@ package org.openhab.binding.yandexstation.internal.commands;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * The {@link ServerActionPayload} is describing server action payload entity
+ *
+ * @author "Dmintry P (d51x)" - Initial contribution
+ */
 public class ServerActionPayload {
 
     @SerializedName("form_update")

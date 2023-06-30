@@ -1,21 +1,18 @@
-/**
+/*
  * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
- * See the NOTICE file(s) distributed with this work for additional
- * information.
+ *  See the NOTICE file(s) distributed with this work for additional
+ *  information.
  *
  * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0
+ *  terms of the Eclipse Public License 2.0 which is available at
+ *  http://www.eclipse.org/legal/epl-2.0
  *
  * SPDX-License-Identifier: EPL-2.0
  */
 package org.openhab.binding.yandexstation.internal;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.internal.LinkedTreeMap;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -24,7 +21,10 @@ import org.openhab.binding.yandexstation.internal.commands.*;
 import org.openhab.binding.yandexstation.internal.response.YandexStationPlayerState;
 import org.openhab.binding.yandexstation.internal.response.YandexStationResponse;
 import org.openhab.binding.yandexstation.internal.response.YandexStationState;
-import org.openhab.binding.yandexstation.internal.yandexapi.*;
+import org.openhab.binding.yandexstation.internal.yandexapi.ApiDeviceResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.*;
 import org.openhab.core.thing.ChannelUID;
@@ -39,10 +39,11 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.*;
 import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
 import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
 
@@ -67,6 +68,13 @@ public class YandexStationHandler extends BaseThingHandler {
 
     private YandexStationState stationState = new YandexStationState();
 
+    /**
+     * Instantiates a new Yandex station handler.
+     *
+     * @param thing      the thing
+     * @param apiFactory the api factory
+     * @throws ApiException the api exception
+     */
     public YandexStationHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
         super(thing);
         this.api = (YandexApiImpl) apiFactory.getApi();
@@ -93,7 +101,6 @@ public class YandexStationHandler extends BaseThingHandler {
                 sendTrackPositionCommand(((DecimalType) command).intValue());
             }
         } else if (CHANNEL_PLAYER_CONTROL.getName().equals(channelUID.getId())) {
-            //if (command instanceof PlayPauseType cmd) {
             if (command instanceof PlayPauseType) {
                 PlayPauseType cmd = (PlayPauseType) command;
                 switch (cmd) {
@@ -160,10 +167,7 @@ public class YandexStationHandler extends BaseThingHandler {
     @Override
     public void initialize() {
         config = getConfigAs(YandexStationConfiguration.class);
-
         updateStatus(ThingStatus.UNKNOWN);
-
-        // Example for background initialization:
         initJob = connect(0);
     }
 
@@ -171,8 +175,6 @@ public class YandexStationHandler extends BaseThingHandler {
     public void dispose() {
         super.dispose();
 
-        //disposeWebsocketPollingJob();
-        //disposeWebSocketReconnectionPollingJob();
         try {
             webSocketClient.stop();
             Future<?> job = initJob;
@@ -202,8 +204,6 @@ public class YandexStationHandler extends BaseThingHandler {
                     receiveDeviceToken();
                 }
                 boolean thingReachable = connectStation(config);
-                logger.warn("thingReachable: {}", thingReachable);
-                // when done do:
                 if (thingReachable) {
                     updateStatus(ThingStatus.ONLINE);
                 }
@@ -226,22 +226,22 @@ public class YandexStationHandler extends BaseThingHandler {
             public void onConnect(boolean connected) {
                 if (connected) {
                     updateStatus(ThingStatus.ONLINE);
-                    logger.info("websocket connected");
+                    logger.debug("websocket connected");
 
                     ping(config.device_token);
                     requestSoftwareVersion(config.device_token);
                 } else {
-                    logger.error("websocket connection failed");
+                    logger.debug("websocket connection failed");
                     updateStatus(ThingStatus.OFFLINE);
                 }
             }
 
             @Override
             public void onClose(int statusCode, String reason) throws Exception {
-                logger.info("Websocket connection closed");
+                logger.debug("Websocket connection closed");
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR,
                         "Connection closed: " + statusCode + " - " + reason);
-                //disposeWebsocketPollingJob();
+
                 if (statusCode == 4000) {
                     receiveDeviceToken();
                 }
@@ -263,7 +263,6 @@ public class YandexStationHandler extends BaseThingHandler {
                 logger.error("Websocket error: {}", cause.getMessage());
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR,
                         cause.getMessage());
-                //disposeWebsocketPollingJob();
                 reconnectWebsocket();
             }
         });
@@ -271,20 +270,15 @@ public class YandexStationHandler extends BaseThingHandler {
         try {
             webSocketClient.start();
             Future<?> session = webSocketClient.connect(yandexStationWebsocket, websocketAddress, clientUpgradeRequest);
-            if (session.isDone()) {
-                return true;
-            } else {
-                return false;
-            }
+            return session.isDone();
         } catch (Exception e) {
             logger.error("Connection error {}", e.getMessage());
             return false;
         }
-        //return true;
     }
 
     private void reconnectWebsocket() {
-        logger.warn("Try to reconnect: {}", initJob);
+        logger.debug("Try to reconnect");
         Future<?> job = initJob;
         if (job != null) {
             job.cancel(true);
@@ -296,7 +290,7 @@ public class YandexStationHandler extends BaseThingHandler {
     private void sendVoiceCommand(String text) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SENT_TEXT, text);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
-        logger.info("Send packet: {}", yandexPacket);
+        logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
@@ -309,21 +303,21 @@ public class YandexStationHandler extends BaseThingHandler {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SERVER_ACTION, event);
 
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
-        logger.info("Send packet: {}", yandexPacket);
+        logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
     private void sendSetVolumeCommand(Double volume) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SET_VOLUME, volume);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
-        logger.info("Send packet: {}", yandexPacket);
+        logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
     private void sendTrackPositionCommand(Integer position) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_REWIND, position);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
-        logger.info("Send packet: {}", yandexPacket);
+        logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
@@ -359,58 +353,55 @@ public class YandexStationHandler extends BaseThingHandler {
     }
 
     private void fastRewind() {
-        Double position = stationState.playerState.getProgress() - 15.0;
+        double position = stationState.playerState.getProgress() - 15.0;
         if (position > 0) {
-            sendTrackPositionCommand(position.intValue());
+            sendTrackPositionCommand((int) position);
         }
     }
 
     private void sendPlayNextCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_NEXT);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
-        logger.info("Send packet: {}", yandexPacket);
+        logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
     private void sendPlayPrevCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_PREV);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
-        logger.info("Send packet: {}", yandexPacket);
+        logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
     private void sendPlayCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_PLAY);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
-        logger.info("Send packet: {}", yandexPacket);
+        logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
     private void sendStopCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_STOP);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
-        logger.info("Send packet: {}", yandexPacket);
+        logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
     private void ping(String device_token) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_PING);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(device_token, sendCommand);
-        logger.info("Send packet: {}", yandexPacket);
+        logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
     private void requestSoftwareVersion(String device_token) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SW_VERSION);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(device_token, sendCommand);
-        logger.info("Send packet: {}", yandexPacket);
+        logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
     private void processReceivedData(YandexStationResponse response) {
-        if (response == null) {
-          logger.error("Empty response from socket");
-        }
         if (response.getSoftwareVersion() != null) {
             updateState(CHANNEL_STATE_SOFTWARE.getName(), new StringType(response.getSoftwareVersion()));
             updateProperty("Software Version:", response.getSoftwareVersion());
@@ -424,7 +415,7 @@ public class YandexStationHandler extends BaseThingHandler {
                 updateState(CHANNEL_STATE_PLAYING.getName(), new StringType(stationState.playing?"PLAY":"PAUSE"));
             }
             if (stationState.volume != null) {
-                updateState(CHANNEL_VOLUME.getName(), new DecimalType(stationState.volume.doubleValue()));
+                updateState(CHANNEL_VOLUME.getName(), new DecimalType(stationState.volume));
             }
             if (stationState.playing != null) {
                 updateState(CHANNEL_STATE_PLAYING.getName(), OnOffType.from(stationState.playing));
@@ -434,51 +425,49 @@ public class YandexStationHandler extends BaseThingHandler {
     }
 
     private void processPlayerState(YandexStationPlayerState playerState) {
-        if (playerState != null) {
-            if (playerState.getDuration() != null) {
-                updateState(CHANNEL_STATE_TRACK_DURATION.getName(), new DecimalType(playerState.getDuration()));
+        if (playerState.getDuration() != null) {
+            updateState(CHANNEL_STATE_TRACK_DURATION.getName(), new DecimalType(playerState.getDuration()));
+        }
+        if (playerState.getHasProgressBar() != null && playerState.getHasProgressBar()
+                && playerState.getProgress() != null) {
+            updateState(CHANNEL_STATE_TRACK_POSITION.getName(), new DecimalType(playerState.getProgress()));
+        }
+        if (playerState.getPlaylistId() != null) {
+            updateState(CHANNEL_STATE_TRACK_PLAYLIST_ID.getName(), new StringType(playerState.getPlaylistId()));
+        }
+        if (playerState.getId() != null) {
+            updateState(CHANNEL_STATE_TRACK_ID.getName(), new DecimalType(playerState.getId()));
+        }
+        if (playerState.getPlaylistType() != null) {
+            updateState(CHANNEL_STATE_PLAYLIST_TYPE.getName(), new StringType(playerState.getPlaylistType()));
+        }
+        if (playerState.getSubtitle() != null) {
+            updateState(CHANNEL_STATE_TRACK_SUBTITLE.getName(), new StringType(playerState.getSubtitle()));
+        }
+        if (playerState.getTitle() != null) {
+            updateState(CHANNEL_STATE_TRACK_TITLE.getName(), new StringType(playerState.getTitle()));
+        }
+        if (playerState.getType() != null) {
+            updateState(CHANNEL_STATE_TRACK_TYPE.getName(), new StringType(playerState.getType()));
+        }
+        if (playerState.getExtra() != null) {
+            if (playerState.getExtra().coverURI != null) {
+                updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(), new StringType(playerState.getExtra().coverURI));
             }
-            if (playerState.getHasProgressBar() != null && playerState.getHasProgressBar()
-                    && playerState.getProgress() != null) {
-                updateState(CHANNEL_STATE_TRACK_POSITION.getName(), new DecimalType(playerState.getProgress()));
-            }
-            if (playerState.getPlaylistId() != null) {
-                updateState(CHANNEL_STATE_TRACK_PLAYLIST_ID.getName(), new StringType(playerState.getPlaylistId()));
-            }
-            if (playerState.getId() != null) {
-                updateState(CHANNEL_STATE_TRACK_ID.getName(), new DecimalType(playerState.getId()));
-            }
-            if (playerState.getPlaylistType() != null) {
-                updateState(CHANNEL_STATE_PLAYLIST_TYPE.getName(), new StringType(playerState.getPlaylistType()));
-            }
-            if (playerState.getSubtitle() != null) {
-                updateState(CHANNEL_STATE_TRACK_SUBTITLE.getName(), new StringType(playerState.getSubtitle()));
-            }
-            if (playerState.getTitle() != null) {
-                updateState(CHANNEL_STATE_TRACK_TITLE.getName(), new StringType(playerState.getTitle()));
-            }
-            if (playerState.getType() != null) {
-                updateState(CHANNEL_STATE_TRACK_TYPE.getName(), new StringType(playerState.getType()));
-            }
-            if (playerState.getExtra() != null) {
-                if (playerState.getExtra().coverURI != null) {
-                    updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(), new StringType(playerState.getExtra().coverURI));
+        }
+        if (playerState.getEntityInfo() != null) {
+            if (playerState.getEntityInfo().next != null && !playerState.getEntityInfo().next.isEmpty()
+                    && playerState.getEntityInfo().next.containsKey("id")) {
+                String sId = playerState.getEntityInfo().next.get("id");
+                if (sId != null) {
+                    updateState(CHANNEL_STATE_TRACK_NEXT_ID.getName(), new DecimalType(DecimalType.valueOf(sId)));
                 }
             }
-            if (playerState.getEntityInfo() != null) {
-                if (playerState.getEntityInfo().next != null && !playerState.getEntityInfo().next.isEmpty()
-                        && playerState.getEntityInfo().next.containsKey("id")) {
-                    String sId = playerState.getEntityInfo().next.get("id");
-                    if (sId != null) {
-                        updateState(CHANNEL_STATE_TRACK_NEXT_ID.getName(), new DecimalType(DecimalType.valueOf(sId)));
-                    }
-                }
-                if (playerState.getEntityInfo().prev != null && !playerState.getEntityInfo().prev.isEmpty()
-                        && playerState.getEntityInfo().prev.containsKey("id")) {
-                    String sId = playerState.getEntityInfo().prev.get("id");
-                    if (sId != null) {
-                        updateState(CHANNEL_STATE_TRACK_PREV_ID.getName(), new DecimalType(DecimalType.valueOf(sId)));
-                    }
+            if (playerState.getEntityInfo().prev != null && !playerState.getEntityInfo().prev.isEmpty()
+                    && playerState.getEntityInfo().prev.containsKey("id")) {
+                String sId = playerState.getEntityInfo().prev.get("id");
+                if (sId != null) {
+                    updateState(CHANNEL_STATE_TRACK_PREV_ID.getName(), new DecimalType(DecimalType.valueOf(sId)));
                 }
             }
         }
@@ -504,24 +493,17 @@ public class YandexStationHandler extends BaseThingHandler {
             config.device_token = token;
 
             config.hostname = device.networkInfo.ipAdresses.get(0);
-            config.port = String.valueOf(device.networkInfo.port); //double
+            config.port = String.valueOf(device.networkInfo.port);
 
             Configuration configuration = thing.getConfiguration();
-            logger.info("Configuration is: {}", configuration);
             configuration.put("device_token", token);
             configuration.put("platform", device.platform);
             configuration.put("hostname", config.hostname);
             configuration.put("port", config.port);
-
             configuration.put("server_certificate", device.glagol.security.serverCertificate);
             configuration.put("server_private_key", device.glagol.security.serverPrivateKey);
 
-            updateProperty("Support Local API:", YandexStationTypes.isLocalApi(device.platform) ? "Supported" : "Not Supported");
-            updateProperty("Wifi SSID:", device.networkInfo.wifiSSID);
-            updateProperty("IP Address:", config.hostname);
-            updateProperty("Platform:", device.platform);
-            updateProperty("Device Name:", YandexStationTypes.getNameByPlatform(device.platform));
-            updateProperty("Friendly Name:", device.name);
+            setThingProperties(device);
 
             if (Boolean.FALSE.equals(YandexStationTypes.isLocalApi(device.platform))) {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Device doesn't support Local API");
@@ -530,5 +512,16 @@ public class YandexStationHandler extends BaseThingHandler {
         } catch (ApiException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
         }
+    }
+
+    private void setThingProperties(ApiDeviceResponse device) {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("Support Local API:", YandexStationTypes.isLocalApi(device.platform) ? "Supported" : "Not Supported");
+        properties.put("Wifi SSID:", device.networkInfo.wifiSSID);
+        properties.put("IP Address:", device.networkInfo.ipAdresses.get(0));
+        properties.put("Platform:", device.platform);
+        properties.put("Device Name:", YandexStationTypes.getNameByPlatform(device.platform));
+        properties.put("Friendly Name:", device.name);
+        updateProperties(properties);
     }
 }

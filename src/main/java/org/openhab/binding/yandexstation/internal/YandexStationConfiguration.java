@@ -24,12 +24,8 @@ import static org.openhab.binding.yandexstation.internal.YandexStationBindingCon
 @NonNullByDefault
 public class YandexStationConfiguration {
 
-    /**
-     * Sample configuration parameters. Replace with your own.
-     */
     public String hostname = "";
     public String port = WSS_PORT;
-    public String password = "";
     public String platform = "";
     public String device_token = "";
     public String device_id = "";
