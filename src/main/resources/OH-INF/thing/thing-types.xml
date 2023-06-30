@@ -28,18 +28,61 @@
 		<config-description>
 			<parameter name="hostname" type="text" required="true">
 				<context>network-address</context>
-				<label>Hostname</label>
-				<description>Hostname or IP address of the device</description>
+				<label>IP Address</label>
+				<description>IP address of the Yandex device</description>
 			</parameter>
-			<parameter name="password" type="text" required="true">
+			<parameter name="device_id" type="text" required="true">
+				<context>service</context>
+				<label>Device Id</label>
+				<description>Identifier of the yandex device</description>
+			</parameter>
+			<parameter name="platform" type="text" required="true">
+				<context>service</context>
+				<label>Platform</label>
+				<!--<default>yandexmicro</default>-->
+				<options>
+					<option value="yandexstation">Яндекс Станция</option>
+					<option value="yandexstation_2">Яндекс Станция Макс</option>
+					<option value="yandexmidi">Яндекс Станция 2</option>
+					<option value="yandexmini">Яндекс Станция Мини</option>
+					<option value="yandexmini_2">Яндекс Станция Мини 2</option>
+					<option value="yandexmicro">Яндекс Станция Лайт</option>
+					<option value="yandexmodule">Яндекс Модуль</option>
+					<option value="yandexmodule_2">Яндекс Модуль 2</option>
+					<option value="yandex_tv">Яндекс ТВ</option>
+					<!--<option value="lightcomm">DEXP Smartbox</option>-->
+					<!--<option value="elari_a98">Elari SmartBeat</option>-->
+					<!--<option value="linkplay_a98">IRBIS A</option>-->
+					<!--<option value="wk7y">LG XBOOM AI ThinQ WK7Y</option>-->
+					<!--<option value="prestigio_smart_mate">Prestigio Smartmate</option>-->
+					<option value="jbl_link_music">JBL Link Music</option>
+					<option value="jbl_link_portable">JBL Link Portable</option>
+				</options>
+				<limitToOptions>false</limitToOptions>
+
+				<description>Platform of the yandex device</description>
+			</parameter>
+			<parameter name="yandex_token" type="text" required="true">
 				<context>password</context>
-				<label>Password</label>
-				<description>Password to access the device</description>
+				<label>Yandex Token</label>
+				<description>
+					<![CDATA[
+						Yandex token to access the device.<br/>
+						<b>How to get Yandex token?</b><br/><br/>
+						<ul><b>Option 1:</b>
+						<li>1. Follow this link <a href="https://music-yandex-bot.ru">https://music-yandex-bot.ru</a> and enter your login and password of Yandex.</li>
+						<li>2. The button "Go to the bot" will appear, do not click it, but copy the link</li>
+						<li>3. Inside the link, all letters-numbers after &start= are the token</li>
+						</ul>
+					]]>
+				</description>
 			</parameter>
-			<parameter name="device_token" type="text" required="true">
+			<parameter name="device_token" type="text">
 				<context>password</context>
 				<label>Device Token</label>
-				<description>Device token to access the device</description>
+				<description>Device token to access the device. No need to fill it yourself. It will be filled automatically. But you can do it yourself</description>
+				<advanced>true</advanced>
+
 			</parameter>
 			<parameter name="reconnectInterval" type="integer" unit="s" min="15">
 				<label>Reconnect Interval</label>

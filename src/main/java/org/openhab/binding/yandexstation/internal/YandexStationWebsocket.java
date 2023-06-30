@@ -63,7 +63,7 @@ public class YandexStationWebsocket {
     }
 
     @OnWebSocketClose
-    public void onClose(int statusCode, String reason) {
+    public void onClose(int statusCode, String reason) throws Exception {
         if (statusCode != StatusCode.NORMAL) {
             logger.error("YandexStationWebSocket Connection closed: {} - {}", statusCode, reason);
             // 4000 - Invalid token - по питанию была перезагрузка

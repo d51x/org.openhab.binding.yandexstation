@@ -27,7 +27,7 @@ public class YandexStationBindingConstants {
     private static final String BINDING_ID = "yandexstation";
 
     // List of all Thing Type UIDs
-    public static final ThingTypeUID THING_TYPE_SAMPLE = new ThingTypeUID(BINDING_ID, "station");
+    public static final ThingTypeUID THING_TYPE_STATION = new ThingTypeUID(BINDING_ID, "station");
 
     public static final String CHANNEL_GROUP_STATION = "station";
     public static final String CHANNEL_GROUP_SPEECH = "speech";

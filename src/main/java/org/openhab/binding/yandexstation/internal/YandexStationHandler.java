@@ -21,6 +21,11 @@ import org.openhab.binding.yandexstation.internal.commands.*;
 import org.openhab.binding.yandexstation.internal.response.YandexStationPlayerState;
 import org.openhab.binding.yandexstation.internal.response.YandexStationResponse;
 import org.openhab.binding.yandexstation.internal.response.YandexStationState;
+import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApi;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
+import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.*;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -58,12 +63,13 @@ public class YandexStationHandler extends BaseThingHandler {
     private YandexStationWebsocket yandexStationWebsocket = new YandexStationWebsocket();
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     private @Nullable URI websocketAddress;
-
+    private @Nullable YandexApiImpl api;
 
     private YandexStationState stationState = new YandexStationState();
 
-    public YandexStationHandler(Thing thing) {
+    public YandexStationHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
         super(thing);
+        this.api = (YandexApiImpl) apiFactory.getApi();
     }
 
     private Double prevVolume = 0.0;
@@ -186,6 +192,14 @@ public class YandexStationHandler extends BaseThingHandler {
             if (config == null) {
                 updateStatus(ThingStatus.UNINITIALIZED, ThingStatusDetail.CONFIGURATION_ERROR);
             } else {
+                if (config.device_token.isEmpty()) {
+                    try {
+                        logger.warn("Device token is empty");
+                        receiveDeviceToken();
+                    } catch (ApiException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
                 boolean thingReachable = connectStation(config);
                 logger.warn("thingReachable: {}", thingReachable);
                 // when done do:
@@ -224,11 +238,14 @@ public class YandexStationHandler extends BaseThingHandler {
             }
 
             @Override
-            public void onClose(int statusCode, String reason) {
+            public void onClose(int statusCode, String reason) throws Exception {
                 logger.info("Websocket connection closed");
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR,
                         "Connection closed: " + statusCode + " - " + reason);
                 //disposeWebsocketPollingJob();
+                if (statusCode == 4000) {
+                    receiveDeviceToken();
+                }
                 reconnectWebsocket();
             }
 
@@ -397,6 +414,7 @@ public class YandexStationHandler extends BaseThingHandler {
         }
         if (response.getSoftwareVersion() != null) {
             updateState(CHANNEL_STATE_SOFTWARE.getName(), new StringType(response.getSoftwareVersion()));
+            updateProperty("Software Version:", response.getSoftwareVersion());
         }
         if (response.getState() != null) {
             stationState = response.getState();
@@ -467,4 +485,23 @@ public class YandexStationHandler extends BaseThingHandler {
         }
     }
 
+    @Override
+    protected void updateConfiguration(Configuration configuration) {
+        super.updateConfiguration(configuration);
+    }
+
+    @Override
+    protected void updateProperty(String name, @Nullable String value) {
+        super.updateProperty(name, value);
+    }
+
+    private void receiveDeviceToken() throws ApiException {
+        // get device token from https://quasar.yandex.net/glagol/token
+        String token = api.getDeviceToken(config.yandex_token, config.device_id, config.platform);
+        config.device_token = token;
+        Configuration configuration = thing.getConfiguration();
+        logger.info("Configuration is: {}", configuration);
+        configuration.put("device_token", token);
+        updateProperty("device_token:", token);
+    }
 }

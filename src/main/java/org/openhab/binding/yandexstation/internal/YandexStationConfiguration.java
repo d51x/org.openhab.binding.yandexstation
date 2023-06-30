@@ -27,6 +27,10 @@ public class YandexStationConfiguration {
      */
     public String hostname = "";
     public String password = "";
+    public String platform = "";
     public String device_token = "";
+    public String device_id = "";
+    public String yandex_token = "";
+
     public int reconnectInterval = 60;
 }

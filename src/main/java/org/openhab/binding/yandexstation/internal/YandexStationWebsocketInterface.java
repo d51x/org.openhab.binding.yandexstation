@@ -24,7 +24,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 public interface YandexStationWebsocketInterface {
     public void onConnect(boolean connected);
 
-    public void onClose(int statusCode, String reason);
+    public void onClose(int statusCode, String reason) throws Exception;
 
     public void onMessage(String data);
 
