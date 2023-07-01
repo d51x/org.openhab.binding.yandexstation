@@ -77,6 +77,18 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendTtsCommand(String.format("<speaker voice='%s'>%s", voice, message));
     }
 
+    @RuleAction(label = "@text/actionSayLabel", description = "@text/actionSayDescription")
+    public void sayText(
+            @ActionInput(name = "message", label = "@text/actionSayTextLabel", description = "@text/actionSayTextDescription") @NonNull String message,
+            @ActionInput(name = "whisper", label = "@text/actionSayTextWhisperLabel", description = "@text/actionSayTextWhisperDescription") @NonNull Boolean whisper) {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+        handler.sendTtsCommand(String.format("<speaker is_whisper='%s'>%s", whisper, message));
+    }
+
     @RuleAction(label = "@text/actionVoiceCommandLabel", description = "@text/actionVoiceCommandDescription")
     public void voiceCommand(
             @ActionInput(name = "message", label = "@text/actionVoiceCommandTextLabel", description = "@text/actionVoiceCommandTextDescription") @NonNull String message) {
@@ -100,6 +112,14 @@ public class YandexStationThingActions implements ThingActions {
     public static void sayText(@Nullable ThingActions actions, @NonNull String description, String voice) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).sayText(description, voice);
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void sayText(@Nullable ThingActions actions, @NonNull String description, @NonNull Boolean whisper) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).sayText(description, whisper);
         } else {
             throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
         }

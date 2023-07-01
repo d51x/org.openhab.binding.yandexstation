@@ -107,7 +107,7 @@ Channel `coverURI` содержит ссылку
 
 + `sayText` - передача текста для синтеза речи (tts). На вход может принимать один или два параметра:
     + `text` - текст для ситеза
-    + `voice` - голос, которым произнести. https://cloud.yandex.com/en-ru/docs/speechkit/tts/voices значение из столбца Voice
+    + `voice`/`whisper` - голос (_**voice**_), которым произнести. https://cloud.yandex.com/en-ru/docs/speechkit/tts/voices значение из столбца Voice. Но вместо голоса можно указать true (_**whisper**_) и тогда произношение будет шепотом.
 + `voiceCommand` - передача команды для выполнения. На вход принимает один параметр:
     + `text` - текст команды для выполнения
 
@@ -127,6 +127,15 @@ things.getActions('yandexstation', 'yandexstation:station:9b957406f6').sayText('
 
 // Произнесет текст голосом Кости
 things.getActions('yandexstation', 'yandexstation:station:9b957406f6').sayText('Привет, я говорю голосом Кости', 'kostya');
+
+// Произнесет текст шепотом
+things.getActions('yandexstation', 'yandexstation:station:9b957406f6').sayText("Как дела", true);
+
+// Произнесет текст шепотом
+things.getActions('yandexstation', 'yandexstation:station:9b957406f6').sayText("<speaker is_whisper='true'>Как дела");
+
+// Произнесет текст голосом Захар
+things.getActions('yandexstation', 'yandexstation:station:9b957406f6').sayText("<speaker voice='zahar'>Как дела");
 
 // выполнит команду так же, как бы вы ей сказали: - Алиса, выключи свет
 things.getActions('yandexstation', 'yandexstation:station:9b957406f6').voiceCommand('Включи свет');
