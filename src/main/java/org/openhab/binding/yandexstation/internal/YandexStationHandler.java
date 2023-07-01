@@ -1,18 +1,29 @@
-/*
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+/**
+ * Copyright (c) 2010-2022 Contributors to the openHAB project
  *
- *  See the NOTICE file(s) distributed with this work for additional
- *  information.
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
  *
  * This program and the accompanying materials are made available under the
- *  terms of the Eclipse Public License 2.0 which is available at
- *  http://www.eclipse.org/legal/epl-2.0
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
  *
  * SPDX-License-Identifier: EPL-2.0
  */
 package org.openhab.binding.yandexstation.internal;
 
-import com.google.gson.Gson;
+import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
+import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -39,17 +50,7 @@ import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
-import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
+import com.google.gson.Gson;
 
 /**
  * The {@link YandexStationHandler} is responsible for handling commands, which are
@@ -468,14 +469,14 @@ public class YandexStationHandler extends BaseThingHandler {
             if (playerState.getEntityInfo().next != null && !playerState.getEntityInfo().next.isEmpty()
                     && playerState.getEntityInfo().next.containsKey("id")) {
                 String sId = playerState.getEntityInfo().next.get("id");
-                if (sId != null) {
+                if ((sId != null) && (!sId.isEmpty())) {
                     updateState(CHANNEL_STATE_TRACK_NEXT_ID.getName(), new DecimalType(DecimalType.valueOf(sId)));
                 }
             }
             if (playerState.getEntityInfo().prev != null && !playerState.getEntityInfo().prev.isEmpty()
                     && playerState.getEntityInfo().prev.containsKey("id")) {
                 String sId = playerState.getEntityInfo().prev.get("id");
-                if (sId != null) {
+                if ((sId != null) && (!sId.isEmpty())) {
                     updateState(CHANNEL_STATE_TRACK_PREV_ID.getName(), new DecimalType(DecimalType.valueOf(sId)));
                 }
             }

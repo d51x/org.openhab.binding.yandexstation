@@ -1,17 +1,18 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
- * <p>
+ * Copyright (c) 2010-2022 Contributors to the openHAB project
+ *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
- * <p>
+ *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
  * http://www.eclipse.org/legal/epl-2.0
- * <p>
+ *
  * SPDX-License-Identifier: EPL-2.0
  */
 package org.openhab.binding.yandexstation.internal;
 
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_BRIDGE;
 import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_STATION;
 
 import java.util.Set;
@@ -20,6 +21,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
+import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.binding.BaseThingHandlerFactory;
@@ -39,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(configurationPid = "binding.yandexstation", service = ThingHandlerFactory.class)
 public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_STATION);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_STATION, THING_TYPE_BRIDGE);
     private final YandexApiFactory apiFactory;
 
     @Override
@@ -59,6 +61,12 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
         if (THING_TYPE_STATION.equals(thingTypeUID)) {
             try {
                 return new YandexStationHandler(thing, apiFactory);
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (THING_TYPE_BRIDGE.equals(thingTypeUID)){
+            try {
+                return new YandexStationBridge((Bridge) thing, apiFactory);
             } catch (ApiException e) {
                 throw new RuntimeException(e);
             }
