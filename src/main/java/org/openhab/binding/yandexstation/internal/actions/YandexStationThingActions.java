@@ -64,6 +64,19 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendTtsCommand(message);
     }
 
+    @RuleAction(label = "@text/actionSayLabel", description = "@text/actionSayDescription")
+    public void sayText(
+            @ActionInput(name = "message", label = "@text/actionSayTextLabel", description = "@text/actionSayTextDescription") @NonNull String message,
+            @ActionInput(name = "voice", label = "@text/actionSayTextVoiceLabel", description = "@text/actionSayTextVoiceDescription") @NonNull String voice) {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+
+        handler.sendTtsCommand(String.format("<speaker voice='%s'>%s", voice, message));
+    }
+
     @RuleAction(label = "@text/actionVoiceCommandLabel", description = "@text/actionVoiceCommandDescription")
     public void voiceCommand(
             @ActionInput(name = "message", label = "@text/actionVoiceCommandTextLabel", description = "@text/actionVoiceCommandTextDescription") @NonNull String message) {
@@ -79,6 +92,14 @@ public class YandexStationThingActions implements ThingActions {
     public static void sayText(@Nullable ThingActions actions, @NonNull String description) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).sayText(description);
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void sayText(@Nullable ThingActions actions, @NonNull String description, String voice) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).sayText(description, voice);
         } else {
             throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
         }
