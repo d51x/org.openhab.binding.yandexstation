@@ -12,20 +12,12 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
-import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
+import com.google.gson.Gson;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.openhab.binding.yandexstation.internal.actions.YandexStationThingActions;
 import org.openhab.binding.yandexstation.internal.commands.*;
 import org.openhab.binding.yandexstation.internal.response.YandexStationPlayerState;
 import org.openhab.binding.yandexstation.internal.response.YandexStationResponse;
@@ -41,12 +33,23 @@ import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
+import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
 
 /**
  * The {@link YandexStationHandler} is responsible for handling commands, which are
@@ -288,14 +291,19 @@ public class YandexStationHandler extends BaseThingHandler {
         initJob = connect(config.reconnectInterval);
     }
 
-    private void sendVoiceCommand(String text) {
+    @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices() {
+        return Collections.singletonList(YandexStationThingActions.class); // , YandexStationAction.class);
+    }
+
+    public void sendVoiceCommand(String text) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SENT_TEXT, text);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
-    private void sendTtsCommand(String text) {
+    public void sendTtsCommand(String text) {
         FormUpdate formUpdate = new FormUpdate();
         FormUpdateSlot slot = new FormUpdateSlot(text);
         formUpdate.addSlot(slot);

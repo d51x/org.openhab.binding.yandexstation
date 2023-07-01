@@ -101,3 +101,43 @@ Channel `coverURI` содержит ссылку
 В начало добавить https:// а в конце вместо %% размер обложки, например 600x600
 
 `https://avatars.yandex.net/get-music-content/2383988/728fabfe.a.9594918-1/600x600`
+
+## Thing Actions
+В правилах доступны следующие команды:
+
++ `sayText` - передача текста для синтеза речи (tts). На вход может принимать один или два параметра:
+    + `text` - текст для ситеза
+    + `voice`/`whisper` - голос (_**voice**_), которым произнести. https://cloud.yandex.com/en-ru/docs/speechkit/tts/voices значение из столбца Voice. Но вместо голоса можно указать true (_**whisper**_) и тогда произношение будет шепотом.
++ `voiceCommand` - передача команды для выполнения. На вход принимает один параметр:
+    + `text` - текст команды для выполнения
+
+Команда вызывается следующим образом:
+```
+things.getActions('yandexstation', thing_uid).sayText(text);
+```
+_thing_uid_ - идентификатор thing YandexStation, который вы создавали
+
+Примеры:
+
+```javascript
+var things = Java.type('org.openhab.core.model.script.actions.Things');
+
+// Произнесет текст
+things.getActions('yandexstation', 'yandexstation:station:9b957406f6').sayText('Привет, как дела');
+
+// Произнесет текст голосом Кости
+things.getActions('yandexstation', 'yandexstation:station:9b957406f6').sayText('Привет, я говорю голосом Кости', 'kostya');
+
+// Произнесет текст шепотом
+things.getActions('yandexstation', 'yandexstation:station:9b957406f6').sayText("Как дела", true);
+
+// Произнесет текст шепотом
+things.getActions('yandexstation', 'yandexstation:station:9b957406f6').sayText("<speaker is_whisper='true'>Как дела");
+
+// Произнесет текст голосом Захар
+things.getActions('yandexstation', 'yandexstation:station:9b957406f6').sayText("<speaker voice='zahar'>Как дела");
+
+// выполнит команду так же, как бы вы ей сказали: - Алиса, выключи свет
+things.getActions('yandexstation', 'yandexstation:station:9b957406f6').voiceCommand('Включи свет');
+
+```
