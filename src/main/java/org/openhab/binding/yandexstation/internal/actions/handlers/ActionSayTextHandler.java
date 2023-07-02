@@ -24,7 +24,6 @@ import org.openhab.core.thing.ThingUID;
 import java.util.Map;
 
 
-// public class ActionSayTextHandler extends BaseModuleHandler<Action> implements ActionHandler {
 public class ActionSayTextHandler extends BaseActionModuleHandler {
 
     @Override
@@ -40,9 +39,13 @@ public class ActionSayTextHandler extends BaseActionModuleHandler {
     public Map<String, Object> execute(Map<String, Object> context) {
         String text = (String) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_TEXT);
         String thing = (String) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_STATION);
+        Boolean whisper = (Boolean) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_WHISPER);
 
         YandexStationHandler handler = YandexStationHandlerFactory.getThingHandlerByThingUID(new ThingUID(thing));
         // нужен способ как-то получить handler нужного Thing по thingUID
+        if (whisper) {
+            text = "<speaker is_whisper='true'>" + text;
+        }
         handler.sendTtsCommand(text);
         return null;
     }

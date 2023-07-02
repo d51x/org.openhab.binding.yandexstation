@@ -28,10 +28,14 @@ public class SayTextActionType extends ActionType {
     public static final String UID = "yandexstation.sayText";
     public static final String CONFIG_PARAM_NAME_TEXT = "sayText";
     public static final String CONFIG_PARAM_NAME_STATION = "station";
+    public static final String CONFIG_PARAM_NAME_WHISPER = "whisper";
     public static final String CONFIG_TEXT = "Say Text";
     public static final String CONFIG_TEXT_DESCRIPTION = "Send text to Yandex Station for speak";
     public static final String CONFIG_STATION = "Select Station";
     public static final String CONFIG_STATION_DESCRIPTION = "Select Station";
+
+    public static final String CONFIG_WHISPER = "Whisper";
+    public static final String CONFIG_WHISPER_DESCRIPTION = "Say in a whisper";
 
     public static ActionType initialize() {
         // это описание конфигурационных параметров после открытия окна Add Action
@@ -49,18 +53,29 @@ public class SayTextActionType extends ActionType {
                 .withContext("thing")
                 .withDescription(CONFIG_STATION_DESCRIPTION).build();
 
+        final ConfigDescriptionParameter whisperParam = ConfigDescriptionParameterBuilder.create(CONFIG_PARAM_NAME_WHISPER,
+                        ConfigDescriptionParameter.Type.BOOLEAN)
+                .withRequired(false).withReadOnly(false).withMultiple(false).withLabel(CONFIG_WHISPER)
+                .withDescription(CONFIG_WHISPER_DESCRIPTION).build();
+
         List<ConfigDescriptionParameter> config = new ArrayList<ConfigDescriptionParameter>();
         config.add(textParam);
         config.add(stationParam);
+        config.add(whisperParam);
+
+
 
         Input textInput = new Input(CONFIG_PARAM_NAME_TEXT, String.class.getName(), CONFIG_TEXT, CONFIG_TEXT_DESCRIPTION,
                 null, true, null, null);
         Input stationInput = new Input(CONFIG_PARAM_NAME_STATION, YandexStationHandlerFactory.class.getName(),
                 CONFIG_STATION, CONFIG_STATION_DESCRIPTION, null, true, null, null);
+        Input whisperInput = new Input(CONFIG_PARAM_NAME_WHISPER, Boolean.class.getName(),
+                CONFIG_WHISPER, CONFIG_WHISPER_DESCRIPTION, null, false, null, "false");
 
         List<Input> input = new ArrayList<>();
         input.add(textInput);
         input.add(stationInput);
+        input.add(whisperInput);
 
         return new SayTextActionType(config, input);
     }
