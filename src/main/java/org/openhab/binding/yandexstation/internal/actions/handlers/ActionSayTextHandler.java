@@ -41,15 +41,24 @@ public class ActionSayTextHandler extends BaseActionModuleHandler {
         String thing = (String) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_STATION);
         Boolean whisper = (Boolean) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_WHISPER);
         String voice = (String) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_VOICE);
+        Boolean preventListening = (Boolean) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_PREVENT_LISTENING);
 
         YandexStationHandler handler = YandexStationHandlerFactory.getThingHandlerByThingUID(new ThingUID(thing));
         // нужен способ как-то получить handler нужного Thing по thingUID
-        if (whisper) {
+        if (whisper != null && whisper) {
             text = "<speaker is_whisper='true'>" + text;
         } else if (voice != null && !voice.isEmpty()) {
             text = "<speaker voice='" + voice + "'>" + text;
         }
         handler.sendTtsCommand(text);
+        if (preventListening != null && preventListening) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            handler.sendStopListening();
+        }
         return null;
     }
 }

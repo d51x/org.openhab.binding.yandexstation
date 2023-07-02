@@ -316,6 +316,16 @@ public class YandexStationHandler extends BaseThingHandler {
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
+    public void sendStopListening() {
+        ServerActionEvent event = new ServerActionEvent("on_suggest", null);
+        YandexStationCommand sendCommand = new YandexStationCommand(CMD_SERVER_ACTION, event);
+
+        YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
+        logger.debug("Send packet: {}", yandexPacket);
+        yandexStationWebsocket.sendMessage(yandexPacket.toString());
+    }
+
+
     private void sendSetVolumeCommand(Double volume) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SET_VOLUME, volume);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
@@ -534,5 +544,9 @@ public class YandexStationHandler extends BaseThingHandler {
         properties.put("Device Name:", YandexStationTypes.getNameByPlatform(device.platform));
         properties.put("Friendly Name:", device.name);
         updateProperties(properties);
+    }
+
+    public YandexStationState getStationState() {
+        return stationState;
     }
 }

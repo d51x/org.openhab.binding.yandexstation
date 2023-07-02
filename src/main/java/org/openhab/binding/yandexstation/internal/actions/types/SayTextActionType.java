@@ -30,6 +30,7 @@ public class SayTextActionType extends ActionType {
     public static final String CONFIG_PARAM_NAME_STATION = "station";
     public static final String CONFIG_PARAM_NAME_WHISPER = "whisper";
     public static final String CONFIG_PARAM_NAME_VOICE = "voice";
+    public static final String CONFIG_PARAM_NAME_PREVENT_LISTENING = "prevent_listening";
     public static final String CONFIG_TEXT = "Say Text";
     public static final String CONFIG_TEXT_DESCRIPTION = "Send text to Yandex Station for speak";
     public static final String CONFIG_STATION = "Select Station";
@@ -40,6 +41,8 @@ public class SayTextActionType extends ActionType {
 
     public static final String CONFIG_VOICE = "Voice";
     public static final String CONFIG_VOICE_DESCRIPTION = "Change speaking voice";
+    public static final String CONFIG_PREVENT_LISTENING = "Prevent Listening";
+    public static final String CONFIG_PREVENT_LISTENING_DESCRIPTION = "Don't wait for an answer";
 
     public static ActionType initialize() {
         // это описание конфигурационных параметров после открытия окна Add Action
@@ -67,11 +70,17 @@ public class SayTextActionType extends ActionType {
                 .withRequired(false).withReadOnly(false).withMultiple(false).withLabel(CONFIG_VOICE)
                 .withDescription(CONFIG_VOICE_DESCRIPTION).build();
 
+        final ConfigDescriptionParameter preventListeningParam = ConfigDescriptionParameterBuilder.create(CONFIG_PARAM_NAME_PREVENT_LISTENING,
+                        ConfigDescriptionParameter.Type.BOOLEAN)
+                .withRequired(false).withReadOnly(false).withMultiple(false).withLabel(CONFIG_PREVENT_LISTENING)
+                .withDescription(CONFIG_PREVENT_LISTENING_DESCRIPTION).build();
+
         List<ConfigDescriptionParameter> config = new ArrayList<ConfigDescriptionParameter>();
         config.add(textParam);
         config.add(stationParam);
         config.add(whisperParam);
         config.add(voiceParam);
+        config.add(preventListeningParam);
 
 
 
@@ -83,12 +92,15 @@ public class SayTextActionType extends ActionType {
                 CONFIG_WHISPER, CONFIG_WHISPER_DESCRIPTION, null, false, null, "false");
         Input voiceInput = new Input(CONFIG_PARAM_NAME_VOICE, String.class.getName(),
                 CONFIG_WHISPER, CONFIG_VOICE_DESCRIPTION, null, false, null, null);
+        Input preventListeningInput = new Input(CONFIG_PARAM_NAME_PREVENT_LISTENING, Boolean.class.getName(),
+                CONFIG_PREVENT_LISTENING, CONFIG_PREVENT_LISTENING_DESCRIPTION, null, false, null, "false");
 
         List<Input> input = new ArrayList<>();
         input.add(textInput);
         input.add(stationInput);
         input.add(whisperInput);
         input.add(voiceInput);
+        input.add(preventListeningInput);
 
         return new SayTextActionType(config, input);
     }
