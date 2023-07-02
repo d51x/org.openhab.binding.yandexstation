@@ -12,8 +12,6 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import java.io.IOException;
-
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.api.Session;
@@ -21,6 +19,8 @@ import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /**
  * The {@link YandexStationWebsocket} is responsible for the Websocket Connection

@@ -15,6 +15,10 @@ package org.openhab.binding.yandexstation.internal.actions;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.yandexstation.internal.actions.handlers.ActionSayTextHandler;
+import org.openhab.binding.yandexstation.internal.actions.handlers.ActionVoiceCommandHandler;
+import org.openhab.binding.yandexstation.internal.actions.types.SayTextActionType;
+import org.openhab.binding.yandexstation.internal.actions.types.VoiceCommandActionType;
 import org.openhab.core.automation.Action;
 import org.openhab.core.automation.Module;
 import org.openhab.core.automation.handler.BaseModuleHandlerFactory;
@@ -37,6 +41,7 @@ public class YandexStationActionHandlerFactory extends BaseModuleHandlerFactory 
     static {
         List<String> types = new ArrayList<String>();
         types.add(SayTextActionType.UID);
+        types.add(VoiceCommandActionType.UID);
         TYPES = Collections.unmodifiableCollection(types);
     }
 
@@ -53,7 +58,9 @@ public class YandexStationActionHandlerFactory extends BaseModuleHandlerFactory 
         ModuleHandler moduleHandler = null;
         if (SayTextActionType.UID.equals(module.getTypeUID())) {
             moduleHandler = new ActionSayTextHandler((Action) module);
-        }  else {
+        } else if (VoiceCommandActionType.UID.equals(module.getTypeUID())) {
+            moduleHandler = new ActionVoiceCommandHandler((Action) module);
+        } else {
             logger.warn(MODULE_HANDLER_FACTORY_NAME + "Not supported moduleHandler: {}", module.getTypeUID());
         }
         return moduleHandler;

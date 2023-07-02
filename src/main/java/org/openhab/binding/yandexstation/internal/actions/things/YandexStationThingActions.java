@@ -11,7 +11,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-package org.openhab.binding.yandexstation.internal.actions;
+package org.openhab.binding.yandexstation.internal.actions.things;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;

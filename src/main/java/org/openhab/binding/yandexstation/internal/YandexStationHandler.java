@@ -17,7 +17,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.openhab.binding.yandexstation.internal.actions.YandexStationThingActions;
+import org.openhab.binding.yandexstation.internal.actions.things.YandexStationThingActions;
 import org.openhab.binding.yandexstation.internal.commands.*;
 import org.openhab.binding.yandexstation.internal.response.YandexStationPlayerState;
 import org.openhab.binding.yandexstation.internal.response.YandexStationResponse;

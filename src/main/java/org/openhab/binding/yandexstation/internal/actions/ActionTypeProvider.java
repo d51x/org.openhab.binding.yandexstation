@@ -15,6 +15,8 @@ package org.openhab.binding.yandexstation.internal.actions;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.yandexstation.internal.actions.types.SayTextActionType;
+import org.openhab.binding.yandexstation.internal.actions.types.VoiceCommandActionType;
 import org.openhab.core.automation.type.ModuleType;
 import org.openhab.core.automation.type.ModuleTypeProvider;
 import org.openhab.core.common.registry.ProviderChangeListener;
@@ -31,6 +33,7 @@ public class ActionTypeProvider implements ModuleTypeProvider {
     public ActionTypeProvider() {
         providedModuleTypes = new HashMap<>();
         providedModuleTypes.put(SayTextActionType.UID, SayTextActionType.initialize());
+        providedModuleTypes.put(VoiceCommandActionType.UID, VoiceCommandActionType.initialize());
     }
 
     @SuppressWarnings("unchecked")
