@@ -62,7 +62,7 @@ public class SayTextActionType extends ActionType {
     }
 
     public SayTextActionType(List<ConfigDescriptionParameter> config, List<Input> input) {
-        super(UID, config, CONFIG_TEXT, "44 Send text to Yandex Station to speak", null,
+        super(UID, config, CONFIG_TEXT, CONFIG_TEXT_DESCR, null,
                 Visibility.VISIBLE, input, null);
         // отображается в окне выбора типов экшенов
     }
