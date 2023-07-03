@@ -461,7 +461,7 @@ public class YandexStationHandler extends BaseThingHandler {
             updateState(CHANNEL_STATE_TRACK_PLAYLIST_ID.getName(), new StringType(playerState.getPlaylistId()));
         }
         if (playerState.getId() != null) {
-            updateState(CHANNEL_STATE_TRACK_ID.getName(), new DecimalType(playerState.getId()));
+            updateState(CHANNEL_STATE_TRACK_ID.getName(), new StringType(playerState.getId()));
         }
         if (playerState.getPlaylistType() != null) {
             updateState(CHANNEL_STATE_PLAYLIST_TYPE.getName(), new StringType(playerState.getPlaylistType()));
