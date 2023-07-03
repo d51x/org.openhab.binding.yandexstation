@@ -20,9 +20,12 @@ import org.openhab.core.automation.type.Input;
 import org.openhab.core.config.core.ConfigDescriptionParameter;
 import org.openhab.core.config.core.ConfigDescriptionParameterBuilder;
 import org.openhab.core.config.core.FilterCriteria;
+import org.openhab.core.config.core.ParameterOption;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SayTextActionType extends ActionType {
     public static final String UID = "yandexstation.sayText";
@@ -68,6 +71,7 @@ public class SayTextActionType extends ActionType {
         final ConfigDescriptionParameter voiceParam = ConfigDescriptionParameterBuilder.create(CONFIG_PARAM_NAME_VOICE,
                         ConfigDescriptionParameter.Type.TEXT)
                 .withRequired(false).withReadOnly(false).withMultiple(false).withLabel(CONFIG_VOICE)
+                .withOptions(getAvailableVoices())
                 .withDescription(CONFIG_VOICE_DESCRIPTION).build();
 
         final ConfigDescriptionParameter preventListeningParam = ConfigDescriptionParameterBuilder.create(CONFIG_PARAM_NAME_PREVENT_LISTENING,
@@ -109,5 +113,11 @@ public class SayTextActionType extends ActionType {
         super(UID, config, CONFIG_TEXT, CONFIG_TEXT_DESCRIPTION, null,
                 Visibility.VISIBLE, input, null);
         // отображается в окне выбора типов экшенов
+    }
+
+    private static List<ParameterOption> getAvailableVoices() {
+        return new ArrayList<>(Arrays.stream(org.openhab.voice.yandexstation.internal.YandexVoices.values())
+                .map(v -> new ParameterOption(v.getVoice(), v.getLabel()))
+                .collect(Collectors.toList()));
     }
 }
