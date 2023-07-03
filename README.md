@@ -102,6 +102,19 @@ Channel `coverURI` содержит ссылку
 
 `https://avatars.yandex.net/get-music-content/2383988/728fabfe.a.9594918-1/600x600`
 
+## Rule Actions
+
+В конструкторе правил в секции _**Then Action**_ при нажатии _**Show All**_ доступен блок _**YandexStation**_ и действия:
++ Say Text - произнести текст
+    + Whisper - произнести текст шепотом
+    + Voice - произнести текст голосом (нужно указать код голоса - https://cloud.yandex.com/en-ru/docs/speechkit/tts/voices значение из столбца Voice)
+    + Prevent Listening - не ждать ответа (возможно, не работает?)
++ Voice Command - выполнить команду
+
+![](docs/images/then-action-01.png)
+
+![](docs/images/then-action-02.png)
+
 ## Thing Actions
 В правилах доступны следующие команды:
 

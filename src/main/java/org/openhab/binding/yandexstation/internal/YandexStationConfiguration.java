@@ -12,9 +12,9 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.WSS_PORT;
-
 import org.eclipse.jdt.annotation.NonNullByDefault;
+
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.WSS_PORT;
 
 /**
  * The {@link YandexStationConfiguration} class contains fields mapping thing configuration parameters.

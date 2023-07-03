@@ -17,7 +17,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.openhab.binding.yandexstation.internal.actions.YandexStationThingActions;
+import org.openhab.binding.yandexstation.internal.actions.things.YandexStationThingActions;
 import org.openhab.binding.yandexstation.internal.commands.*;
 import org.openhab.binding.yandexstation.internal.response.YandexStationPlayerState;
 import org.openhab.binding.yandexstation.internal.response.YandexStationResponse;
@@ -316,6 +316,16 @@ public class YandexStationHandler extends BaseThingHandler {
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
+    public void sendStopListening() {
+        ServerActionEvent event = new ServerActionEvent("on_suggest", null);
+        YandexStationCommand sendCommand = new YandexStationCommand(CMD_SERVER_ACTION, event);
+
+        YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
+        logger.debug("Send packet: {}", yandexPacket);
+        yandexStationWebsocket.sendMessage(yandexPacket.toString());
+    }
+
+
     private void sendSetVolumeCommand(Double volume) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SET_VOLUME, volume);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
@@ -429,7 +439,9 @@ public class YandexStationHandler extends BaseThingHandler {
             if (stationState.playing != null) {
                 updateState(CHANNEL_STATE_PLAYING.getName(), OnOffType.from(stationState.playing));
             }
-            processPlayerState(stationState.playerState);
+            if (stationState.playerState != null) {
+                processPlayerState(stationState.playerState);
+            }
         }
     }
 
@@ -534,5 +546,9 @@ public class YandexStationHandler extends BaseThingHandler {
         properties.put("Device Name:", YandexStationTypes.getNameByPlatform(device.platform));
         properties.put("Friendly Name:", device.name);
         updateProperties(properties);
+    }
+
+    public YandexStationState getStationState() {
+        return stationState;
     }
 }
