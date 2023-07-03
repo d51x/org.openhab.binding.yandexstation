@@ -439,7 +439,9 @@ public class YandexStationHandler extends BaseThingHandler {
             if (stationState.playing != null) {
                 updateState(CHANNEL_STATE_PLAYING.getName(), OnOffType.from(stationState.playing));
             }
-            processPlayerState(stationState.playerState);
+            if (stationState.playerState != null) {
+                processPlayerState(stationState.playerState);
+            }
         }
     }
 
