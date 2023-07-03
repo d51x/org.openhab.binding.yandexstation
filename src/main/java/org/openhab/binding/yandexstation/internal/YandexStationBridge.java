@@ -12,9 +12,6 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.discovery.YandexStationDiscoveryService;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiDeviceResponse;
@@ -27,6 +24,9 @@ import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseBridgeHandler;
 import org.openhab.core.types.Command;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * The {@link YandexStationBindingConstants} class defines common constants, which are
@@ -50,11 +50,15 @@ public class YandexStationBridge extends BaseBridgeHandler {
         updateStatus(ThingStatus.UNKNOWN);
         YandexStationDiscoveryService.yandexTokenBridgeBusList.add(this);
         config = getConfigAs(YandexStationConfiguration.class);
-        try {
-            devicesList = api.getDevices(config.yandex_token);
-            updateStatus(ThingStatus.ONLINE);
-        } catch (ApiException e) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Can not connect to Yandex");
+        if (config != null) {
+            try {
+                devicesList = api.getDevices(config.yandex_token);
+                updateStatus(ThingStatus.ONLINE);
+            } catch (ApiException e) {
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Can not connect to Yandex");
+            }
+        } else {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Check bridge configuration");
         }
     }
 

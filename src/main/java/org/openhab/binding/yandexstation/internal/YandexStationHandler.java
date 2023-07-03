@@ -12,18 +12,7 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
-import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
+import com.google.gson.Gson;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -39,18 +28,26 @@ import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.*;
-import org.openhab.core.thing.ChannelUID;
-import org.openhab.core.thing.Thing;
-import org.openhab.core.thing.ThingStatus;
-import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.*;
 import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
+import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
 
 /**
  * The {@link YandexStationHandler} is responsible for handling commands, which are
