@@ -6,11 +6,9 @@
 
 	<!-- Sample Thing Type -->
 	<thing-type id="station">
-		<!-- Comment this in for Things which need a Bridge to function.
-			<supported-bridge-type-refs>
-			<bridge-type-ref id="YandexStationBridge" />
-			</supported-bridge-type-refs>
-		-->
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="bridge"/>
+		</supported-bridge-type-refs>
 
 		<label>YandexStation</label>
 		<description>YandexStation thing for YandexStation Binding</description>
@@ -31,21 +29,22 @@
 				<label>Device Id</label>
 				<description>Identifier of the yandex device</description>
 			</parameter>
-			<parameter name="yandex_token" type="text" required="true">
+			<!--<parameter name="yandex_token" type="text" required="true">
 				<context>password</context>
 				<label>Yandex Token</label>
 				<description>
-					<![CDATA[
-						Yandex token to access the device.<br/>
-						<b>How to get Yandex token?</b><br/><br/>
-						<ul><b>Option 1:</b>
-						<li>1. Follow this link <a href="https://music-yandex-bot.ru">https://music-yandex-bot.ru</a> and enter your login and password of Yandex.</li>
-						<li>2. The button "Go to the bot" will appear, do not click it, but copy the link</li>
-						<li>3. Inside the link, all letters-numbers after &start= are the token</li>
-						</ul>
-					]]>
+				<![CDATA[
+				Yandex token to access the device.<br/>
+				<b>How to get Yandex token?</b><br/><br/>
+				<ul><b>Option 1:</b>
+				<li>1. Follow this link <a href="https://music-yandex-bot.ru">https://music-yandex-bot.ru</a> and enter your login and
+				password of Yandex.</li>
+				<li>2. The button "Go to the bot" will appear, do not click it, but copy the link</li>
+				<li>3. Inside the link, all letters-numbers after &start= are the token</li>
+				</ul>
+				]]>
 				</description>
-			</parameter>
+				</parameter> -->
 			<!--
 				<parameter name="hostname" type="text" required="false">
 				<context>network-address</context>

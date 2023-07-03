@@ -23,7 +23,10 @@ import org.openhab.binding.yandexstation.internal.YandexStationBindingConstants;
 import org.openhab.binding.yandexstation.internal.YandexStationBridge;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiDeviceResponse;
 import org.openhab.core.config.discovery.AbstractDiscoveryService;
+import org.openhab.core.config.discovery.DiscoveryResult;
+import org.openhab.core.config.discovery.DiscoveryResultBuilder;
 import org.openhab.core.config.discovery.DiscoveryService;
+import org.openhab.core.thing.ThingUID;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,16 +71,16 @@ public class YandexStationDiscoveryService extends AbstractDiscoveryService {
         logger.debug("Start scan");
         for (YandexStationBridge yandexToken : yandexTokenBridgeBusList) {
             List<ApiDeviceResponse> devices = yandexToken.getDevices();
-            if(devices != null) {
+            if (devices != null) {
                 for (ApiDeviceResponse device : devices) {
                     logger.debug("found: {}", device.id);
-                    // ThingUID thingUID = new ThingUID(YandexStationBindingConstants.THING_TYPE_STATION_BRIDGE,
-                    // incoming.getThing().getUID(), ips.replace('.', '_'));
-                    // DiscoveryResult resultS = DiscoveryResultBuilder.create(thingUID).withProperty("yandex_token", "token")
-                    // .withRepresentationProperty("hostname")
-                    // .withLabel("device_id " + ips + " at " + incoming.getThing().getLabel())
-                    // .withBridge(incoming.getThing().getUID()).build();
-                    // thingDiscovered(resultS);
+                    ThingUID thingUID = new ThingUID(YandexStationBindingConstants.THING_TYPE_STATION,
+                            yandexToken.getThing().getUID(), device.id);
+                    DiscoveryResult resultS = DiscoveryResultBuilder.create(thingUID)
+                            .withProperty("device_id", device.id).withRepresentationProperty("device_id")
+                            .withLabel(device.name + " S/N: " + device.id).withBridge(yandexToken.getThing().getUID())
+                            .build();
+                    thingDiscovered(resultS);
                 }
             }
         }

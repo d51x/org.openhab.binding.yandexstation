@@ -39,11 +39,13 @@ import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.*;
+import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
@@ -70,7 +72,8 @@ public class YandexStationHandler extends BaseThingHandler {
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     private @Nullable URI websocketAddress;
     private @Nullable YandexApiImpl api;
-
+    @Nullable
+    YandexStationBridge yandexStationBridge;
     private YandexStationState stationState = new YandexStationState();
 
     /**
@@ -174,7 +177,12 @@ public class YandexStationHandler extends BaseThingHandler {
     public void initialize() {
         config = getConfigAs(YandexStationConfiguration.class);
         updateStatus(ThingStatus.UNKNOWN);
-        initJob = connect(0);
+        yandexStationBridge = getBridgeHandler();
+        if (yandexStationBridge == null) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED, "Check bridge");
+        } else {
+            initJob = connect(0);
+        }
     }
 
     @Override
@@ -496,8 +504,9 @@ public class YandexStationHandler extends BaseThingHandler {
     private void receiveDeviceToken() {
         // get device token from https://quasar.yandex.net/glagol/token
         try {
-            ApiDeviceResponse device = api.findDevice(config.device_id, config.yandex_token);
-            String token = api.getDeviceToken(config.yandex_token, config.device_id, device.platform);
+            ApiDeviceResponse device = api.findDevice(config.device_id, yandexStationBridge.config.yandex_token);
+            String token = api.getDeviceToken(yandexStationBridge.config.yandex_token, config.device_id,
+                    device.platform);
 
             config.platform = device.platform;
             config.device_token = token;
@@ -535,5 +544,25 @@ public class YandexStationHandler extends BaseThingHandler {
         properties.put("Device Name:", YandexStationTypes.getNameByPlatform(device.platform));
         properties.put("Friendly Name:", device.name);
         updateProperties(properties);
+    }
+
+    private synchronized @Nullable YandexStationBridge getBridgeHandler() {
+        Bridge bridge = getBridge();
+        if (bridge == null) {
+            logger.error("Required bridge not defined for device.");
+            return null;
+        } else {
+            return getBridgeHandler(bridge);
+        }
+    }
+
+    private synchronized @Nullable YandexStationBridge getBridgeHandler(Bridge bridge) {
+        ThingHandler handler = bridge.getHandler();
+        if (handler instanceof YandexStationBridge) {
+            return (YandexStationBridge) handler;
+        } else {
+            logger.debug("No available bridge handler found yet. Bridge: {} .", bridge.getUID());
+            return null;
+        }
     }
 }

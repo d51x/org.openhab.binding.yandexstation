@@ -64,7 +64,7 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
             } catch (ApiException e) {
                 throw new RuntimeException(e);
             }
-        } else if (THING_TYPE_BRIDGE.equals(thingTypeUID)){
+        } else if (THING_TYPE_BRIDGE.equals(thingTypeUID)) {
             try {
                 return new YandexStationBridge((Bridge) thing, apiFactory);
             } catch (ApiException e) {
