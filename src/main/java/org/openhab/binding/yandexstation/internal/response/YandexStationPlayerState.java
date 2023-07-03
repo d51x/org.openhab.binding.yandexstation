@@ -26,7 +26,7 @@ public class YandexStationPlayerState {
     private Boolean hasPlay;
     private Boolean hasPrev;
     private Boolean hasProgressBar;
-    private Long id;
+    private String id;
     private String playerType;
     private String playlistId;
     private String playlistType;
@@ -85,11 +85,11 @@ public class YandexStationPlayerState {
         this.hasProgressBar = hasProgressBar;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
