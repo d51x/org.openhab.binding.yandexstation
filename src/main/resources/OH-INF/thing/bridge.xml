@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="yandexstation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<!-- Sample Thing Type -->
+	<bridge-type id="bridge">
+
+		<label>YandexStation Bridge</label>
+		<description>YandexStation bridge for YandexStation Binding</description>
+		<category>Speaker</category>
+
+		<config-description>
+			<parameter name="yandex_token" type="text" required="true">
+				<context>password</context>
+				<label>Yandex Token</label>
+				<description>
+					<![CDATA[
+						Yandex token to access the device.<br/>
+						<b>How to get Yandex token?</b><br/><br/>
+						<ul><b>Option 1:</b>
+						<li>1. Follow this link <a href="https://music-yandex-bot.ru">https://music-yandex-bot.ru</a> and enter your login and password of Yandex.</li>
+						<li>2. The button "Go to the bot" will appear, do not click it, but copy the link</li>
+						<li>3. Inside the link, all letters-numbers after &start= are the token</li>
+						Other options described here: https://github.com/MarshalX/yandex-music-api/discussions/513#discussioncomment-2729781
+						</ul>
+					]]>
+				</description>
+			</parameter>
+		</config-description>
+	</bridge-type>
+</thing:thing-descriptions>
