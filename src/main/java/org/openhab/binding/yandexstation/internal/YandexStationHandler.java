@@ -330,7 +330,7 @@ public class YandexStationHandler extends BaseThingHandler {
     }
 
 
-    private void sendSetVolumeCommand(Double volume) {
+    public void sendSetVolumeCommand(Double volume) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SET_VOLUME, volume);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -344,7 +344,7 @@ public class YandexStationHandler extends BaseThingHandler {
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
-    private void volumeMute() {
+    public void volumeMute() {
         if (prevVolume > 0.0) {
             stationState.volume = prevVolume;
         } else {
@@ -354,14 +354,14 @@ public class YandexStationHandler extends BaseThingHandler {
         sendSetVolumeCommand(stationState.volume);
     }
 
-    private void volumeUp() {
+    public void volumeUp() {
         if (stationState.volume < 1) {
             stationState.volume += 0.1;
             sendSetVolumeCommand(stationState.volume);
         }
     }
 
-    private void volumeDown() {
+    public void volumeDown() {
         if (stationState.volume > 0) {
             stationState.volume -= 0.1;
             sendSetVolumeCommand(stationState.volume);
@@ -382,28 +382,28 @@ public class YandexStationHandler extends BaseThingHandler {
         }
     }
 
-    private void sendPlayNextCommand() {
+    public void sendPlayNextCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_NEXT);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
-    private void sendPlayPrevCommand() {
+    public void sendPlayPrevCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_PREV);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
-    private void sendPlayCommand() {
+    public void sendPlayCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_PLAY);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
-    private void sendStopCommand() {
+    public void sendStopCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_STOP);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);

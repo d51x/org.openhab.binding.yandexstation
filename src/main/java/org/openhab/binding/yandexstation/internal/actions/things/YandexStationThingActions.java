@@ -106,6 +106,96 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendVoiceCommand(message);
     }
 
+    @RuleAction(label = "@text/actionPlay", description = "@text/actionPlayDescription")
+    public void play() {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+        handler.sendPlayCommand();
+    }
+
+    @RuleAction(label = "@text/actionPause", description = "@text/actionPauseDescription")
+    public void pause() {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+        handler.sendStopCommand();
+    }
+
+    @RuleAction(label = "@text/actionNext", description = "@text/actionNextDescription")
+    public void next() {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+        handler.sendPlayNextCommand();
+    }
+
+    @RuleAction(label = "@text/actionPrev", description = "@text/actionPrevDescription")
+    public void prev() {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+        handler.sendPlayPrevCommand();
+    }
+
+    @RuleAction(label = "@text/actionVolumeUp", description = "@text/actionVolumeUpDescription")
+    public void volumeUp() {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+        handler.volumeUp();
+    }
+
+    @RuleAction(label = "@text/actionVolumeDown", description = "@text/actionVolumeDownDescription")
+    public void volumeDown() {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+        handler.volumeDown();
+    }
+
+    @RuleAction(label = "@text/actionSetVolume", description = "@text/actionSetVolumeDescription")
+    public void setVolume(Integer level) {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+        handler.sendSetVolumeCommand( level / 10.0);
+    }
+
+    @RuleAction(label = "@text/actionMuteVolume", description = "@text/actionMuteVolumeDescription")
+    public void mute(Boolean mute) {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+        handler.volumeMute();
+    }
+
+    @RuleAction(label = "@text/actionStopListening", description = "@text/actionStopListeningDescription")
+    public void stopListening() {
+        YandexStationHandler clientHandler = handler;
+        if (clientHandler == null) {
+            logger.warn("YandexStationHandler is null");
+            return;
+        }
+        handler.sendStopListening();
+    }
+
     public static void sayText(@Nullable ThingActions actions, @NonNull String description) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).sayText(description);
@@ -133,6 +223,78 @@ public class YandexStationThingActions implements ThingActions {
     public static void voiceCommand(@Nullable ThingActions actions, @NonNull String description) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).voiceCommand(description);
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void play(@Nullable ThingActions actions) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).play();
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void pause(@Nullable ThingActions actions) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).pause();
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void next(@Nullable ThingActions actions) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).next();
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void prev(@Nullable ThingActions actions) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).prev();
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void volumeUp(@Nullable ThingActions actions) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).volumeUp();
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void volumeDown(@Nullable ThingActions actions) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).volumeDown();
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void setVolume(@Nullable ThingActions actions, @NonNull Integer level) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).setVolume(level);
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void mute(@Nullable ThingActions actions, @NonNull Boolean mute) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).mute(mute);
+        } else {
+            throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
+        }
+    }
+
+    public static void stopListening(@Nullable ThingActions actions) {
+        if (actions instanceof YandexStationThingActions) {
+            ((YandexStationThingActions) actions).stopListening();
         } else {
             throw new IllegalArgumentException("Instance is not a YandexStationThingActions class.");
         }
