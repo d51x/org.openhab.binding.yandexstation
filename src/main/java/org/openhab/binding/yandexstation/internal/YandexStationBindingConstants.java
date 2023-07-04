@@ -24,10 +24,12 @@ import org.openhab.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class YandexStationBindingConstants {
 
-    private static final String BINDING_ID = "yandexstation";
+    public static final String BINDING_ID = "yandexstation";
+    public static final String THING_TYPE_ID = "station";
+    public static final String BRIDGE_TYPE_ID = "bridge";
 
-    public static final ThingTypeUID THING_TYPE_STATION = new ThingTypeUID(BINDING_ID, "station");
-    public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "bridge");
+    public static final ThingTypeUID THING_TYPE_STATION = new ThingTypeUID(BINDING_ID, THING_TYPE_ID);
+    public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, BRIDGE_TYPE_ID);
     public static final String CHANNEL_GROUP_STATION = "station";
     public static final String CHANNEL_GROUP_SPEECH = "speech";
     public static final String CHANNEL_GROUP_VOLUME = "volume";

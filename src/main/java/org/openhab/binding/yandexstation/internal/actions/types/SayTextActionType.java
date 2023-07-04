@@ -13,7 +13,6 @@
 
 package org.openhab.binding.yandexstation.internal.actions.types;
 
-import org.openhab.binding.yandexstation.internal.YandexStationHandlerFactory;
 import org.openhab.core.automation.Visibility;
 import org.openhab.core.automation.type.ActionType;
 import org.openhab.core.automation.type.Input;
@@ -26,6 +25,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.BINDING_ID;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_ID;
+
 
 public class SayTextActionType extends ActionType {
     public static final String UID = "yandexstation.sayText";
@@ -54,13 +57,19 @@ public class SayTextActionType extends ActionType {
                 .withRequired(true).withReadOnly(false).withMultiple(false).withLabel(CONFIG_TEXT)
                 .withDescription(CONFIG_TEXT_DESCRIPTION).build();
 
-        //FilterCriteria filterCriteria = new FilterCriteria("id", "yandexstation:station");
-        FilterCriteria filterCriteria = new FilterCriteria("bindingId", "yandexstation");
+        List<FilterCriteria> filter = new ArrayList<>();
+        FilterCriteria criteria1 = new FilterCriteria("bindingId", BINDING_ID);
+        FilterCriteria criteria2 = new FilterCriteria("thingTypeId", THING_TYPE_ID);
+        filter.add(criteria1);
+        filter.add(criteria2);
+
         final ConfigDescriptionParameter stationParam = ConfigDescriptionParameterBuilder.create(CONFIG_PARAM_NAME_STATION,
                         ConfigDescriptionParameter.Type.TEXT)
                 .withRequired(true).withReadOnly(false).withMultiple(false).withLabel(CONFIG_STATION)
-                .withFilterCriteria(List.of(filterCriteria))
+                .withFilterCriteria(filter)
                 .withContext("thing")
+                //.withOptions(getStations())
+                .withLimitToOptions(true)
                 .withDescription(CONFIG_STATION_DESCRIPTION).build();
 
         final ConfigDescriptionParameter whisperParam = ConfigDescriptionParameterBuilder.create(CONFIG_PARAM_NAME_WHISPER,
@@ -90,12 +99,12 @@ public class SayTextActionType extends ActionType {
 
         Input textInput = new Input(CONFIG_PARAM_NAME_TEXT, String.class.getName(), CONFIG_TEXT, CONFIG_TEXT_DESCRIPTION,
                 null, true, null, null);
-        Input stationInput = new Input(CONFIG_PARAM_NAME_STATION, YandexStationHandlerFactory.class.getName(),
+        Input stationInput = new Input(CONFIG_PARAM_NAME_STATION, String.class.getName(),
                 CONFIG_STATION, CONFIG_STATION_DESCRIPTION, null, true, null, null);
         Input whisperInput = new Input(CONFIG_PARAM_NAME_WHISPER, Boolean.class.getName(),
                 CONFIG_WHISPER, CONFIG_WHISPER_DESCRIPTION, null, false, null, "false");
         Input voiceInput = new Input(CONFIG_PARAM_NAME_VOICE, String.class.getName(),
-                CONFIG_WHISPER, CONFIG_VOICE_DESCRIPTION, null, false, null, null);
+                CONFIG_VOICE, CONFIG_VOICE_DESCRIPTION, null, false, null, null);
         Input preventListeningInput = new Input(CONFIG_PARAM_NAME_PREVENT_LISTENING, Boolean.class.getName(),
                 CONFIG_PREVENT_LISTENING, CONFIG_PREVENT_LISTENING_DESCRIPTION, null, false, null, "false");
 
@@ -120,4 +129,5 @@ public class SayTextActionType extends ActionType {
                 .map(v -> new ParameterOption(v.getVoice(), v.getLabel()))
                 .collect(Collectors.toList()));
     }
+
 }
