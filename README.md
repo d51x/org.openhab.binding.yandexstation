@@ -123,13 +123,15 @@ Channel `coverURI` содержит ссылку
 В конструкторе правил в секции _**Then Action**_ при нажатии _**Show All**_ доступен блок _**YandexStation**_ и действия:
 + Say Text - произнести текст
     + Whisper - произнести текст шепотом
-    + Voice - произнести текст голосом (нужно указать код голоса - https://cloud.yandex.com/en-ru/docs/speechkit/tts/voices значение из столбца Voice)
+    + Voice - произнести текст голосом. Голос выбирается из списка доступных голосов (взято отсюда https://github.com/tayanov/Yandex-tts-speechkit-FIX/blob/master/custom_components/yandextts/tts.py) 
     + Prevent Listening - не ждать ответа (возможно, не работает?)
 + Voice Command - выполнить команду
 
 ![](docs/images/then-action-01.png)
 
 ![](docs/images/then-action-02.png)
+
+![](docs/images/then-action-03.png)
 
 ## Thing Actions
 В правилах доступны следующие команды:
