@@ -194,3 +194,9 @@ action.voiceCommand('Включи свет');
 
 
 ```
+
+### Blockly 
+
+Достпен модуль [YandexStation](https://github.com/d51x/openhab-blockly/edit/main/yandex_station) для **_Blockly_** 
+
+
