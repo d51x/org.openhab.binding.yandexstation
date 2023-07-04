@@ -124,5 +124,5 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
             throw new RuntimeException(String.format("YandexStationThing with uid '%s' not found", uid));
         }
     }
-    
+
 }

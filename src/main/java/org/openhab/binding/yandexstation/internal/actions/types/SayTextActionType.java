@@ -13,6 +13,7 @@
 
 package org.openhab.binding.yandexstation.internal.actions.types;
 
+import org.openhab.binding.yandexstation.internal.YandexStationHandlerFactory;
 import org.openhab.core.automation.Visibility;
 import org.openhab.core.automation.type.ActionType;
 import org.openhab.core.automation.type.Input;
@@ -66,10 +67,10 @@ public class SayTextActionType extends ActionType {
         final ConfigDescriptionParameter stationParam = ConfigDescriptionParameterBuilder.create(CONFIG_PARAM_NAME_STATION,
                         ConfigDescriptionParameter.Type.TEXT)
                 .withRequired(true).withReadOnly(false).withMultiple(false).withLabel(CONFIG_STATION)
-                .withFilterCriteria(filter)
+                //.withFilterCriteria(filter)
                 .withContext("thing")
                 //.withOptions(getStations())
-                .withLimitToOptions(true)
+                //.withLimitToOptions(true)
                 .withDescription(CONFIG_STATION_DESCRIPTION).build();
 
         final ConfigDescriptionParameter whisperParam = ConfigDescriptionParameterBuilder.create(CONFIG_PARAM_NAME_WHISPER,
@@ -99,7 +100,7 @@ public class SayTextActionType extends ActionType {
 
         Input textInput = new Input(CONFIG_PARAM_NAME_TEXT, String.class.getName(), CONFIG_TEXT, CONFIG_TEXT_DESCRIPTION,
                 null, true, null, null);
-        Input stationInput = new Input(CONFIG_PARAM_NAME_STATION, String.class.getName(),
+        Input stationInput = new Input(CONFIG_PARAM_NAME_STATION, YandexStationHandlerFactory.class.getName(),
                 CONFIG_STATION, CONFIG_STATION_DESCRIPTION, null, true, null, null);
         Input whisperInput = new Input(CONFIG_PARAM_NAME_WHISPER, Boolean.class.getName(),
                 CONFIG_WHISPER, CONFIG_WHISPER_DESCRIPTION, null, false, null, "false");
