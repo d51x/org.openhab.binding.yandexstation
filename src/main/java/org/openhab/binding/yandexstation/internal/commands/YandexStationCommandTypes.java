@@ -19,15 +19,45 @@ package org.openhab.binding.yandexstation.internal.commands;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 public enum YandexStationCommandTypes {
+    /**
+     * Cmd ping yandex station command types.
+     */
     CMD_PING("ping"),
+    /**
+     * Cmd play yandex station command types.
+     */
     CMD_PLAY("play"),
+    /**
+     * Cmd stop yandex station command types.
+     */
     CMD_STOP("stop"),
+    /**
+     * Cmd prev yandex station command types.
+     */
     CMD_PREV("prev"),
+    /**
+     * Cmd next yandex station command types.
+     */
     CMD_NEXT("next"),
+    /**
+     * Cmd sw version yandex station command types.
+     */
     CMD_SW_VERSION("softwareVersion"),
+    /**
+     * Cmd rewind yandex station command types.
+     */
     CMD_REWIND("rewind", "position"),
+    /**
+     * Cmd set volume yandex station command types.
+     */
     CMD_SET_VOLUME("setVolume", "volume"),
+    /**
+     * Cmd sent text yandex station command types.
+     */
     CMD_SENT_TEXT("sendText", "text"),
+    /**
+     * Cmd server action yandex station command types.
+     */
     CMD_SERVER_ACTION("serverAction", "serverActionEventPayload");
 
     private String command;
@@ -42,10 +72,20 @@ public enum YandexStationCommandTypes {
         this.command = command;
     }
 
+    /**
+     * Gets command.
+     *
+     * @return the command
+     */
     public String getCommand() {
         return command;
     }
 
+    /**
+     * Gets extra.
+     *
+     * @return the extra
+     */
     public String getExtra() {
         return extra;
     }

@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.yandexstation.internal.yandexapi;
+package org.openhab.binding.yandexstation.internal.yandexapi.response;
 
 /**
  * The {@link ApiSuccessResponse} is describing api common success response.

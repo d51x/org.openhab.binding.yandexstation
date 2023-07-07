@@ -57,9 +57,14 @@ public class YandexStationThingActions implements ThingActions {
         ThingActions.super.deactivate();
     }
 
-    @RuleAction(label = "@text/actionSayLabel", description = "@text/actionSayDescription")
+    /**
+     * Say text.
+     *
+     * @param message the message
+     */
+    @RuleAction(label = "@text/action.SayLabel", description = "@text/action.SayDescription")
     public void sayText(
-            @ActionInput(name = "message", label = "@text/actionSayTextLabel", description = "@text/actionSayTextDescription") @NonNull String message) {
+            @ActionInput(name = "message", label = "@text/action.SayTextLabel", description = "@text/action.SayTextDescription") @NonNull String message) {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
             logger.warn("YandexStationHandler is null");
@@ -69,10 +74,16 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendTtsCommand(message);
     }
 
-    @RuleAction(label = "@text/actionSayLabel", description = "@text/actionSayDescription")
+    /**
+     * Say text.
+     *
+     * @param message the message
+     * @param voice   the voice
+     */
+    @RuleAction(label = "@text/action.SayLabel", description = "@text/action.SayDescription")
     public void sayText(
-            @ActionInput(name = "message", label = "@text/actionSayTextLabel", description = "@text/actionSayTextDescription") @NonNull String message,
-            @ActionInput(name = "voice", label = "@text/actionSayTextVoiceLabel", description = "@text/actionSayTextVoiceDescription") @NonNull String voice) {
+            @ActionInput(name = "message", label = "@text/action.SayTextLabel", description = "@text/action.SayTextDescription") @NonNull String message,
+            @ActionInput(name = "voice", label = "@text/action.SayTextVoiceLabel", description = "@text/action.SayTextVoiceDescription") @NonNull String voice) {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
             logger.warn("YandexStationHandler is null");
@@ -82,10 +93,16 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendTtsCommand(String.format("<speaker voice='%s'>%s", voice, message));
     }
 
-    @RuleAction(label = "@text/actionSayLabel", description = "@text/actionSayDescription")
+    /**
+     * Say text.
+     *
+     * @param message the message
+     * @param whisper the whisper
+     */
+    @RuleAction(label = "@text/action.SayLabel", description = "@text/action.SayDescription")
     public void sayText(
-            @ActionInput(name = "message", label = "@text/actionSayTextLabel", description = "@text/actionSayTextDescription") @NonNull String message,
-            @ActionInput(name = "whisper", label = "@text/actionSayTextWhisperLabel", description = "@text/actionSayTextWhisperDescription") @NonNull Boolean whisper) {
+            @ActionInput(name = "message", label = "@text/action.SayTextLabel", description = "@text/action.SayTextDescription") @NonNull String message,
+            @ActionInput(name = "whisper", label = "@text/action.SayTextWhisperLabel", description = "@text/action.SayTextWhisperDescription") @NonNull Boolean whisper) {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
             logger.warn("YandexStationHandler is null");
@@ -94,9 +111,14 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendTtsCommand(String.format("<speaker is_whisper='%s'>%s", whisper, message));
     }
 
-    @RuleAction(label = "@text/actionVoiceCommandLabel", description = "@text/actionVoiceCommandDescription")
+    /**
+     * Voice command.
+     *
+     * @param message the message
+     */
+    @RuleAction(label = "@text/action.VoiceCommandLabel", description = "@text/action.VoiceCommandDescription")
     public void voiceCommand(
-            @ActionInput(name = "message", label = "@text/actionVoiceCommandTextLabel", description = "@text/actionVoiceCommandTextDescription") @NonNull String message) {
+            @ActionInput(name = "message", label = "@text/action.VoiceCommandTextLabel", description = "@text/action.VoiceCommandTextDescription") @NonNull String message) {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
             logger.warn("YandexStationHandler is null");
@@ -106,7 +128,10 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendVoiceCommand(message);
     }
 
-    @RuleAction(label = "@text/actionPlay", description = "@text/actionPlayDescription")
+    /**
+     * Play.
+     */
+    @RuleAction(label = "@text/action.Play", description = "@text/action.PlayDescription")
     public void play() {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
@@ -116,7 +141,10 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendPlayCommand();
     }
 
-    @RuleAction(label = "@text/actionPause", description = "@text/actionPauseDescription")
+    /**
+     * Pause.
+     */
+    @RuleAction(label = "@text/action.Pause", description = "@text/action.PauseDescription")
     public void pause() {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
@@ -126,7 +154,10 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendStopCommand();
     }
 
-    @RuleAction(label = "@text/actionNext", description = "@text/actionNextDescription")
+    /**
+     * Next.
+     */
+    @RuleAction(label = "@text/action.Next", description = "@text/action.NextDescription")
     public void next() {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
@@ -136,7 +167,10 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendPlayNextCommand();
     }
 
-    @RuleAction(label = "@text/actionPrev", description = "@text/actionPrevDescription")
+    /**
+     * Prev.
+     */
+    @RuleAction(label = "@text/action.Prev", description = "@text/action.PrevDescription")
     public void prev() {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
@@ -146,7 +180,10 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendPlayPrevCommand();
     }
 
-    @RuleAction(label = "@text/actionVolumeUp", description = "@text/actionVolumeUpDescription")
+    /**
+     * Volume up.
+     */
+    @RuleAction(label = "@text/action.VolumeUp", description = "@text/action.VolumeUpDescription")
     public void volumeUp() {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
@@ -156,7 +193,10 @@ public class YandexStationThingActions implements ThingActions {
         handler.volumeUp();
     }
 
-    @RuleAction(label = "@text/actionVolumeDown", description = "@text/actionVolumeDownDescription")
+    /**
+     * Volume down.
+     */
+    @RuleAction(label = "@text/action.VolumeDown", description = "@text/action.VolumeDownDescription")
     public void volumeDown() {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
@@ -166,17 +206,27 @@ public class YandexStationThingActions implements ThingActions {
         handler.volumeDown();
     }
 
-    @RuleAction(label = "@text/actionSetVolume", description = "@text/actionSetVolumeDescription")
+    /**
+     * Sets volume.
+     *
+     * @param level the level
+     */
+    @RuleAction(label = "@text/action.SetVolume", description = "@text/action.SetVolumeDescription")
     public void setVolume(Integer level) {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
             logger.warn("YandexStationHandler is null");
             return;
         }
-        handler.sendSetVolumeCommand( level / 10.0);
+        handler.sendSetVolumeCommand(level / 10.0);
     }
 
-    @RuleAction(label = "@text/actionMuteVolume", description = "@text/actionMuteVolumeDescription")
+    /**
+     * Mute.
+     *
+     * @param mute the mute
+     */
+    @RuleAction(label = "@text/action.MuteVolume", description = "@text/action.MuteVolumeDescription")
     public void mute(Boolean mute) {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
@@ -186,7 +236,10 @@ public class YandexStationThingActions implements ThingActions {
         handler.volumeMute();
     }
 
-    @RuleAction(label = "@text/actionStopListening", description = "@text/actionStopListeningDescription")
+    /**
+     * Stop listening.
+     */
+    @RuleAction(label = "@text/action.StopListening", description = "@text/action.StopListeningDescription")
     public void stopListening() {
         YandexStationHandler clientHandler = handler;
         if (clientHandler == null) {
@@ -196,6 +249,12 @@ public class YandexStationThingActions implements ThingActions {
         handler.sendStopListening();
     }
 
+    /**
+     * Say text.
+     *
+     * @param actions     the actions
+     * @param description the description
+     */
     public static void sayText(@Nullable ThingActions actions, @NonNull String description) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).sayText(description);
@@ -204,6 +263,13 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Say text.
+     *
+     * @param actions     the actions
+     * @param description the description
+     * @param voice       the voice
+     */
     public static void sayText(@Nullable ThingActions actions, @NonNull String description, String voice) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).sayText(description, voice);
@@ -212,6 +278,13 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Say text.
+     *
+     * @param actions     the actions
+     * @param description the description
+     * @param whisper     the whisper
+     */
     public static void sayText(@Nullable ThingActions actions, @NonNull String description, @NonNull Boolean whisper) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).sayText(description, whisper);
@@ -220,6 +293,12 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Voice command.
+     *
+     * @param actions     the actions
+     * @param description the description
+     */
     public static void voiceCommand(@Nullable ThingActions actions, @NonNull String description) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).voiceCommand(description);
@@ -228,6 +307,11 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Play.
+     *
+     * @param actions the actions
+     */
     public static void play(@Nullable ThingActions actions) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).play();
@@ -236,6 +320,11 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Pause.
+     *
+     * @param actions the actions
+     */
     public static void pause(@Nullable ThingActions actions) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).pause();
@@ -244,6 +333,11 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Next.
+     *
+     * @param actions the actions
+     */
     public static void next(@Nullable ThingActions actions) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).next();
@@ -252,6 +346,11 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Prev.
+     *
+     * @param actions the actions
+     */
     public static void prev(@Nullable ThingActions actions) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).prev();
@@ -260,6 +359,11 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Volume up.
+     *
+     * @param actions the actions
+     */
     public static void volumeUp(@Nullable ThingActions actions) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).volumeUp();
@@ -268,6 +372,11 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Volume down.
+     *
+     * @param actions the actions
+     */
     public static void volumeDown(@Nullable ThingActions actions) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).volumeDown();
@@ -276,6 +385,12 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Sets volume.
+     *
+     * @param actions the actions
+     * @param level   the level
+     */
     public static void setVolume(@Nullable ThingActions actions, @NonNull Integer level) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).setVolume(level);
@@ -284,6 +399,12 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Mute.
+     *
+     * @param actions the actions
+     * @param mute    the mute
+     */
     public static void mute(@Nullable ThingActions actions, @NonNull Boolean mute) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).mute(mute);
@@ -292,6 +413,11 @@ public class YandexStationThingActions implements ThingActions {
         }
     }
 
+    /**
+     * Stop listening.
+     *
+     * @param actions the actions
+     */
     public static void stopListening(@Nullable ThingActions actions) {
         if (actions instanceof YandexStationThingActions) {
             ((YandexStationThingActions) actions).stopListening();

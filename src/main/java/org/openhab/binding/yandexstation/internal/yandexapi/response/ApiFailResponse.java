@@ -10,13 +10,24 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.yandexstation.internal.yandexapi;
+package org.openhab.binding.yandexstation.internal.yandexapi.response;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
- * The {@link ApiTokenResponse} is describing api token response.
+ * The {@link ApiFailResponse} is describing api fail response.
  *
  * @author "Dmintry P (d51x)" - Initial contribution
  */
-public class ApiTokenResponse extends ApiSuccessResponse {
-    public String token;
+public class ApiFailResponse extends ApiResponse {
+    /**
+     * The message text.
+     */
+    @SerializedName("message")
+    public String message;
+
+    /**
+     * The Status.
+     */
+    public String status; // error
 }

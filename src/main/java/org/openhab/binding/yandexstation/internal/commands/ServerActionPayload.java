@@ -25,11 +25,22 @@ public class ServerActionPayload {
     private FormUpdate formUpdate;
     private Boolean resubmit;
 
+    /**
+     * Instantiates a new Server action payload.
+     *
+     * @param formUpdate the form update
+     */
     public ServerActionPayload(FormUpdate formUpdate) {
         this.formUpdate = formUpdate;
         this.resubmit = null;
     }
 
+    /**
+     * Instantiates a new Server action payload.
+     *
+     * @param formUpdate the form update
+     * @param resubmit   the resubmit
+     */
     public ServerActionPayload(FormUpdate formUpdate, Boolean resubmit) {
         this.formUpdate = formUpdate;
         this.resubmit = resubmit;

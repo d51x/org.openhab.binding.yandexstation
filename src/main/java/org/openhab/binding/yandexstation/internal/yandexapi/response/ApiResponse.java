@@ -10,24 +10,22 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.yandexstation.internal.yandexapi;
+package org.openhab.binding.yandexstation.internal.yandexapi.response;
 
-import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
 
 /**
- * The {@link ApiFailResponse} is describing api fail response.
+ * The {@link ApiResponse} is describing api common response.
  *
  * @author "Dmintry P (d51x)" - Initial contribution
  */
-public class ApiFailResponse extends ApiResponse {
+public class ApiResponse implements Serializable {
     /**
-     * The message text.
+     * The Http code.
      */
-    @SerializedName("message")
-    public String message;
-
+    public Integer httpCode;
     /**
-     * The Status.
+     * The Response.
      */
-    public String status; // error
+    public String response;
 }

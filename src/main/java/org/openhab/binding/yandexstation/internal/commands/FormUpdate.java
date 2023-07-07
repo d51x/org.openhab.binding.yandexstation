@@ -24,14 +24,27 @@ public class FormUpdate {
     private String name;
     private ArrayList<FormUpdateSlot> slots = new ArrayList<>();
 
+    /**
+     * Instantiates a new Form update.
+     */
     public FormUpdate() {
         this.name = "personal_assistant.scenarios.repeat_after_me";
     }
 
+    /**
+     * Sets slots.
+     *
+     * @param slots the slots
+     */
     public void setSlots(ArrayList<FormUpdateSlot> slots) {
         this.slots = slots;
     }
 
+    /**
+     * Add slot.
+     *
+     * @param slot the slot
+     */
     public void addSlot(FormUpdateSlot slot) {
         this.slots.add(slot);
     }

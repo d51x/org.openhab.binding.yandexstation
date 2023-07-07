@@ -12,9 +12,12 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.discovery.YandexStationDiscoveryService;
-import org.openhab.binding.yandexstation.internal.yandexapi.ApiDeviceResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
@@ -25,9 +28,6 @@ import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseBridgeHandler;
 import org.openhab.core.types.Command;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * The {@link YandexStationBindingConstants} class defines common constants, which are
  * used across the whole binding.
@@ -35,11 +35,30 @@ import java.util.Map;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 public class YandexStationBridge extends BaseBridgeHandler {
+    /**
+     * The Api.
+     */
     public YandexApiImpl api;
+    /**
+     * The Devices list.
+     */
     List<ApiDeviceResponse> devicesList;
+    /**
+     * The Devices.
+     */
     public Map<String, ApiDeviceResponse> devices;
+    /**
+     * The Config.
+     */
     public @Nullable YandexStationConfiguration config;
 
+    /**
+     * Instantiates a new Yandex station bridge.
+     *
+     * @param bridge     the bridge
+     * @param apiFactory the api factory
+     * @throws ApiException the api exception
+     */
     public YandexStationBridge(Bridge bridge, YandexApiFactory apiFactory) throws ApiException {
         super(bridge);
         api = (YandexApiImpl) apiFactory.getApi();
@@ -66,6 +85,11 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
     }
 
+    /**
+     * Gets devices.
+     *
+     * @return the devices
+     */
     public List<ApiDeviceResponse> getDevices() {
         return devicesList;
     }

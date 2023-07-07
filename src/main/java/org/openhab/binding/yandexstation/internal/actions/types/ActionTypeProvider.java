@@ -11,29 +11,49 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-package org.openhab.binding.yandexstation.internal.actions;
+package org.openhab.binding.yandexstation.internal.actions.types;
+
+import java.util.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.yandexstation.internal.YandexStationTranslationProvider;
 import org.openhab.binding.yandexstation.internal.actions.types.SayTextActionType;
 import org.openhab.binding.yandexstation.internal.actions.types.VoiceCommandActionType;
 import org.openhab.core.automation.type.ModuleType;
 import org.openhab.core.automation.type.ModuleTypeProvider;
 import org.openhab.core.common.registry.ProviderChangeListener;
+import org.openhab.core.i18n.LocaleProvider;
+import org.openhab.core.i18n.TranslationProvider;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
-import java.util.*;
-
+/**
+ * The type Action type provider.
+ */
 @NonNullByDefault
-@Component(service={ModuleTypeProvider.class})
+@Component(service = { ModuleTypeProvider.class })
 public class ActionTypeProvider implements ModuleTypeProvider {
 
     private Map<String, ModuleType> providedModuleTypes;
 
-    public ActionTypeProvider() {
+    private final YandexStationTranslationProvider translationProvider;
+
+    /**
+     * Instantiates a new Action type provider.
+     *
+     * @param i18nProvider   the 18 n provider
+     * @param localeProvider the locale provider
+     */
+    @Activate
+    public ActionTypeProvider(final @Reference TranslationProvider i18nProvider,
+            final @Reference LocaleProvider localeProvider) {
+        this.translationProvider = new YandexStationTranslationProvider(i18nProvider, localeProvider, null);
         providedModuleTypes = new HashMap<>();
-        providedModuleTypes.put(SayTextActionType.UID, SayTextActionType.initialize());
-        providedModuleTypes.put(VoiceCommandActionType.UID, VoiceCommandActionType.initialize());
+        providedModuleTypes.put(SayTextActionType.UID, SayTextActionType.initialize(this.translationProvider));
+        providedModuleTypes.put(VoiceCommandActionType.UID,
+                VoiceCommandActionType.initialize(this.translationProvider));
     }
 
     @SuppressWarnings("unchecked")

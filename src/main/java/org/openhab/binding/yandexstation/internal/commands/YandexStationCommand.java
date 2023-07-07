@@ -32,11 +32,22 @@ public class YandexStationCommand {
     @Expose(serialize = false)
     private Object extra;
 
+    /**
+     * Sets command.
+     *
+     * @param command the command
+     */
     public void setCommand(YandexStationCommandTypes command) {
         this.command = command.getCommand();
         this.extra = command.getExtra();
     }
 
+    /**
+     * Instantiates a new Yandex station command.
+     *
+     * @param command the command
+     * @param value   the value
+     */
     public YandexStationCommand(YandexStationCommandTypes command, Object value) {
         this.command = command.getCommand();
         if (command == YandexStationCommandTypes.CMD_REWIND) {
@@ -50,10 +61,18 @@ public class YandexStationCommand {
         }
     }
 
+    /**
+     * Instantiates a new Yandex station command.
+     *
+     * @param command the command
+     */
     public YandexStationCommand(YandexStationCommandTypes command) {
         this.command = command.getCommand();
     }
 
+    /**
+     * Instantiates a new Yandex station command.
+     */
     public YandexStationCommand() {
     }
 }

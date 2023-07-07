@@ -23,18 +23,33 @@ public class FormUpdateSlot {
     private String name;
     private String value;
 
+    /**
+     * Instantiates a new Form update slot.
+     */
     public FormUpdateSlot() {
         this.type = "string";
         this.name = "request";
         this.value = null;
     }
 
+    /**
+     * Instantiates a new Form update slot.
+     *
+     * @param value the value
+     */
     public FormUpdateSlot(String value) {
         this.type = "string";
         this.name = "request";
         this.value = value;
     }
 
+    /**
+     * Instantiates a new Form update slot.
+     *
+     * @param type  the type
+     * @param name  the name
+     * @param value the value
+     */
     public FormUpdateSlot(String type, String name, String value) {
         this.type = type;
         this.name = name;

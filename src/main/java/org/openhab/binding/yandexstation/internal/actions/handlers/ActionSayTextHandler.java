@@ -13,6 +13,8 @@
 
 package org.openhab.binding.yandexstation.internal.actions.handlers;
 
+import java.util.Map;
+
 import org.openhab.binding.yandexstation.internal.YandexStationHandler;
 import org.openhab.binding.yandexstation.internal.YandexStationHandlerFactory;
 import org.openhab.binding.yandexstation.internal.actions.types.SayTextActionType;
@@ -21,9 +23,11 @@ import org.openhab.core.automation.ModuleHandlerCallback;
 import org.openhab.core.automation.handler.BaseActionModuleHandler;
 import org.openhab.core.thing.ThingUID;
 
-import java.util.Map;
-
-
+/**
+ * The type Action say text handler.
+ *
+ * @author "Dmintry P (d51x)" - Initial contribution
+ */
 public class ActionSayTextHandler extends BaseActionModuleHandler {
 
     @Override
@@ -31,6 +35,11 @@ public class ActionSayTextHandler extends BaseActionModuleHandler {
         super.setCallback(callback);
     }
 
+    /**
+     * Instantiates a new Action say text handler.
+     *
+     * @param module the module
+     */
     public ActionSayTextHandler(final Action module) {
         super(module);
     }
@@ -41,7 +50,8 @@ public class ActionSayTextHandler extends BaseActionModuleHandler {
         String thing = (String) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_STATION);
         Boolean whisper = (Boolean) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_WHISPER);
         String voice = (String) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_VOICE);
-        Boolean preventListening = (Boolean) module.getConfiguration().get(SayTextActionType.CONFIG_PARAM_NAME_PREVENT_LISTENING);
+        Boolean preventListening = (Boolean) module.getConfiguration()
+                .get(SayTextActionType.CONFIG_PARAM_NAME_PREVENT_LISTENING);
 
         YandexStationHandler handler = YandexStationHandlerFactory.getThingHandlerByThingUID(new ThingUID(thing));
         // нужен способ как-то получить handler нужного Thing по thingUID

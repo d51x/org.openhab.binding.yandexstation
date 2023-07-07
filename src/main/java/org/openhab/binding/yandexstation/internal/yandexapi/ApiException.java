@@ -23,6 +23,11 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 public class ApiException extends Exception {
     private static final long serialVersionUID = -1748312966538510299L;
 
+    /**
+     * Instantiates a new Api exception.
+     *
+     * @param message the message
+     */
     public ApiException(String message) {
         super(message);
     }
@@ -31,7 +36,7 @@ public class ApiException extends Exception {
      * Instantiates a new Api exception.
      *
      * @param message the message
-     * @param e the e
+     * @param e       the e
      */
     public ApiException(String message, Throwable e) {
         super(message, e);

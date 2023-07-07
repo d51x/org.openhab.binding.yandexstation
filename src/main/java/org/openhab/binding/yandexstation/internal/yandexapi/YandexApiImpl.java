@@ -12,8 +12,13 @@
  */
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
-import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -23,15 +28,14 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.Fields;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiTokenResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * The {@link YandexApiImpl} is describing implementaion of api interface.

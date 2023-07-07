@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
+import java.io.IOException;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.api.Session;
@@ -19,8 +21,6 @@ import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * The {@link YandexStationWebsocket} is responsible for the Websocket Connection
@@ -35,10 +35,21 @@ public class YandexStationWebsocket {
     private final Logger logger = LoggerFactory.getLogger(YandexStationWebsocket.class);
     private @Nullable YandexStationWebsocketInterface websocketHandler;
 
+    /**
+     * Add message handler.
+     *
+     * @param yandexStationWebsocketInterfaceHandler the yandex station websocket interface handler
+     */
     public void addMessageHandler(YandexStationWebsocketInterface yandexStationWebsocketInterfaceHandler) {
         this.websocketHandler = yandexStationWebsocketInterfaceHandler;
     }
 
+    /**
+     * On text.
+     *
+     * @param session the session
+     * @param message the message
+     */
     @OnWebSocketMessage
     public void onText(Session session, String message) {
         if (websocketHandler != null) {
@@ -46,6 +57,11 @@ public class YandexStationWebsocket {
         }
     }
 
+    /**
+     * On connect.
+     *
+     * @param session the session
+     */
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
@@ -54,6 +70,11 @@ public class YandexStationWebsocket {
         }
     }
 
+    /**
+     * On error.
+     *
+     * @param cause the cause
+     */
     @OnWebSocketError
     public void onError(Throwable cause) {
         logger.error("YandexStationWebSocketError {}", cause.getMessage());
@@ -62,6 +83,13 @@ public class YandexStationWebsocket {
         }
     }
 
+    /**
+     * On close.
+     *
+     * @param statusCode the status code
+     * @param reason     the reason
+     * @throws Exception the exception
+     */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) throws Exception {
         if (statusCode != StatusCode.NORMAL) {
@@ -82,6 +110,11 @@ public class YandexStationWebsocket {
         }
     }
 
+    /**
+     * Send message.
+     *
+     * @param str the str
+     */
     public void sendMessage(String str) {
         if (session != null) {
             try {
@@ -92,6 +125,9 @@ public class YandexStationWebsocket {
         }
     }
 
+    /**
+     * Close websocket session.
+     */
     public void closeWebsocketSession() {
         if (session != null) {
             session.close();

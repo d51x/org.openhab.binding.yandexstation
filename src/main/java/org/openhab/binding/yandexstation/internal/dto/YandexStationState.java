@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.yandexstation.internal.response;
+package org.openhab.binding.yandexstation.internal.dto;
 
 import java.util.Map;
 
@@ -20,12 +20,33 @@ import java.util.Map;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 public class YandexStationState {
+    /**
+     * The Alice state.
+     */
     public String aliceState; // IDLE LISTENING SPEAKING BUSY
+    /**
+     * The Can stop.
+     */
     public Boolean canStop;
+    /**
+     * The Hdmi.
+     */
     public Map<String, Boolean> hdmi;
+    /**
+     * The Playing.
+     */
     public Boolean playing;
+    /**
+     * The Time since last voice activity.
+     */
     public Long timeSinceLastVoiceActivity;
+    /**
+     * The Volume.
+     */
     public Double volume;
 
+    /**
+     * The Player state.
+     */
     public YandexStationPlayerState playerState;
 }
