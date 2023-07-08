@@ -32,11 +32,22 @@ public class YandexApiFactory {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final HttpClient httpClient;
 
+    /**
+     * Instantiates a new Yandex api factory.
+     *
+     * @param httpClientFactory the http client factory
+     */
     @Activate
     public YandexApiFactory(@Reference HttpClientFactory httpClientFactory) {
         this.httpClient = httpClientFactory.getCommonHttpClient();
     }
 
+    /**
+     * Gets api.
+     *
+     * @return the api
+     * @throws ApiException the api exception
+     */
     public YandexApi getApi() throws ApiException {
         return new YandexApiImpl(httpClient);
     }

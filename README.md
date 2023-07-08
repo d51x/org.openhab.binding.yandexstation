@@ -112,9 +112,9 @@ https://yandex.ru/dev/dialogs/alice/doc/speech-tuning.html
 
 Channel `coverURI` содержит ссылку
 
-Пример `avatars.yandex.net/get-music-content/2383988/728fabfe.a.9594918-1/%%`
+Пример `https://avatars.yandex.net/get-music-content/2383988/728fabfe.a.9594918-1/%%`
 
-В начало добавить https:// а в конце вместо %% размер обложки, например 600x600
+В конце вместо %% размер обложки, например 600x600
 
 `https://avatars.yandex.net/get-music-content/2383988/728fabfe.a.9594918-1/600x600`
 

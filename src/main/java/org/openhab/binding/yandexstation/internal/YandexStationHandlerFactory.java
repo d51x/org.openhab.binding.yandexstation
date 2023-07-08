@@ -12,6 +12,13 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_BRIDGE;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_STATION;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -28,13 +35,6 @@ import org.openhab.core.thing.type.ThingType;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_BRIDGE;
-import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_STATION;
 
 /**
  * The {@link YandexStationHandlerFactory} is responsible for creating things and thing
@@ -56,6 +56,11 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
         return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
     }
 
+    /**
+     * Instantiates a new Yandex station handler factory.
+     *
+     * @param apiFactory the api factory
+     */
     @Activate
     public YandexStationHandlerFactory(@Reference YandexApiFactory apiFactory) {
         this.apiFactory = apiFactory;
@@ -90,7 +95,6 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
     @Override
     protected void removeHandler(ThingHandler thingHandler) {
         super.removeHandler(thingHandler);
-
     }
 
     @Override
@@ -112,8 +116,14 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
         return handler;
     }
 
+    /**
+     * Gets thing handler by thing uid.
+     *
+     * @param uid the uid
+     * @return the thing handler by thing uid
+     */
     public static YandexStationHandler getThingHandlerByThingUID(ThingUID uid) {
-        if ( !handlerMap.isEmpty() && handlerMap.containsKey(uid)) {
+        if (!handlerMap.isEmpty() && handlerMap.containsKey(uid)) {
             YandexStationHandler handler = handlerMap.get(uid);
             if (handler != null) {
                 return handler;
@@ -124,5 +134,4 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
             throw new RuntimeException(String.format("YandexStationThing with uid '%s' not found", uid));
         }
     }
-
 }

@@ -15,6 +15,7 @@ package org.openhab.binding.yandexstation.internal.yandexapi;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jetty.util.Fields;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 
 /**
  * The {@link YandexApi} is describing api interface.
@@ -23,15 +24,60 @@ import org.eclipse.jetty.util.Fields;
  */
 @NonNullByDefault
 public interface YandexApi {
+    /**
+     * Update.
+     *
+     * @throws ApiException the api exception
+     */
     void update() throws ApiException;
 
+    /**
+     * Initialize.
+     *
+     * @throws ApiException the api exception
+     */
     void initialize() throws ApiException;
 
+    /**
+     * Send get request api response.
+     *
+     * @param path   the path
+     * @param params the params
+     * @param token  the token
+     * @return the api response
+     * @throws ApiException the api exception
+     */
     ApiResponse sendGetRequest(String path, @NonNull String params, String token) throws ApiException;
 
+    /**
+     * Send get request api response.
+     *
+     * @param path  the path
+     * @param token the token
+     * @return the api response
+     * @throws ApiException the api exception
+     */
     ApiResponse sendGetRequest(String path, String token) throws ApiException;
 
+    /**
+     * Send post request api response.
+     *
+     * @param path  the path
+     * @param data  the data
+     * @param token the token
+     * @return the api response
+     * @throws ApiException the api exception
+     */
     ApiResponse sendPostRequest(String path, String data, String token) throws ApiException;
 
+    /**
+     * Send post request api response.
+     *
+     * @param path   the path
+     * @param fields the fields
+     * @param token  the token
+     * @return the api response
+     * @throws ApiException the api exception
+     */
     ApiResponse sendPostRequest(String path, Fields fields, String token) throws ApiException;
 }

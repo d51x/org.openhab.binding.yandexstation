@@ -12,12 +12,12 @@
  */
 package org.openhab.binding.yandexstation.internal.commands;
 
+import java.util.Date;
+import java.util.UUID;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
-
-import java.util.Date;
-import java.util.UUID;
 
 /**
  * The {@link YandexStationSendPacket} is responsible for YandexStationCommandTypes action, which are
@@ -32,6 +32,12 @@ public class YandexStationSendPacket {
     private Object payload;
     private long sentTime;
 
+    /**
+     * Instantiates a new Yandex station send packet.
+     *
+     * @param conversationToken the conversation token
+     * @param command           the command
+     */
     public YandexStationSendPacket(String conversationToken, YandexStationCommand command) {
         this.conversationToken = conversationToken;
         this.id = UUID.randomUUID().toString();
@@ -41,22 +47,47 @@ public class YandexStationSendPacket {
         this.sentTime = new Date().getTime();
     }
 
+    /**
+     * Sets conversation token.
+     *
+     * @param conversationToken the conversation token
+     */
     public void setConversationToken(String conversationToken) {
         this.conversationToken = conversationToken;
     }
 
+    /**
+     * Sets id.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets payload.
+     *
+     * @param payload the payload
+     */
     public void setPayload(String payload) {
         this.payload = payload;
     }
 
+    /**
+     * Sets sent time.
+     *
+     * @param sentTime the sent time
+     */
     public void setSentTime(long sentTime) {
         this.sentTime = sentTime;
     }

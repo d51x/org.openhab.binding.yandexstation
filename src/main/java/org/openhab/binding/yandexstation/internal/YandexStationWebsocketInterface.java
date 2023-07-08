@@ -19,14 +19,35 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
  *
  * @author Dmitry P. (d51x) - Initial contribution
  */
-
 @NonNullByDefault
 public interface YandexStationWebsocketInterface {
+    /**
+     * On connect.
+     *
+     * @param connected the connected
+     */
     public void onConnect(boolean connected);
 
+    /**
+     * On close.
+     *
+     * @param statusCode the status code
+     * @param reason     the reason
+     * @throws Exception the exception
+     */
     public void onClose(int statusCode, String reason) throws Exception;
 
+    /**
+     * On message.
+     *
+     * @param data the data
+     */
     public void onMessage(String data);
 
+    /**
+     * On error.
+     *
+     * @param cause the cause
+     */
     public void onError(Throwable cause);
 }

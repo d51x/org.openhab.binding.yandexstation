@@ -10,16 +10,16 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.yandexstation.internal.yandexapi;
-
-import java.io.Serializable;
+package org.openhab.binding.yandexstation.internal.yandexapi.response;
 
 /**
- * The {@link ApiResponse} is describing api common response.
+ * The {@link ApiTokenResponse} is describing api token response.
  *
  * @author "Dmintry P (d51x)" - Initial contribution
  */
-public class ApiResponse implements Serializable {
-    public Integer httpCode;
-    public String response;
+public class ApiTokenResponse extends ApiSuccessResponse {
+    /**
+     * The Token.
+     */
+    public String token;
 }

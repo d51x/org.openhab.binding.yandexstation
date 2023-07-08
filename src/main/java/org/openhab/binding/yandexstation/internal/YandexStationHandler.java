@@ -12,17 +12,28 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import com.google.gson.Gson;
+import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
+import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.openhab.binding.yandexstation.internal.actions.things.YandexStationThingActions;
 import org.openhab.binding.yandexstation.internal.commands.*;
-import org.openhab.binding.yandexstation.internal.response.YandexStationPlayerState;
-import org.openhab.binding.yandexstation.internal.response.YandexStationResponse;
-import org.openhab.binding.yandexstation.internal.response.YandexStationState;
-import org.openhab.binding.yandexstation.internal.yandexapi.ApiDeviceResponse;
+import org.openhab.binding.yandexstation.internal.dto.YandexStationPlayerState;
+import org.openhab.binding.yandexstation.internal.dto.YandexStationResponse;
+import org.openhab.binding.yandexstation.internal.dto.YandexStationState;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
@@ -37,17 +48,7 @@ import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import static org.openhab.binding.yandexstation.internal.YandexStationChannels.*;
-import static org.openhab.binding.yandexstation.internal.commands.YandexStationCommandTypes.*;
+import com.google.gson.Gson;
 
 /**
  * The {@link YandexStationHandler} is responsible for handling commands, which are
@@ -67,6 +68,9 @@ public class YandexStationHandler extends BaseThingHandler {
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     private @Nullable URI websocketAddress;
     private @Nullable YandexApiImpl api;
+    /**
+     * The Yandex station bridge.
+     */
     @Nullable
     YandexStationBridge yandexStationBridge;
     private YandexStationState stationState = new YandexStationState();
@@ -74,7 +78,7 @@ public class YandexStationHandler extends BaseThingHandler {
     /**
      * Instantiates a new Yandex station handler.
      *
-     * @param thing the thing
+     * @param thing      the thing
      * @param apiFactory the api factory
      * @throws ApiException the api exception
      */
@@ -83,7 +87,7 @@ public class YandexStationHandler extends BaseThingHandler {
         this.api = (YandexApiImpl) apiFactory.getApi();
     }
 
-    private Double prevVolume = 0.0;
+    private Integer prevVolume = 0;
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
@@ -98,7 +102,7 @@ public class YandexStationHandler extends BaseThingHandler {
             }
         } else if (CHANNEL_VOLUME.getName().equals(channelUID.getId())) {
             if (command instanceof DecimalType) {
-                sendSetVolumeCommand(((DecimalType) command).doubleValue());
+                sendSetVolumeCommand(((DecimalType) command).intValue());
             }
         } else if (CHANNEL_STATE_TRACK_POSITION.getName().equals(channelUID.getId())) {
             if (command instanceof DecimalType) {
@@ -300,6 +304,11 @@ public class YandexStationHandler extends BaseThingHandler {
         return Collections.singletonList(YandexStationThingActions.class); // , YandexStationAction.class);
     }
 
+    /**
+     * Send voice command.
+     *
+     * @param text the text
+     */
     public void sendVoiceCommand(String text) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SENT_TEXT, text);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
@@ -307,6 +316,11 @@ public class YandexStationHandler extends BaseThingHandler {
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
+    /**
+     * Send tts command.
+     *
+     * @param text the text
+     */
     public void sendTtsCommand(String text) {
         FormUpdate formUpdate = new FormUpdate();
         FormUpdateSlot slot = new FormUpdateSlot(text);
@@ -320,6 +334,9 @@ public class YandexStationHandler extends BaseThingHandler {
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
+    /**
+     * Send stop listening.
+     */
     public void sendStopListening() {
         ServerActionEvent event = new ServerActionEvent("on_suggest", null);
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SERVER_ACTION, event);
@@ -329,8 +346,12 @@ public class YandexStationHandler extends BaseThingHandler {
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
-
-    public void sendSetVolumeCommand(Double volume) {
+    /**
+     * Send set volume command.
+     *
+     * @param volume the volume
+     */
+    public void sendSetVolumeCommand(Integer volume) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SET_VOLUME, volume);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -344,27 +365,38 @@ public class YandexStationHandler extends BaseThingHandler {
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
+    /**
+     * Volume mute.
+     */
     public void volumeMute() {
-        if (prevVolume > 0.0) {
-            stationState.volume = prevVolume;
+        if (prevVolume > 0) {
+            stationState.setVolume(prevVolume);
         } else {
-            prevVolume = stationState.volume;
-            stationState.volume = 0.0;
+            prevVolume = stationState.getVolume();
+            stationState.setVolume(0);
         }
-        sendSetVolumeCommand(stationState.volume);
+        sendSetVolumeCommand(stationState.getVolume());
     }
 
+    /**
+     * Volume up.
+     */
     public void volumeUp() {
-        if (stationState.volume < 1) {
-            stationState.volume += 0.1;
-            sendSetVolumeCommand(stationState.volume);
+        Integer volume = stationState.getVolume();
+        if (volume < 10) {
+            volume++;
+            sendSetVolumeCommand(volume);
         }
     }
 
+    /**
+     * Volume down.
+     */
     public void volumeDown() {
-        if (stationState.volume > 0) {
-            stationState.volume -= 0.1;
-            sendSetVolumeCommand(stationState.volume);
+        Integer volume = stationState.getVolume();
+        if (volume > 0) {
+            volume--;
+            sendSetVolumeCommand(volume);
         }
     }
 
@@ -382,6 +414,9 @@ public class YandexStationHandler extends BaseThingHandler {
         }
     }
 
+    /**
+     * Send play next command.
+     */
     public void sendPlayNextCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_NEXT);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
@@ -389,6 +424,9 @@ public class YandexStationHandler extends BaseThingHandler {
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
+    /**
+     * Send play prev command.
+     */
     public void sendPlayPrevCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_PREV);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
@@ -396,6 +434,9 @@ public class YandexStationHandler extends BaseThingHandler {
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
+    /**
+     * Send play command.
+     */
     public void sendPlayCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_PLAY);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
@@ -403,6 +444,9 @@ public class YandexStationHandler extends BaseThingHandler {
         yandexStationWebsocket.sendMessage(yandexPacket.toString());
     }
 
+    /**
+     * Send stop command.
+     */
     public void sendStopCommand() {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_STOP);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
@@ -437,8 +481,8 @@ public class YandexStationHandler extends BaseThingHandler {
             if (stationState.playing != null) {
                 updateState(CHANNEL_STATE_PLAYING.getName(), new StringType(stationState.playing ? "PLAY" : "PAUSE"));
             }
-            if (stationState.volume != null) {
-                updateState(CHANNEL_VOLUME.getName(), new DecimalType(stationState.volume));
+            if (stationState.getVolume() != null) {
+                updateState(CHANNEL_VOLUME.getName(), new PercentType(stationState.getVolume()));
             }
             if (stationState.playing != null) {
                 updateState(CHANNEL_STATE_PLAYING.getName(), OnOffType.from(stationState.playing));
@@ -477,7 +521,7 @@ public class YandexStationHandler extends BaseThingHandler {
         }
         if (playerState.getExtra() != null) {
             if (playerState.getExtra().coverURI != null) {
-                updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(), new StringType(playerState.getExtra().coverURI));
+                updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(), new StringType("https://" + playerState.getExtra().coverURI));
             }
         }
         if (playerState.getEntityInfo() != null) {
@@ -553,6 +597,11 @@ public class YandexStationHandler extends BaseThingHandler {
         updateProperties(properties);
     }
 
+    /**
+     * Gets station state.
+     *
+     * @return the station state
+     */
     public YandexStationState getStationState() {
         return stationState;
     }

@@ -13,6 +13,8 @@
 
 package org.openhab.binding.yandexstation.internal.actions.handlers;
 
+import java.util.Map;
+
 import org.openhab.binding.yandexstation.internal.YandexStationHandler;
 import org.openhab.binding.yandexstation.internal.YandexStationHandlerFactory;
 import org.openhab.binding.yandexstation.internal.actions.types.VoiceCommandActionType;
@@ -21,8 +23,11 @@ import org.openhab.core.automation.ModuleHandlerCallback;
 import org.openhab.core.automation.handler.BaseActionModuleHandler;
 import org.openhab.core.thing.ThingUID;
 
-import java.util.Map;
-
+/**
+ * The type Action voice command handler.
+ *
+ * @author "Dmintry P (d51x)" - Initial contribution
+ */
 public class ActionVoiceCommandHandler extends BaseActionModuleHandler {
 
     @Override
@@ -30,6 +35,11 @@ public class ActionVoiceCommandHandler extends BaseActionModuleHandler {
         super.setCallback(callback);
     }
 
+    /**
+     * Instantiates a new Action voice command handler.
+     *
+     * @param module the module
+     */
     public ActionVoiceCommandHandler(final Action module) {
         super(module);
     }

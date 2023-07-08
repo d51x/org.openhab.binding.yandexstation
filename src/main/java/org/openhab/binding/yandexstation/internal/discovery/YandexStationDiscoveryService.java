@@ -21,7 +21,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.YandexStationBindingConstants;
 import org.openhab.binding.yandexstation.internal.YandexStationBridge;
-import org.openhab.binding.yandexstation.internal.yandexapi.ApiDeviceResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.config.discovery.AbstractDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
  * Discovery service for Yandex station
  *
  * @author Petr Shatsillo - Initial contribution
- *
  */
 @Component(service = DiscoveryService.class, configurationPid = "discovery.yandexstation")
 @NonNullByDefault
@@ -44,8 +43,14 @@ public class YandexStationDiscoveryService extends AbstractDiscoveryService {
     @Nullable
     private Runnable scanner;
     private @Nullable ScheduledFuture<?> backgroundFuture;
+    /**
+     * The constant yandexTokenBridgeBusList.
+     */
     public static List<YandexStationBridge> yandexTokenBridgeBusList = new ArrayList<org.openhab.binding.yandexstation.internal.YandexStationBridge>();
 
+    /**
+     * Instantiates a new Yandex station discovery service.
+     */
     public YandexStationDiscoveryService() {
         super(Collections.singleton(YandexStationBindingConstants.THING_TYPE_BRIDGE), 30, false);
     }

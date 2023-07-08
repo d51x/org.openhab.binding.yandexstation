@@ -13,7 +13,11 @@
 
 package org.openhab.binding.yandexstation.internal.actions.types;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.openhab.binding.yandexstation.internal.YandexStationHandlerFactory;
+import org.openhab.binding.yandexstation.internal.YandexStationTranslationProvider;
 import org.openhab.core.automation.Visibility;
 import org.openhab.core.automation.type.ActionType;
 import org.openhab.core.automation.type.Input;
@@ -21,53 +25,98 @@ import org.openhab.core.config.core.ConfigDescriptionParameter;
 import org.openhab.core.config.core.ConfigDescriptionParameterBuilder;
 import org.openhab.core.config.core.FilterCriteria;
 
-import java.util.ArrayList;
-import java.util.List;
-
+/**
+ * The type Voice command action type.
+ *
+ * @author "Dmintry P (d51x)" - Initial contribution
+ */
 public class VoiceCommandActionType extends ActionType {
+    /**
+     * The constant UID.
+     */
     public static final String UID = "yandexstation.voiceCommand";
+    /**
+     * The constant CONFIG_PARAM_NAME_TEXT.
+     */
     public static final String CONFIG_PARAM_NAME_TEXT = "voiceCommand";
+    /**
+     * The constant CONFIG_PARAM_NAME_STATION.
+     */
     public static final String CONFIG_PARAM_NAME_STATION = "station";
+    /**
+     * The constant CONFIG_TEXT.
+     */
     public static final String CONFIG_TEXT = "Voice Command";
+    /**
+     * The constant CONFIG_TEXT_DESCR.
+     */
     public static final String CONFIG_TEXT_DESCR = "Send text to Yandex Station for voice command";
+    /**
+     * The constant CONFIG_STATION.
+     */
     public static final String CONFIG_STATION = "Select Station";
+    /**
+     * The constant CONFIG_STATION_DESCR.
+     */
     public static final String CONFIG_STATION_DESCR = "Select Station";
 
-    public static ActionType initialize() {
+    /**
+     * Initialize action type.
+     *
+     * @param i18nProvider the 18 n provider
+     * @return the action type
+     */
+    public static ActionType initialize(YandexStationTranslationProvider i18nProvider) {
         // это описание конфигурационных параметров после открытия окна Add Action
-        final ConfigDescriptionParameter textParam = ConfigDescriptionParameterBuilder.create(CONFIG_PARAM_NAME_TEXT,
-                        ConfigDescriptionParameter.Type.TEXT).withRequired(true).withReadOnly(false).withMultiple(false)
-                .withLabel(CONFIG_TEXT).withDescription(CONFIG_TEXT_DESCR).build();
 
-        //FilterCriteria filterCriteria = new FilterCriteria("id", "yandexstation:station");
+        String label = i18nProvider.getText("action.VoiceCommandLabel", CONFIG_TEXT);
+        String description = i18nProvider.getText("action.VoiceCommandDescription", CONFIG_TEXT_DESCR);
+
+        final ConfigDescriptionParameter textParam = ConfigDescriptionParameterBuilder
+                .create(CONFIG_PARAM_NAME_TEXT, ConfigDescriptionParameter.Type.TEXT).withRequired(true)
+                .withReadOnly(false).withMultiple(false).withLabel(label).withDescription(description).build();
+
+        Input textInput = new Input(CONFIG_PARAM_NAME_TEXT, String.class.getName(), label, description, null, true,
+                null, null);
+
+        label = i18nProvider.getText("action.select_station.label", CONFIG_STATION);
+        description = i18nProvider.getText("action.select_station.description", CONFIG_STATION_DESCR);
+
+        // FilterCriteria filterCriteria = new FilterCriteria("id", "yandexstation:station");
         FilterCriteria filterCriteria = new FilterCriteria("bindingId", "yandexstation");
-        final ConfigDescriptionParameter stationParam = ConfigDescriptionParameterBuilder.create(CONFIG_PARAM_NAME_STATION,
-                        ConfigDescriptionParameter.Type.TEXT)
-                .withRequired(true).withReadOnly(false).withMultiple(false).withLabel(CONFIG_STATION)
-                .withFilterCriteria(List.of(filterCriteria))
-                .withContext("thing")
-                .withDescription(CONFIG_STATION_DESCR).build();
+        final ConfigDescriptionParameter stationParam = ConfigDescriptionParameterBuilder
+                .create(CONFIG_PARAM_NAME_STATION, ConfigDescriptionParameter.Type.TEXT).withRequired(true)
+                .withReadOnly(false).withMultiple(false).withLabel(label).withFilterCriteria(List.of(filterCriteria))
+                .withContext("thing").withDescription(description).build();
+
+        Input stationInput = new Input(CONFIG_PARAM_NAME_STATION, YandexStationHandlerFactory.class.getName(), label,
+                description, null, true, null, null);
 
         List<ConfigDescriptionParameter> config = new ArrayList<ConfigDescriptionParameter>();
         config.add(textParam);
         config.add(stationParam);
 
-        Input textInput = new Input(CONFIG_PARAM_NAME_TEXT, String.class.getName(), CONFIG_TEXT,
-                CONFIG_TEXT_DESCR, null, true, null, null);
-        Input stationInput = new Input(CONFIG_PARAM_NAME_STATION,
-                YandexStationHandlerFactory.class.getName(), CONFIG_STATION, CONFIG_STATION_DESCR, null,
-                true, null, null);
-
         List<Input> input = new ArrayList<>();
         input.add(textInput);
         input.add(stationInput);
 
-        return new VoiceCommandActionType(config, input);
+        label = i18nProvider.getText("action.VoiceCommandLabel", CONFIG_TEXT);
+        description = i18nProvider.getText("action.VoiceCommandDescription", CONFIG_TEXT_DESCR);
+
+        return new VoiceCommandActionType(config, input, label, description);
     }
 
-    public VoiceCommandActionType(List<ConfigDescriptionParameter> config, List<Input> input) {
-        super(UID, config, CONFIG_TEXT, CONFIG_TEXT_DESCR, null,
-                Visibility.VISIBLE, input, null);
+    /**
+     * Instantiates a new Voice command action type.
+     *
+     * @param config      the config
+     * @param input       the input
+     * @param label       the label
+     * @param description the description
+     */
+    public VoiceCommandActionType(List<ConfigDescriptionParameter> config, List<Input> input, String label,
+            String description) {
+        super(UID, config, label, description, null, Visibility.VISIBLE, input, null);
         // отображается в окне выбора типов экшенов
     }
 }
