@@ -87,7 +87,7 @@ public class YandexStationHandler extends BaseThingHandler {
         this.api = (YandexApiImpl) apiFactory.getApi();
     }
 
-    private Double prevVolume = 0.0;
+    private Integer prevVolume = 0;
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
@@ -102,7 +102,7 @@ public class YandexStationHandler extends BaseThingHandler {
             }
         } else if (CHANNEL_VOLUME.getName().equals(channelUID.getId())) {
             if (command instanceof DecimalType) {
-                sendSetVolumeCommand(((DecimalType) command).doubleValue());
+                sendSetVolumeCommand(((DecimalType) command).intValue());
             }
         } else if (CHANNEL_STATE_TRACK_POSITION.getName().equals(channelUID.getId())) {
             if (command instanceof DecimalType) {
@@ -351,7 +351,7 @@ public class YandexStationHandler extends BaseThingHandler {
      *
      * @param volume the volume
      */
-    public void sendSetVolumeCommand(Double volume) {
+    public void sendSetVolumeCommand(Integer volume) {
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SET_VOLUME, volume);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -369,22 +369,23 @@ public class YandexStationHandler extends BaseThingHandler {
      * Volume mute.
      */
     public void volumeMute() {
-        if (prevVolume > 0.0) {
-            stationState.volume = prevVolume;
+        if (prevVolume > 0) {
+            stationState.setVolume(prevVolume);
         } else {
-            prevVolume = stationState.volume;
-            stationState.volume = 0.0;
+            prevVolume = stationState.getVolume();
+            stationState.setVolume(0);
         }
-        sendSetVolumeCommand(stationState.volume);
+        sendSetVolumeCommand(stationState.getVolume());
     }
 
     /**
      * Volume up.
      */
     public void volumeUp() {
-        if (stationState.volume < 1) {
-            stationState.volume += 0.1;
-            sendSetVolumeCommand(stationState.volume);
+        Integer volume = stationState.getVolume();
+        if (volume < 10) {
+            volume++;
+            sendSetVolumeCommand(volume);
         }
     }
 
@@ -392,9 +393,10 @@ public class YandexStationHandler extends BaseThingHandler {
      * Volume down.
      */
     public void volumeDown() {
-        if (stationState.volume > 0) {
-            stationState.volume -= 0.1;
-            sendSetVolumeCommand(stationState.volume);
+        Integer volume = stationState.getVolume();
+        if (volume > 0) {
+            volume--;
+            sendSetVolumeCommand(volume);
         }
     }
 
@@ -479,8 +481,8 @@ public class YandexStationHandler extends BaseThingHandler {
             if (stationState.playing != null) {
                 updateState(CHANNEL_STATE_PLAYING.getName(), new StringType(stationState.playing ? "PLAY" : "PAUSE"));
             }
-            if (stationState.volume != null) {
-                updateState(CHANNEL_VOLUME.getName(), new DecimalType(stationState.volume));
+            if (stationState.getVolume() != null) {
+                updateState(CHANNEL_VOLUME.getName(), new PercentType(stationState.getVolume()));
             }
             if (stationState.playing != null) {
                 updateState(CHANNEL_STATE_PLAYING.getName(), OnOffType.from(stationState.playing));

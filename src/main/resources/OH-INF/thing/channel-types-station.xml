@@ -38,10 +38,10 @@
 		</state>
 	</channel-type>
 	<channel-type id="volume-channel">
-		<item-type>Number</item-type>
+		<item-type>Dimmer</item-type>
 		<label>Volume</label>
-		<description>Volume from 0.0 to 1.0, step 0.1</description>
+		<description>Volume from 0 to 10, step 1</description>
 		<category>if:mdi:volume-high</category>
-		<state pattern="%.1f %unit%" min="0" max="1" step="0.1" readOnly="true"/>
+		<state pattern="%.1f %unit%" min="0" max="10" step="1" readOnly="true"/>
 	</channel-type>
 </thing:thing-descriptions>

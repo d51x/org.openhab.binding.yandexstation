@@ -218,7 +218,7 @@ public class YandexStationThingActions implements ThingActions {
             logger.warn("YandexStationHandler is null");
             return;
         }
-        handler.sendSetVolumeCommand(level / 10.0);
+        handler.sendSetVolumeCommand(level);
     }
 
     /**

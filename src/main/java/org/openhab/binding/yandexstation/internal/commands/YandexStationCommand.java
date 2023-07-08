@@ -53,7 +53,7 @@ public class YandexStationCommand {
         if (command == YandexStationCommandTypes.CMD_REWIND) {
             this.position = (Integer) value;
         } else if (command == YandexStationCommandTypes.CMD_SET_VOLUME) {
-            this.volume = (Double) value;
+            this.volume = (Integer) value / 10.0;
         } else if (command == YandexStationCommandTypes.CMD_SENT_TEXT) {
             this.text = (String) value;
         } else if (command == YandexStationCommandTypes.CMD_SERVER_ACTION) {
