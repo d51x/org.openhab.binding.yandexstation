@@ -42,6 +42,6 @@
 		<label>Volume</label>
 		<description>Volume from 0 to 10, step 1</description>
 		<category>if:mdi:volume-high</category>
-		<state pattern="%.1f %unit%" min="0" max="10" step="1" readOnly="true"/>
+		<state pattern="%d %unit%" min="0" max="10" step="1" readOnly="false"/>
 	</channel-type>
 </thing:thing-descriptions>
