@@ -521,7 +521,7 @@ public class YandexStationHandler extends BaseThingHandler {
         }
         if (playerState.getExtra() != null) {
             if (playerState.getExtra().coverURI != null) {
-                updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(), new StringType(playerState.getExtra().coverURI));
+                updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(), new StringType("https://" + playerState.getExtra().coverURI));
             }
         }
         if (playerState.getEntityInfo() != null) {
