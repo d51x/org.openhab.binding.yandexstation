@@ -27,7 +27,7 @@ public class ServerActionEvent {
     /**
      * Instantiates a new Server action event.
      *
-     * @param name    the name
+     * @param name the name
      * @param payload the payload
      */
     public ServerActionEvent(String name, ServerActionPayload payload) {

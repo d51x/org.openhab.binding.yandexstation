@@ -1,16 +1,15 @@
-/*
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+/**
+ * Copyright (c) 2010-2022 Contributors to the openHAB project
  *
- *  See the NOTICE file(s) distributed with this work for additional
- *  information.
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
  *
  * This program and the accompanying materials are made available under the
- *  terms of the Eclipse Public License 2.0 which is available at
- *  http://www.eclipse.org/legal/epl-2.0
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-
 package org.openhab.binding.yandexstation.internal.actions.types;
 
 import java.util.*;
@@ -18,8 +17,6 @@ import java.util.*;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.YandexStationTranslationProvider;
-import org.openhab.binding.yandexstation.internal.actions.types.SayTextActionType;
-import org.openhab.binding.yandexstation.internal.actions.types.VoiceCommandActionType;
 import org.openhab.core.automation.type.ModuleType;
 import org.openhab.core.automation.type.ModuleTypeProvider;
 import org.openhab.core.common.registry.ProviderChangeListener;
@@ -31,6 +28,8 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * The type Action type provider.
+ * 
+ * @author "Dmintry P (d51x)" - Initial contribution
  */
 @NonNullByDefault
 @Component(service = { ModuleTypeProvider.class })
@@ -43,7 +42,7 @@ public class ActionTypeProvider implements ModuleTypeProvider {
     /**
      * Instantiates a new Action type provider.
      *
-     * @param i18nProvider   the 18 n provider
+     * @param i18nProvider the 18 n provider
      * @param localeProvider the locale provider
      */
     @Activate

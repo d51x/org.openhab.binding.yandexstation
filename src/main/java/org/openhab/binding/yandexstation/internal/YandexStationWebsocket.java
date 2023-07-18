@@ -87,7 +87,7 @@ public class YandexStationWebsocket {
      * On close.
      *
      * @param statusCode the status code
-     * @param reason     the reason
+     * @param reason the reason
      * @throws Exception the exception
      */
     @OnWebSocketClose

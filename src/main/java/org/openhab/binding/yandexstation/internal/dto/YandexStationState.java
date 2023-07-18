@@ -51,7 +51,7 @@ public class YandexStationState {
     public YandexStationPlayerState playerState;
 
     public Integer getVolume() {
-        return (int)(volume.doubleValue() * 10);
+        return (int) (volume.doubleValue() * 10);
     }
 
     public void setVolume(Integer volume) {

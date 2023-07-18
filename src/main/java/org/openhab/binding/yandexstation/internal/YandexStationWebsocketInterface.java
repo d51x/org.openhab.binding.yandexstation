@@ -32,7 +32,7 @@ public interface YandexStationWebsocketInterface {
      * On close.
      *
      * @param statusCode the status code
-     * @param reason     the reason
+     * @param reason the reason
      * @throws Exception the exception
      */
     public void onClose(int statusCode, String reason) throws Exception;

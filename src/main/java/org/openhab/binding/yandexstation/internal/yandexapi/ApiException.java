@@ -36,7 +36,7 @@ public class ApiException extends Exception {
      * Instantiates a new Api exception.
      *
      * @param message the message
-     * @param e       the e
+     * @param e the e
      */
     public ApiException(String message, Throwable e) {
         super(message, e);

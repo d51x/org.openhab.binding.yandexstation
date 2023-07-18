@@ -46,8 +46,8 @@ public class FormUpdateSlot {
     /**
      * Instantiates a new Form update slot.
      *
-     * @param type  the type
-     * @param name  the name
+     * @param type the type
+     * @param name the name
      * @param value the value
      */
     public FormUpdateSlot(String type, String name, String value) {

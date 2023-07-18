@@ -46,7 +46,7 @@ public class YandexStationCommand {
      * Instantiates a new Yandex station command.
      *
      * @param command the command
-     * @param value   the value
+     * @param value the value
      */
     public YandexStationCommand(YandexStationCommandTypes command, Object value) {
         this.command = command.getCommand();

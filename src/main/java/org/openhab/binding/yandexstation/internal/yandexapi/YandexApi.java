@@ -41,9 +41,9 @@ public interface YandexApi {
     /**
      * Send get request api response.
      *
-     * @param path   the path
+     * @param path the path
      * @param params the params
-     * @param token  the token
+     * @param token the token
      * @return the api response
      * @throws ApiException the api exception
      */
@@ -52,7 +52,7 @@ public interface YandexApi {
     /**
      * Send get request api response.
      *
-     * @param path  the path
+     * @param path the path
      * @param token the token
      * @return the api response
      * @throws ApiException the api exception
@@ -62,8 +62,8 @@ public interface YandexApi {
     /**
      * Send post request api response.
      *
-     * @param path  the path
-     * @param data  the data
+     * @param path the path
+     * @param data the data
      * @param token the token
      * @return the api response
      * @throws ApiException the api exception
@@ -73,9 +73,9 @@ public interface YandexApi {
     /**
      * Send post request api response.
      *
-     * @param path   the path
+     * @param path the path
      * @param fields the fields
-     * @param token  the token
+     * @param token the token
      * @return the api response
      * @throws ApiException the api exception
      */

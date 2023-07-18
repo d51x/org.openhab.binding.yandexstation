@@ -36,7 +36,7 @@ public class YandexStationSendPacket {
      * Instantiates a new Yandex station send packet.
      *
      * @param conversationToken the conversation token
-     * @param command           the command
+     * @param command the command
      */
     public YandexStationSendPacket(String conversationToken, YandexStationCommand command) {
         this.conversationToken = conversationToken;

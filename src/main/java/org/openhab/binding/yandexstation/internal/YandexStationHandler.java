@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -33,10 +34,10 @@ import org.openhab.binding.yandexstation.internal.commands.*;
 import org.openhab.binding.yandexstation.internal.dto.YandexStationPlayerState;
 import org.openhab.binding.yandexstation.internal.dto.YandexStationResponse;
 import org.openhab.binding.yandexstation.internal.dto.YandexStationState;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.*;
 import org.openhab.core.thing.*;
@@ -60,7 +61,7 @@ import com.google.gson.Gson;
 public class YandexStationHandler extends BaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(YandexStationHandler.class);
-
+    private @Nullable ScheduledFuture<?> refreshPollingJob;
     private @Nullable YandexStationConfiguration config;
     private @Nullable Future<?> initJob;
     private WebSocketClient webSocketClient = new WebSocketClient();
@@ -78,7 +79,7 @@ public class YandexStationHandler extends BaseThingHandler {
     /**
      * Instantiates a new Yandex station handler.
      *
-     * @param thing      the thing
+     * @param thing the thing
      * @param apiFactory the api factory
      * @throws ApiException the api exception
      */
@@ -181,13 +182,19 @@ public class YandexStationHandler extends BaseThingHandler {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED, "Check bridge");
         } else {
             initJob = connect(0);
+            if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
+                refreshPollingJob = scheduler.scheduleWithFixedDelay(this::receiveDeviceToken, 0, 1, TimeUnit.MINUTES);
+            }
         }
     }
 
     @Override
     public void dispose() {
         super.dispose();
-
+        if (refreshPollingJob != null && !refreshPollingJob.isCancelled()) {
+            refreshPollingJob.cancel(true);
+            refreshPollingJob = null;
+        }
         try {
             webSocketClient.stop();
             Future<?> job = initJob;
@@ -521,7 +528,8 @@ public class YandexStationHandler extends BaseThingHandler {
         }
         if (playerState.getExtra() != null) {
             if (playerState.getExtra().coverURI != null) {
-                updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(), new StringType("https://" + playerState.getExtra().coverURI));
+                updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(),
+                        new StringType("https://" + playerState.getExtra().coverURI));
             }
         }
         if (playerState.getEntityInfo() != null) {
