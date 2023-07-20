@@ -219,6 +219,8 @@ public class YandexStationHandler extends BaseThingHandler {
                 boolean thingReachable = connectStation(config);
                 if (thingReachable) {
                     updateStatus(ThingStatus.ONLINE);
+                } else {
+                    reconnectWebsocket();
                 }
             }
         }, wait, TimeUnit.SECONDS);
