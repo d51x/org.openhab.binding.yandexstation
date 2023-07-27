@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -60,7 +61,7 @@ import com.google.gson.Gson;
 public class YandexStationHandler extends BaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(YandexStationHandler.class);
-
+    private @Nullable ScheduledFuture<?> refreshPollingJob;
     private @Nullable YandexStationConfiguration config;
     private @Nullable Future<?> initJob;
     private WebSocketClient webSocketClient = new WebSocketClient();
@@ -181,13 +182,20 @@ public class YandexStationHandler extends BaseThingHandler {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED, "Check bridge");
         } else {
             initJob = connect(0);
+            if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
+                refreshPollingJob = scheduler.scheduleWithFixedDelay(
+                        () -> ping(Objects.requireNonNull(config).device_token), 0, 1, TimeUnit.MINUTES);
+            }
         }
     }
 
     @Override
     public void dispose() {
         super.dispose();
-
+        if (refreshPollingJob != null && !refreshPollingJob.isCancelled()) {
+            refreshPollingJob.cancel(true);
+            refreshPollingJob = null;
+        }
         try {
             webSocketClient.stop();
             Future<?> job = initJob;
