@@ -17,10 +17,7 @@ import static org.openhab.binding.yandexstation.internal.commands.YandexStationC
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -183,7 +180,8 @@ public class YandexStationHandler extends BaseThingHandler {
         } else {
             initJob = connect(0);
             if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
-                refreshPollingJob = scheduler.scheduleWithFixedDelay(this::receiveDeviceToken, 0, 1, TimeUnit.MINUTES);
+                refreshPollingJob = scheduler.scheduleWithFixedDelay(
+                        () -> ping(Objects.requireNonNull(config).device_token), 0, 1, TimeUnit.MINUTES);
             }
         }
     }
