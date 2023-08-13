@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -78,7 +78,7 @@ public class YandexStationThingActions implements ThingActions {
      * Say text.
      *
      * @param message the message
-     * @param voice   the voice
+     * @param voice the voice
      */
     @RuleAction(label = "@text/action.SayLabel", description = "@text/action.SayDescription")
     public void sayText(
@@ -252,7 +252,7 @@ public class YandexStationThingActions implements ThingActions {
     /**
      * Say text.
      *
-     * @param actions     the actions
+     * @param actions the actions
      * @param description the description
      */
     public static void sayText(@Nullable ThingActions actions, @NonNull String description) {
@@ -266,9 +266,9 @@ public class YandexStationThingActions implements ThingActions {
     /**
      * Say text.
      *
-     * @param actions     the actions
+     * @param actions the actions
      * @param description the description
-     * @param voice       the voice
+     * @param voice the voice
      */
     public static void sayText(@Nullable ThingActions actions, @NonNull String description, String voice) {
         if (actions instanceof YandexStationThingActions) {
@@ -281,9 +281,9 @@ public class YandexStationThingActions implements ThingActions {
     /**
      * Say text.
      *
-     * @param actions     the actions
+     * @param actions the actions
      * @param description the description
-     * @param whisper     the whisper
+     * @param whisper the whisper
      */
     public static void sayText(@Nullable ThingActions actions, @NonNull String description, @NonNull Boolean whisper) {
         if (actions instanceof YandexStationThingActions) {
@@ -296,7 +296,7 @@ public class YandexStationThingActions implements ThingActions {
     /**
      * Voice command.
      *
-     * @param actions     the actions
+     * @param actions the actions
      * @param description the description
      */
     public static void voiceCommand(@Nullable ThingActions actions, @NonNull String description) {
@@ -389,7 +389,7 @@ public class YandexStationThingActions implements ThingActions {
      * Sets volume.
      *
      * @param actions the actions
-     * @param level   the level
+     * @param level the level
      */
     public static void setVolume(@Nullable ThingActions actions, @NonNull Integer level) {
         if (actions instanceof YandexStationThingActions) {
@@ -403,7 +403,7 @@ public class YandexStationThingActions implements ThingActions {
      * Mute.
      *
      * @param actions the actions
-     * @param mute    the mute
+     * @param mute the mute
      */
     public static void mute(@Nullable ThingActions actions, @NonNull Boolean mute) {
         if (actions instanceof YandexStationThingActions) {

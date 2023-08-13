@@ -12,7 +12,7 @@
 		<category>Speaker</category>
 
 		<config-description>
-			<parameter name="yandex_token" type="text" required="true">
+			<parameter name="yandex_token" type="text">
 				<context>password</context>
 				<label>Yandex Token</label>
 				<description>
@@ -26,6 +26,20 @@
 						Other options described here: https://github.com/MarshalX/yandex-music-api/discussions/513#discussioncomment-2729781
 						</ul>
 					]]>
+				</description>
+			</parameter>
+			<parameter name="username" type="text">
+				<context>text</context>
+				<label>Yandex username</label>
+				<description>
+					Yandex username
+				</description>
+			</parameter>
+			<parameter name="password" type="text">
+				<context>password</context>
+				<label>Yandex password</label>
+				<description>
+					Yandex one time password
 				</description>
 			</parameter>
 		</config-description>

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -17,16 +17,19 @@ import java.util.Map;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.discovery.YandexStationDiscoveryService;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiGetTokens;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseBridgeHandler;
 import org.openhab.core.types.Command;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link YandexStationBindingConstants} class defines common constants, which are
@@ -35,10 +38,12 @@ import org.openhab.core.types.Command;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 public class YandexStationBridge extends BaseBridgeHandler {
+    private final Logger logger = LoggerFactory.getLogger(YandexStationBridge.class);
     /**
      * The Api.
      */
     public YandexApiImpl api;
+    public YandexApiGetTokens token;
     /**
      * The Devices list.
      */
@@ -55,13 +60,14 @@ public class YandexStationBridge extends BaseBridgeHandler {
     /**
      * Instantiates a new Yandex station bridge.
      *
-     * @param bridge     the bridge
+     * @param bridge the bridge
      * @param apiFactory the api factory
      * @throws ApiException the api exception
      */
     public YandexStationBridge(Bridge bridge, YandexApiFactory apiFactory) throws ApiException {
         super(bridge);
         api = (YandexApiImpl) apiFactory.getApi();
+        token = (YandexApiGetTokens) apiFactory.getToken();
     }
 
     @Override
@@ -71,6 +77,8 @@ public class YandexStationBridge extends BaseBridgeHandler {
         config = getConfigAs(YandexStationConfiguration.class);
         if (config != null) {
             try {
+                String yaMusicToken = token.getToken(config.username, config.password);
+                logger.debug("response {}", yaMusicToken);
                 devicesList = api.getDevices(config.yandex_token);
                 updateStatus(ThingStatus.ONLINE);
             } catch (ApiException e) {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -46,7 +46,7 @@ public class YandexStationCommand {
      * Instantiates a new Yandex station command.
      *
      * @param command the command
-     * @param value   the value
+     * @param value the value
      */
     public YandexStationCommand(YandexStationCommandTypes command, Object value) {
         this.command = command.getCommand();

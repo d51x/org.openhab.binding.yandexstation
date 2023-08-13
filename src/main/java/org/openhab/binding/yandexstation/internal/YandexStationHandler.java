@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -33,10 +33,10 @@ import org.openhab.binding.yandexstation.internal.commands.*;
 import org.openhab.binding.yandexstation.internal.dto.YandexStationPlayerState;
 import org.openhab.binding.yandexstation.internal.dto.YandexStationResponse;
 import org.openhab.binding.yandexstation.internal.dto.YandexStationState;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.*;
 import org.openhab.core.thing.*;
@@ -78,7 +78,7 @@ public class YandexStationHandler extends BaseThingHandler {
     /**
      * Instantiates a new Yandex station handler.
      *
-     * @param thing      the thing
+     * @param thing the thing
      * @param apiFactory the api factory
      * @throws ApiException the api exception
      */
@@ -521,7 +521,8 @@ public class YandexStationHandler extends BaseThingHandler {
         }
         if (playerState.getExtra() != null) {
             if (playerState.getExtra().coverURI != null) {
-                updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(), new StringType("https://" + playerState.getExtra().coverURI));
+                updateState(CHANNEL_STATE_TRACK_COVER_URI.getName(),
+                        new StringType("https://" + playerState.getExtra().coverURI));
             }
         }
         if (playerState.getEntityInfo() != null) {

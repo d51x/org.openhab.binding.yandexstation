@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -39,7 +39,7 @@ public class ServerActionPayload {
      * Instantiates a new Server action payload.
      *
      * @param formUpdate the form update
-     * @param resubmit   the resubmit
+     * @param resubmit the resubmit
      */
     public ServerActionPayload(FormUpdate formUpdate, Boolean resubmit) {
         this.formUpdate = formUpdate;
