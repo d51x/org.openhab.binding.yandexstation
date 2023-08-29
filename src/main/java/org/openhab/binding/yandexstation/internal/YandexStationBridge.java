@@ -14,6 +14,7 @@ package org.openhab.binding.yandexstation.internal;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.discovery.YandexStationDiscoveryService;
@@ -77,12 +78,19 @@ public class YandexStationBridge extends BaseBridgeHandler {
         config = getConfigAs(YandexStationConfiguration.class);
         if (config != null) {
             try {
-                String yaMusicToken = token.getToken(config.username, config.password);
-                logger.debug("response {}", yaMusicToken);
-                devicesList = api.getDevices(config.yandex_token);
-                updateStatus(ThingStatus.ONLINE);
+                token.getToken(config.username, config.password);
+                if (token.readMusicToken() != null) {
+                    devicesList = api.getDevices(Objects.requireNonNull(token.readMusicToken()));
+                    config.yandex_token = Objects.requireNonNull(token.readMusicToken());
+                    updateStatus(ThingStatus.ONLINE);
+                } else {
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                            "Can not find Yandex music token");
+                }
+
             } catch (ApiException e) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Can not connect to Yandex");
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                        "Can not connect to Yandex: " + e.getMessage());
             }
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Check bridge configuration");
