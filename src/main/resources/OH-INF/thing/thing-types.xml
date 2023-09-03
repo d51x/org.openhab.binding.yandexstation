@@ -37,4 +37,15 @@
 			</parameter>
 		</config-description>
 	</thing-type>
+
+	<thing-type id="scenarios">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="bridge"/>
+		</supported-bridge-type-refs>
+
+		<label>Yandex Station Scenarios</label>
+		<description>Yandex Station Scenarios</description>
+		<category>Speaker</category>
+
+	</thing-type>
 </thing:thing-descriptions>

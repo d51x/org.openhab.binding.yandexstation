@@ -80,8 +80,8 @@ public class YandexStationBridge extends BaseBridgeHandler {
             try {
                 token.getToken(config.username, config.password);
                 if (token.readMusicToken() != null) {
-                    devicesList = api.getDevices(Objects.requireNonNull(token.readMusicToken()));
                     config.yandex_token = Objects.requireNonNull(token.readMusicToken());
+                    devicesList = api.getDevices(Objects.requireNonNull(token.readMusicToken()));
                     updateStatus(ThingStatus.ONLINE);
                 } else {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,

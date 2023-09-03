@@ -12,8 +12,7 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_BRIDGE;
-import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_STATION;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +45,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(configurationPid = "binding.yandexstation", service = ThingHandlerFactory.class)
 public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_STATION, THING_TYPE_BRIDGE);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_STATION, THING_TYPE_BRIDGE,
+            THING_TYPE_SCENARIO);
     private final YandexApiFactory apiFactory;
 
     private static final Map<ThingUID, @NonNull YandexStationHandler> handlerMap = new HashMap<>();
@@ -79,6 +79,12 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
         } else if (THING_TYPE_BRIDGE.equals(thingTypeUID)) {
             try {
                 return new YandexStationBridge((Bridge) thing, apiFactory);
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (THING_TYPE_SCENARIO.equals(thingTypeUID)) {
+            try {
+                return new YandexScenariosHandler(thing, apiFactory);
             } catch (ApiException e) {
                 throw new RuntimeException(e);
             }
