@@ -13,7 +13,6 @@
 package org.openhab.binding.yandexstation.internal.yandexapi.response;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * The {@link APICloudDevicesResponse} is describing implementaion of api interface.
@@ -22,54 +21,36 @@ import org.eclipse.jdt.annotation.Nullable;
  */
 @NonNullByDefault
 public class APICloudDevicesResponse {
-    @Nullable
-    String status;
-    @Nullable
+    public String status = "";
     Households[] households = new Households[0];
-    @Nullable
-    String updates_url;
-
-    public APICloudDevicesResponse() {
-    }
+    public String updates_url = "";
 
     public class Households {
-        @Nullable
-        String id;
-        @Nullable
-        String name;
-        @Nullable
+        String id = "";
+        String name = "";
         Rooms[] rooms = new Rooms[0];
     }
 
     public class Rooms {
-        @Nullable
-        String id;
-        @Nullable
-        String name;
+        String id = "";
+        String name = "";
         Items[] items = new Items[0];
     }
 
     public class Items {
-        @Nullable
-        String id;
-        @Nullable
-        String name;
-        @Nullable
-        String type;
+        String id = "";
+        String name = "";
+        String type = "";
         Capabilities[] capabilities = new Capabilities[0];
     }
 
     public class Capabilities {
-        @Nullable
-        String type;
-        @Nullable
-        State state;
+        String type = "";
+        State state = new State();
     }
 
     public class State {
-        @Nullable
-        String instance;
-        @Nullable
-        Object value;
+        String instance = "";
+        Object value = "";
     }
 }

@@ -14,6 +14,7 @@ package org.openhab.binding.yandexstation.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -24,6 +25,7 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiGetTokens;
+import org.openhab.core.config.core.Configuration;
 import org.openhab.core.thing.*;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.binding.ThingHandler;
@@ -45,12 +47,15 @@ public class YandexScenariosHandler extends BaseThingHandler {
     @Nullable
     YandexStationBridge yandexStationBridge;
     private @Nullable Future<?> initJob;
-    private @Nullable YandexApiGetTokens api;
+    private YandexApiGetTokens api;
     private WebSocketClient webSocketClient = new WebSocketClient();
     private @Nullable URI websocketAddress;
     private YandexStationWebsocket yandexStationWebsocket = new YandexStationWebsocket();
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     private String url = "";
+
+    char[] base_chars = ",.:".toCharArray();
+    char[] digits = "01234567890".toCharArray();
 
     public YandexScenariosHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
         super(thing);
@@ -65,18 +70,28 @@ public class YandexScenariosHandler extends BaseThingHandler {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED, "Check bridge");
         } else {
             while (yandexStationBridge.getThing().getStatus() != ThingStatus.ONLINE) {
+                logger.debug("Waiting for bridge goes online");
             }
-            // List<ApiDeviceResponse> devices = api.getDevices();
             try {
-                if (api != null) {
-                    url = api.getWssUrl();
-                    logger.debug("Devices {}", url);
-                }
+                url = api.getWssUrl();
+                logger.debug("Websocket url is: {}", url);
             } catch (ApiException e) {
                 logger.debug("Error {}", e.getMessage());
             }
             initJob = connect();
         }
+        List<Channel> channels = thing.getChannels();
+        channels.forEach(channel -> {
+            String config = channel.getConfiguration().get("answer").toString();
+            logger.debug("config {}", config.toString());
+        });
+        logger.debug("Channels {}", channels);
+    }
+
+    @Override
+    protected Configuration editConfiguration() {
+        logger.debug("Editing config");
+        return super.editConfiguration();
     }
 
     @Override
@@ -165,5 +180,57 @@ public class YandexScenariosHandler extends BaseThingHandler {
             logger.error("Connection error {}", e.getMessage());
             return false;
         }
+    }
+
+    public String encode(int number){
+        String character = "";
+        int x = 0;
+        char[] nmb = String.valueOf(number).toCharArray();
+        for(char digit: nmb) {
+            x = x * digits.length + String.valueOf(digits).indexOf(digit);
+        }
+        if(x==0){
+            character = String.valueOf(base_chars[0]);
+        } else {
+            while (x>0){
+                int dig = x % base_chars.length;
+                character = base_chars[dig] + character;
+                x = x / base_chars.length;
+            }
+        }
+        return character;
+    }
+
+    public String decode(String encode) {
+        String character = "";
+        int x = 0;
+        char[] nmb = encode.toCharArray();
+        for(char digit: nmb) {
+            x = x * base_chars.length + String.valueOf(base_chars).indexOf(digit);
+        }
+        if(x==0){
+            character = String.valueOf(digits[0]);
+        } else {
+            while (x>0){
+                int dig = x % digits.length;
+                character = digits[dig] + character;
+                x = x / digits.length;
+            }
+        }
+        return character;
+    }
+
+    @Override
+    public void dispose() {
+        try {
+            webSocketClient.stop();
+            Future<?> job = initJob;
+            if (job != null) {
+                job.cancel(true);
+                initJob = null;
+            }
+        } catch (Exception ignored) {
+        }
+        super.dispose();
     }
 }

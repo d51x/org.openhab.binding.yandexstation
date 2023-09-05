@@ -14,14 +14,13 @@ package org.openhab.binding.yandexstation.internal.yandexapi;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -37,16 +36,13 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.Fields;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.APIExtendedResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.OpenHAB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 
 /**
  * The {@link YandexApiGetTokens} is describing implementaion of api interface.
@@ -320,50 +316,17 @@ public class YandexApiGetTokens implements YandexApi {
         }
     }
 
-    public String getDevicesList() throws ApiException {
+    public APICloudDevicesResponse getDevicesList() throws ApiException {
         APIExtendedResponse response = sendGetRequest("https://iot.quasar.yandex.ru/m/v3/user/devices", null,
                 readCookieSession());
-
-        JsonObject json = JsonParser.parseString(response.response).getAsJsonObject();
-        JsonArray deviceList = json.getAsJsonArray("devices");
-        Type listType = new TypeToken<ArrayList<ApiDeviceResponse>>() {
-        }.getType();
-        List<ApiDeviceResponse> devices = new Gson().fromJson(deviceList, listType);
-        logger.debug("Device list is: {}", devices);
+        APICloudDevicesResponse resp = new APICloudDevicesResponse();
         Gson gson = new Gson();
-        APICloudDevicesResponse devicesResponse = gson.fromJson(response.response, APICloudDevicesResponse.class);
-        // ArrayList<JsonObject> devices = new ArrayList<>();
-        if (json.get("status").getAsString().equals("ok")) {
-            // JsonArray households = json.getAsJsonArray("households");
-            // households.forEach(rooms -> {
-            // JsonArray roomsArr = rooms.getAsJsonObject().getAsJsonArray("rooms");
-            // roomsArr.forEach(room -> {
-            // JsonArray item = room.getAsJsonObject().getAsJsonArray("items");
-            // item.forEach(itm -> {
-            // JsonObject it = itm.getAsJsonObject();
-            // if (it.get("type").getAsString().startsWith("devices.types.smart_speaker")
-            // || it.get("type").getAsString().endsWith("yandex.module")
-            // || it.get("type").getAsString().endsWith("yandex.module_2")) {
-            // logger.debug("item: {}, type {}", it.get("name").getAsString(),
-            // it.get("type").getAsString());
-            // devices.add(it);
-            // }
-            // });
-            //
-            // });
-            // });
-            //
-        }
-        // logger.debug("Device list is: {}", devices_list.response);
-
-        // logger.debug("devices_list is: {}", devices_list.response);
-        // logger.debug("getMusicToken is: {}", getMusicToken.response);
-
-        return response.response;
+        resp = gson.fromJson(response.response, APICloudDevicesResponse.class);
+        return Objects.requireNonNullElseGet(resp, APICloudDevicesResponse::new);
     }
 
     public String getWssUrl() throws ApiException {
-        return JsonParser.parseString(getDevicesList()).getAsJsonObject().get("updates_url").getAsString();
+        return getDevicesList().updates_url;
     }
 
     private void setHeaders(Request request, @Nullable String token, @Nullable String cookie) {

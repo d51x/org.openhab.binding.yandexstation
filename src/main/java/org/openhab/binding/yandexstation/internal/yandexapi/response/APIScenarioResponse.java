@@ -12,15 +12,24 @@
  */
 package org.openhab.binding.yandexstation.internal.yandexapi.response;
 
-import com.google.gson.annotations.SerializedName;
-
 /**
  * The {@link APIScenarioResponse} is describing api common success response.
  *
  * @author "Dmintry P (d51x)" - Initial contribution
  */
-public class APIScenarioResponse extends ApiSuccessResponse {
+public class APIScenarioResponse {
     // public String status;
-    @SerializedName("updates_url")
-    public String updatesUrl;
+    String status;
+    Scenarios[] scenarios;
+
+    public class Scenarios {
+        String id;
+        String name;
+        Triggers[] triggers;
+    }
+
+    public class Triggers {
+        String type;
+        String value;
+    }
 }
