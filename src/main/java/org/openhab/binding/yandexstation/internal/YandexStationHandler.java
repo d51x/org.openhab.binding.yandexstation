@@ -55,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.openhab.binding.yandexstation.internal.actions.things.YandexStationThingActions;
@@ -111,6 +112,7 @@ public class YandexStationHandler extends BaseThingHandler {
     private YandexStationWebsocket yandexStationWebsocket = new YandexStationWebsocket();
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     private @Nullable URI websocketAddress;
+    private @Nullable Future<Session> webSocketSession;
     private @Nullable YandexApiImpl api;
 
     private Boolean isConnected = false;
@@ -228,11 +230,12 @@ public class YandexStationHandler extends BaseThingHandler {
         if (yandexStationBridge == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED, "Check bridge");
         } else {
+            receiveDeviceToken();
             logger.info("Connect to Yandex Station: {} with IP {}", config.device_id, config.hostname);
-            initJob = connect(0);
+            initJob = connect(config.reconnectInterval);
             if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
                 refreshPollingJob = scheduler.scheduleWithFixedDelay(
-                        () -> ping(Objects.requireNonNull(config).device_token), 0, 1, TimeUnit.MINUTES);
+                        () -> ping(Objects.requireNonNull(config).device_token), 1, 1, TimeUnit.MINUTES);
             }
         }
     }
@@ -346,7 +349,7 @@ public class YandexStationHandler extends BaseThingHandler {
 
         try {
             webSocketClient.start();
-            Future<?> session = webSocketClient.connect(yandexStationWebsocket, websocketAddress, clientUpgradeRequest);
+            webSocketSession = webSocketClient.connect(yandexStationWebsocket, websocketAddress, clientUpgradeRequest);
         } catch (Exception e) {
             logger.error("Connection error {}", e.getMessage());
             setWebSocketConnected(false);
@@ -355,6 +358,7 @@ public class YandexStationHandler extends BaseThingHandler {
 
     private void reconnectWebsocket() {
         logger.debug("Try to reconnect");
+
         Future<?> job = initJob;
         if (job != null) {
             job.cancel(true);
@@ -638,7 +642,11 @@ public class YandexStationHandler extends BaseThingHandler {
             config.platform = device.platform;
             config.device_token = token;
 
-            config.hostname = device.networkInfo.ipAdresses.get(0);
+            logger.info("Yandex station IP's: {}", device.networkInfo.ipAdresses);
+
+            // config.hostname = device.networkInfo.ipAdresses.get(0);
+            config.hostname = Objects.requireNonNull(device.networkInfo.ipAdresses.stream()
+                    .filter(ip -> !ip.startsWith("169.254")).findFirst().orElse(null));
             config.port = String.valueOf(device.networkInfo.port);
 
             Configuration configuration = thing.getConfiguration();
@@ -648,6 +656,7 @@ public class YandexStationHandler extends BaseThingHandler {
             configuration.put("port", config.port);
             configuration.put("server_certificate", device.glagol.security.serverCertificate);
             configuration.put("server_private_key", device.glagol.security.serverPrivateKey);
+            updateConfiguration(configuration);
 
             setThingProperties(device);
 
@@ -666,7 +675,9 @@ public class YandexStationHandler extends BaseThingHandler {
         properties.put("Support Local API:",
                 YandexStationTypes.isLocalApi(device.platform) ? "Supported" : "Not Supported");
         properties.put("Wifi SSID:", device.networkInfo.wifiSSID);
-        properties.put("IP Address:", device.networkInfo.ipAdresses.get(0));
+        // properties.put("IP Address:", device.networkInfo.ipAdresses.get(0));
+        properties.put("IP Address:", Objects.requireNonNull(device.networkInfo.ipAdresses.stream()
+                .filter(ip -> !ip.startsWith("169.254")).findFirst().orElse(null)));
         properties.put("Platform:", device.platform);
         properties.put("Device Name:", YandexStationTypes.getNameByPlatform(device.platform));
         properties.put("Friendly Name:", device.name);
