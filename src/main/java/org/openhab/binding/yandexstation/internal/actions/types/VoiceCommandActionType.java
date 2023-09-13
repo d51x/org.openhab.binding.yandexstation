@@ -23,6 +23,8 @@ import org.openhab.core.automation.type.Input;
 import org.openhab.core.config.core.ConfigDescriptionParameter;
 import org.openhab.core.config.core.ConfigDescriptionParameterBuilder;
 import org.openhab.core.config.core.FilterCriteria;
+import org.openhab.core.thing.ThingTypeUID;
+import org.openhab.core.thing.type.ThingType;
 
 /**
  * The type Voice command action type.
@@ -81,14 +83,16 @@ public class VoiceCommandActionType extends ActionType {
         label = i18nProvider.getText("action.select_station.label", CONFIG_STATION);
         description = i18nProvider.getText("action.select_station.description", CONFIG_STATION_DESCR);
 
-        // FilterCriteria filterCriteria = new FilterCriteria("id", "yandexstation:station");
-        FilterCriteria filterCriteria = new FilterCriteria("bindingId", "yandexstation");
+        //thingTypeUID
+        FilterCriteria filterType = new FilterCriteria("thingTypeUID", "yandexstation:station");
+        List<FilterCriteria> filters = new ArrayList<>();
+        filters.add(filterType);
         final ConfigDescriptionParameter stationParam = ConfigDescriptionParameterBuilder
                 .create(CONFIG_PARAM_NAME_STATION, ConfigDescriptionParameter.Type.TEXT).withRequired(true)
-                .withReadOnly(false).withMultiple(false).withLabel(label).withFilterCriteria(List.of(filterCriteria))
+                .withReadOnly(false).withMultiple(false).withLabel(label).withFilterCriteria(filters)
                 .withContext("thing").withDescription(description).build();
 
-        Input stationInput = new Input(CONFIG_PARAM_NAME_STATION, YandexStationHandlerFactory.class.getName(), label,
+        Input stationInput = new Input(CONFIG_PARAM_NAME_STATION, ThingType.class.getName(), label,
                 description, null, true, null, null);
 
         List<ConfigDescriptionParameter> config = new ArrayList<ConfigDescriptionParameter>();
