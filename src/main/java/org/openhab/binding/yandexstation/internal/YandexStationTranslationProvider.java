@@ -1,16 +1,15 @@
-/*
+/**
  * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
- *  See the NOTICE file(s) distributed with this work for additional
- *  information.
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
  *
  * This program and the accompanying materials are made available under the
- *  terms of the Eclipse Public License 2.0 which is available at
- *  http://www.eclipse.org/legal/epl-2.0
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-
 package org.openhab.binding.yandexstation.internal;
 
 import java.util.Locale;
@@ -40,9 +39,9 @@ public class YandexStationTranslationProvider {
     /**
      * Instantiates a new Yandex station translation provider.
      *
-     * @param i18nProvider   the 18 n provider
+     * @param i18nProvider the 18 n provider
      * @param localeProvider the locale provider
-     * @param locale         the locale
+     * @param locale the locale
      */
     @Activate
     public YandexStationTranslationProvider(@Nullable TranslationProvider i18nProvider,
@@ -56,9 +55,9 @@ public class YandexStationTranslationProvider {
     /**
      * Gets text.
      *
-     * @param key         the key
+     * @param key the key
      * @param defaultText the default text
-     * @param arguments   the arguments
+     * @param arguments the arguments
      * @return the text
      */
     public String getText(String key, String defaultText, @Nullable Object... arguments) {
