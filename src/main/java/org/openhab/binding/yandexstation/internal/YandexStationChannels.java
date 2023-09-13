@@ -12,7 +12,12 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.*;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.CHANNEL_GROUP_PLAYER_CONTROL;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.CHANNEL_GROUP_PLAYER_PROPERTIES;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.CHANNEL_GROUP_SPEECH;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.CHANNEL_GROUP_STATION;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.CHANNEL_GROUP_TRACK;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.CHANNEL_GROUP_VOLUME;
 
 /**
  * The {@link YandexStationChannels} is responsible for channels definition.
