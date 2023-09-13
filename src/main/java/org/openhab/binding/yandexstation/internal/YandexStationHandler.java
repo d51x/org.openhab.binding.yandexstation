@@ -583,14 +583,14 @@ public class YandexStationHandler extends BaseThingHandler {
                     && playerState.getEntityInfo().next.containsKey("id")) {
                 String sId = playerState.getEntityInfo().next.get("id");
                 if (sId != null && !sId.isEmpty()) {
-                    updateState(CHANNEL_STATE_TRACK_NEXT_ID.getName(), new DecimalType(DecimalType.valueOf(sId)));
+                    updateState(CHANNEL_STATE_TRACK_NEXT_ID.getName(), new StringType(sId));
                 }
             }
             if (playerState.getEntityInfo().prev != null && !playerState.getEntityInfo().prev.isEmpty()
                     && playerState.getEntityInfo().prev.containsKey("id")) {
                 String sId = playerState.getEntityInfo().prev.get("id");
                 if ((sId != null && !sId.isEmpty()) && (!sId.isEmpty())) {
-                    updateState(CHANNEL_STATE_TRACK_PREV_ID.getName(), new DecimalType(DecimalType.valueOf(sId)));
+                    updateState(CHANNEL_STATE_TRACK_PREV_ID.getName(), new StringType(sId));
                 }
             }
         }
