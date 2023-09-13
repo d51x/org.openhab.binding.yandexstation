@@ -112,6 +112,9 @@ public class YandexStationHandler extends BaseThingHandler {
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     private @Nullable URI websocketAddress;
     private @Nullable YandexApiImpl api;
+
+    private Boolean isConnected = false;
+
     /**
      * The Yandex station bridge.
      */
@@ -218,12 +221,14 @@ public class YandexStationHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
+        logger.debug("Initialize Yandex Station Binding");
         config = getConfigAs(YandexStationConfiguration.class);
         updateStatus(ThingStatus.UNKNOWN);
         yandexStationBridge = getBridgeHandler();
         if (yandexStationBridge == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED, "Check bridge");
         } else {
+            logger.info("Connect to Yandex Station: {} with IP {}", config.device_id, config.hostname);
             initJob = connect(0);
             if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
                 refreshPollingJob = scheduler.scheduleWithFixedDelay(
@@ -256,6 +261,10 @@ public class YandexStationHandler extends BaseThingHandler {
         super.updateState(channelID, state);
     }
 
+    private void setWebSocketConnected(boolean connected) {
+        isConnected = connected;
+    }
+
     private Future<?> connect(int wait) {
         logger.warn("Try connect after: {} sec", wait);
         return scheduler.schedule(() -> {
@@ -267,8 +276,9 @@ public class YandexStationHandler extends BaseThingHandler {
                     logger.warn("Device token is empty");
                     receiveDeviceToken();
                 }
-                boolean thingReachable = connectStation(config);
-                if (thingReachable) {
+                connectStation(config);
+                logger.debug("Yandex Station connected: {}", isConnected);
+                if (isConnected) {
                     updateStatus(ThingStatus.ONLINE);
                 } else {
                     reconnectWebsocket();
@@ -277,19 +287,20 @@ public class YandexStationHandler extends BaseThingHandler {
         }, wait, TimeUnit.SECONDS);
     }
 
-    private boolean connectStation(@Nullable YandexStationConfiguration config) {
+    private void connectStation(@Nullable YandexStationConfiguration config) {
         try {
             websocketAddress = new URI("wss://" + config.hostname + ":" + config.port);
         } catch (URISyntaxException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.CONFIGURATION_ERROR,
                     "Initialize web socket failed: " + e.getMessage());
-            return false;
+            setWebSocketConnected(false);
         }
 
         webSocketClient.getSslContextFactory().setTrustAll(true);
         yandexStationWebsocket.addMessageHandler(new YandexStationWebsocketInterface() {
             @Override
             public void onConnect(boolean connected) {
+                setWebSocketConnected(connected);
                 if (connected) {
                     updateStatus(ThingStatus.ONLINE);
                     logger.debug("websocket connected");
@@ -305,6 +316,7 @@ public class YandexStationHandler extends BaseThingHandler {
             @Override
             public void onClose(int statusCode, String reason) throws Exception {
                 logger.debug("Websocket connection closed");
+                setWebSocketConnected(false);
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR,
                         "Connection closed: " + statusCode + " - " + reason);
 
@@ -316,7 +328,7 @@ public class YandexStationHandler extends BaseThingHandler {
 
             @Override
             public void onMessage(String data) {
-                logger.debug("Data received: {}", data);
+                logger.trace("Data received: {}", data);
                 Gson gson = new Gson();
                 YandexStationResponse response = gson.fromJson(data, YandexStationResponse.class);
                 if (response != null) {
@@ -335,10 +347,9 @@ public class YandexStationHandler extends BaseThingHandler {
         try {
             webSocketClient.start();
             Future<?> session = webSocketClient.connect(yandexStationWebsocket, websocketAddress, clientUpgradeRequest);
-            return session.isDone();
         } catch (Exception e) {
             logger.error("Connection error {}", e.getMessage());
-            return false;
+            setWebSocketConnected(false);
         }
     }
 
@@ -363,6 +374,7 @@ public class YandexStationHandler extends BaseThingHandler {
      * @param text the text
      */
     public void sendVoiceCommand(String text) {
+        logger.debug("sendVoiceCommand");
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SENT_TEXT, text);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -375,6 +387,7 @@ public class YandexStationHandler extends BaseThingHandler {
      * @param text the text
      */
     public void sendTtsCommand(String text) {
+        logger.debug("sendTtsCommand");
         FormUpdate formUpdate = new FormUpdate();
         FormUpdateSlot slot = new FormUpdateSlot(text);
         formUpdate.addSlot(slot);
@@ -391,6 +404,7 @@ public class YandexStationHandler extends BaseThingHandler {
      * Send stop listening.
      */
     public void sendStopListening() {
+        logger.debug("sendStopListening");
         ServerActionEvent event = new ServerActionEvent("on_suggest", null);
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SERVER_ACTION, event);
 
@@ -405,6 +419,7 @@ public class YandexStationHandler extends BaseThingHandler {
      * @param volume the volume
      */
     public void sendSetVolumeCommand(Integer volume) {
+        logger.debug("sendSetVolumeCommand");
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SET_VOLUME, volume);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -412,6 +427,7 @@ public class YandexStationHandler extends BaseThingHandler {
     }
 
     private void sendTrackPositionCommand(Integer position) {
+        logger.debug("sendTrackPositionCommand");
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_REWIND, position);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -471,6 +487,7 @@ public class YandexStationHandler extends BaseThingHandler {
      * Send play next command.
      */
     public void sendPlayNextCommand() {
+        logger.debug("sendPlayNextCommand");
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_NEXT);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -481,6 +498,7 @@ public class YandexStationHandler extends BaseThingHandler {
      * Send play prev command.
      */
     public void sendPlayPrevCommand() {
+        logger.debug("sendPlayPrevCommand");
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_PREV);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -491,6 +509,7 @@ public class YandexStationHandler extends BaseThingHandler {
      * Send play command.
      */
     public void sendPlayCommand() {
+        logger.debug("sendPlayCommand");
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_PLAY);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -501,6 +520,7 @@ public class YandexStationHandler extends BaseThingHandler {
      * Send stop command.
      */
     public void sendStopCommand() {
+        logger.debug("sendStopCommand");
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_STOP);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(config.device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -508,6 +528,7 @@ public class YandexStationHandler extends BaseThingHandler {
     }
 
     private void ping(String device_token) {
+        logger.debug("ping");
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_PING);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
@@ -515,6 +536,7 @@ public class YandexStationHandler extends BaseThingHandler {
     }
 
     private void requestSoftwareVersion(String device_token) {
+        logger.debug("requestSoftwareVersion");
         YandexStationCommand sendCommand = new YandexStationCommand(CMD_SW_VERSION);
         YandexStationSendPacket yandexPacket = new YandexStationSendPacket(device_token, sendCommand);
         logger.debug("Send packet: {}", yandexPacket);
