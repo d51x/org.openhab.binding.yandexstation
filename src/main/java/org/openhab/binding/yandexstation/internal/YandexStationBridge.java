@@ -14,14 +14,12 @@ package org.openhab.binding.yandexstation.internal;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.discovery.YandexStationDiscoveryService;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
@@ -29,8 +27,6 @@ import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseBridgeHandler;
 import org.openhab.core.types.Command;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The {@link YandexStationBindingConstants} class defines common constants, which are
@@ -39,12 +35,10 @@ import org.slf4j.LoggerFactory;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 public class YandexStationBridge extends BaseBridgeHandler {
-    private final Logger logger = LoggerFactory.getLogger(YandexStationBridge.class);
     /**
      * The Api.
      */
     public YandexApiImpl api;
-    public YandexApiOnline token;
     /**
      * The Devices list.
      */
@@ -68,7 +62,6 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public YandexStationBridge(Bridge bridge, YandexApiFactory apiFactory) throws ApiException {
         super(bridge);
         api = (YandexApiImpl) apiFactory.getApi();
-        token = (YandexApiOnline) apiFactory.getToken();
     }
 
     @Override
@@ -78,19 +71,10 @@ public class YandexStationBridge extends BaseBridgeHandler {
         config = getConfigAs(YandexStationConfiguration.class);
         if (config != null) {
             try {
-                token.getToken(config.username, config.password);
-                if (token.readMusicToken() != null) {
-                    config.yandex_token = Objects.requireNonNull(token.readMusicToken());
-                    devicesList = api.getDevices(Objects.requireNonNull(token.readMusicToken()));
-                    updateStatus(ThingStatus.ONLINE);
-                } else {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                            "Can not find Yandex music token");
-                }
-
+                devicesList = api.getDevices(config.yandex_token);
+                updateStatus(ThingStatus.ONLINE);
             } catch (ApiException e) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                        "Can not connect to Yandex: " + e.getMessage());
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Can not connect to Yandex");
             }
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Check bridge configuration");

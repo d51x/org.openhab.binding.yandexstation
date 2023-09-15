@@ -31,7 +31,7 @@ import org.openhab.core.config.core.FilterCriteria;
 import org.openhab.core.config.core.ParameterOption;
 
 /**
- * The type Action type provider.
+ * The type Say text action type.
  *
  * @author "Dmintry P (d51x)" - Initial contribution
  */
