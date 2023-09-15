@@ -20,8 +20,8 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.discovery.YandexStationDiscoveryService;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiGetTokens;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
@@ -44,7 +44,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
      * The Api.
      */
     public YandexApiImpl api;
-    public YandexApiGetTokens token;
+    public YandexApiOnline token;
     /**
      * The Devices list.
      */
@@ -68,7 +68,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public YandexStationBridge(Bridge bridge, YandexApiFactory apiFactory) throws ApiException {
         super(bridge);
         api = (YandexApiImpl) apiFactory.getApi();
-        token = (YandexApiGetTokens) apiFactory.getToken();
+        token = (YandexApiOnline) apiFactory.getToken();
     }
 
     @Override

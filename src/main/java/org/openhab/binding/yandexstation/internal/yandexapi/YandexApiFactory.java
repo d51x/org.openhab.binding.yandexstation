@@ -53,6 +53,10 @@ public class YandexApiFactory {
     }
 
     public YandexApi getToken() throws ApiException {
-        return new YandexApiGetTokens(httpClient);
+        return new YandexApiOnline(httpClient);
+    }
+
+    public YandexApi getScenario() throws ApiException {
+        return new YandexApiScenarios(httpClient);
     }
 }

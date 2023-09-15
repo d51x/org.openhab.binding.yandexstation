@@ -14,23 +14,27 @@ package org.openhab.binding.yandexstation.internal.yandexapi;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.CookieStore;
+import java.net.HttpCookie;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.Fields;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.APIExtendedResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
 import org.openhab.core.OpenHAB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
 
 /**
  * The {@link YandexApiScenarios} is describing implementaion of api interface.
@@ -47,7 +51,7 @@ public class YandexApiScenarios implements YandexApi {
     }
 
     @Override
-    public void update() throws ApiException {
+    public void update() {
     }
 
     @Override
@@ -56,27 +60,69 @@ public class YandexApiScenarios implements YandexApi {
 
     @Override
     public APIExtendedResponse sendGetRequest(String path, @Nullable String params, String token) throws ApiException {
+        String cookie = readCookie();
+        APIExtendedResponse result = new APIExtendedResponse();
+        Request request = null;
+        httpClient.setConnectTimeout(60 * 1000);
+        if (params != null) {
+            request = httpClient.newRequest(path + params);
+        } else {
+            request = httpClient.newRequest(path);
+        }
+        setHeaders(request, cookie);
+        request.method(HttpMethod.GET);
+        String errorReason = "";
+        try {
+            ContentResponse contentResponse = request.send();
+            result.httpCode = contentResponse.getStatus();
+            if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
+                result.response = contentResponse.getContentAsString();
+                CookieStore cs = httpClient.getCookieStore();
+                List<HttpCookie> cck = cs.getCookies();
+                return result;
+            } else {
+                errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
+                        contentResponse.getReason());
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.error("ERROR {}", e.getMessage());
+        }
+        throw new ApiException(errorReason);
+    }
+
+    @Override
+    public APIExtendedResponse sendGetRequest(String path, String token) {
         return new APIExtendedResponse();
     }
 
     @Override
-    public APIExtendedResponse sendGetRequest(String path, String token) throws ApiException {
+    public APIExtendedResponse sendPostRequest(String path, String data, String token) {
         return new APIExtendedResponse();
     }
 
     @Override
-    public APIExtendedResponse sendPostRequest(String path, String data, String token) throws ApiException {
+    public APIExtendedResponse sendPostRequest(String path, Fields fields, String token) {
         return new APIExtendedResponse();
     }
 
-    @Override
-    public APIExtendedResponse sendPostRequest(String path, Fields fields, String token) throws ApiException {
-        return new APIExtendedResponse();
+    private void setHeaders(Request request, @Nullable String cookie) {
+        String YANDEX_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36";
+        request.timeout(60, TimeUnit.SECONDS);
+        request.header(HttpHeader.USER_AGENT, null);
+        request.header(HttpHeader.USER_AGENT, YANDEX_USER_AGENT);
+        request.header(HttpHeader.CONNECTION, "keep-alive");
+        request.header(HttpHeader.ACCEPT, "*/*");
+        request.header(HttpHeader.ACCEPT_ENCODING, null);
+        request.header(HttpHeader.ACCEPT_ENCODING, "gzip, deflate, br");
+        if (cookie != null) {
+            request.header(HttpHeader.COOKIE, cookie);
+        }
+        request.followRedirects(true);
     }
 
-    public @Nullable String readCookieSession() {
+    public @Nullable String readCookie() {
         File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "sessionCookie");
+                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "passportCookie");
         if (!file.exists()) {
             return null;
         } else {
@@ -87,18 +133,5 @@ public class YandexApiScenarios implements YandexApi {
             }
             return lines == null || lines.isEmpty() ? null : lines.get(0);
         }
-    }
-
-    public List<APIScenarioResponse> getScenarios() {
-        List<APIScenarioResponse> scenarios = new ArrayList<>();
-        try {
-            APIExtendedResponse response = sendGetRequest("https://iot.quasar.yandex.ru/m/user/scenarios", null,
-                    Objects.requireNonNull(readCookieSession()));
-            Gson gson = new Gson();
-            APIScenarioResponse scenarioResponse = gson.fromJson(response.response, APIScenarioResponse.class);
-            logger.debug("Scenarios json is: {}", response.response);
-        } catch (ApiException e) {
-        }
-        return scenarios;
     }
 }

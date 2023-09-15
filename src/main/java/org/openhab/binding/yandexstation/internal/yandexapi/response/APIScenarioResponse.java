@@ -18,18 +18,17 @@ package org.openhab.binding.yandexstation.internal.yandexapi.response;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 public class APIScenarioResponse {
-    // public String status;
-    String status;
-    Scenarios[] scenarios;
+    public String status;
+    public Scenarios[] scenarios;
 
     public class Scenarios {
-        String id;
-        String name;
-        Triggers[] triggers;
+        public String id;
+        public String name;
+        public Triggers[] triggers;
     }
 
     public class Triggers {
-        String type;
-        String value;
+        public String type;
+        public String value;
     }
 }

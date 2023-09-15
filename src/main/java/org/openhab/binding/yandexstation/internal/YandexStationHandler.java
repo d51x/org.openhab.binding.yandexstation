@@ -39,12 +39,14 @@ import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.*;
+import org.openhab.core.net.NetworkAddressService;
 import org.openhab.core.thing.*;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +70,8 @@ public class YandexStationHandler extends BaseThingHandler {
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     private @Nullable URI websocketAddress;
     private @Nullable YandexApiImpl api;
+    NetworkAddressService networkAddressService;
+    ConfigurationAdmin configAdmin;
     /**
      * The Yandex station bridge.
      */
@@ -82,9 +86,12 @@ public class YandexStationHandler extends BaseThingHandler {
      * @param apiFactory the api factory
      * @throws ApiException the api exception
      */
-    public YandexStationHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
+    public YandexStationHandler(Thing thing, YandexApiFactory apiFactory, NetworkAddressService networkAddressService,
+            ConfigurationAdmin configAdmin) throws ApiException {
         super(thing);
         this.api = (YandexApiImpl) apiFactory.getApi();
+        this.networkAddressService = networkAddressService;
+        this.configAdmin = configAdmin;
     }
 
     private Integer prevVolume = 0;
@@ -174,11 +181,13 @@ public class YandexStationHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
+        logger.debug("Config {}", networkAddressService.getPrimaryIpv4HostAddress());
         config = getConfigAs(YandexStationConfiguration.class);
         updateStatus(ThingStatus.UNKNOWN);
         yandexStationBridge = getBridgeHandler();
         if (yandexStationBridge == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED, "Check bridge");
+            logger.debug("Config {}", networkAddressService.getPrimaryIpv4HostAddress());
         } else {
             initJob = connect(0);
         }

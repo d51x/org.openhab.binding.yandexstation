@@ -12,9 +12,11 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
+import static org.openhab.binding.yandexstation.internal.YandexStationScenarios.SEPARATOR_CHARS;
+
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -24,7 +26,10 @@ import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiGetTokens;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiScenarios;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APIExtendedResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.thing.*;
 import org.openhab.core.thing.binding.BaseThingHandler;
@@ -47,45 +52,84 @@ public class YandexScenariosHandler extends BaseThingHandler {
     @Nullable
     YandexStationBridge yandexStationBridge;
     private @Nullable Future<?> initJob;
-    private YandexApiGetTokens api;
+    private YandexApiOnline api;
+    private YandexApiScenarios scenarios;
     private WebSocketClient webSocketClient = new WebSocketClient();
     private @Nullable URI websocketAddress;
     private YandexStationWebsocket yandexStationWebsocket = new YandexStationWebsocket();
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     private String url = "";
-
+    // private String SEPARATOR_CHARS = YandexStationScenarios;
     char[] base_chars = ",.:".toCharArray();
     char[] digits = "01234567890".toCharArray();
 
     public YandexScenariosHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
         super(thing);
-        this.api = (YandexApiGetTokens) apiFactory.getToken();
+        this.api = (YandexApiOnline) apiFactory.getToken();
+        this.scenarios = (YandexApiScenarios) apiFactory.getScenario();
     }
 
     @Override
     public void initialize() {
+        Map<Integer, YandexStationScenarios> scnList = new HashMap<>();
         updateStatus(ThingStatus.UNKNOWN);
         yandexStationBridge = getBridgeHandler();
         if (yandexStationBridge == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_UNINITIALIZED, "Check bridge");
         } else {
             while (yandexStationBridge.getThing().getStatus() != ThingStatus.ONLINE) {
-                logger.debug("Waiting for bridge goes online");
+                // logger.debug("Waiting for bridge goes online");
+                if (!yandexStationBridge.getThing().isEnabled()) {
+                    break;
+                }
             }
             try {
                 url = api.getWssUrl();
-                logger.debug("Websocket url is: {}", url);
+                APIScenarioResponse scenario = api.getScenarios();
+                List<Channel> channels = thing.getChannels();
+                var context = new Object() {
+                    int x = 0;
+                };
+                channels.forEach(channel -> {
+                    boolean isNew = true;
+                    if (channel.getConfiguration().get("answer") != null) {
+                        String config = channel.getConfiguration().get("answer").toString();
+                        logger.debug("config {}", config);
+                    }
+                    for (APIScenarioResponse.Scenarios scn : scenario.scenarios) {
+                        logger.debug("scn {}", scn.name);
+                        if (scn.name.startsWith(SEPARATOR_CHARS)) {
+                            //
+                            if (Objects.equals(channel.getLabel(), scn.name.substring(4))) {
+                                logger.debug("Match: {}", scn.name);
+                                YandexStationScenarios yaScn = new YandexStationScenarios();
+                                yaScn.addScenario(scn, channel, encode(context.x));
+                                scnList.put(context.x, yaScn);
+                                context.x++;
+                                isNew = false;
+                            }
+                        }
+                    }
+                    if (isNew) {
+                        logger.debug("Channel {} is new. Creating...", channel.getLabel());
+                        YandexStationScenarios yaScn = new YandexStationScenarios();
+                        String json = yaScn.createScenario(channel, encode(context.x));
+                        try {
+                            APIExtendedResponse response = api
+                                    .sendPostJsonRequest("https://iot.quasar.yandex.ru/m/user/scenarios", json, "");
+                            logger.debug("response script creation: {}", response.response);
+                        } catch (ApiException ignored) {
+                        }
+                        scnList.put(context.x, yaScn);
+                        context.x++;
+                    }
+                });
+                logger.debug("Channels {}", scnList.keySet());
             } catch (ApiException e) {
                 logger.debug("Error {}", e.getMessage());
             }
             initJob = connect();
         }
-        List<Channel> channels = thing.getChannels();
-        channels.forEach(channel -> {
-            String config = channel.getConfiguration().get("answer").toString();
-            logger.debug("config {}", config.toString());
-        });
-        logger.debug("Channels {}", channels);
     }
 
     @Override
@@ -159,16 +203,19 @@ public class YandexScenariosHandler extends BaseThingHandler {
 
             @Override
             public void onMessage(String data) {
-                logger.debug("Data received: {}", data);
+                // logger.debug("Data received: {}", data);
                 // Gson gson = new Gson();
                 JsonObject json = JsonParser.parseString(data).getAsJsonObject();
+                if (json.get("operation").getAsString().equals("update_states")) {
+
+                }
             }
 
             @Override
             public void onError(Throwable cause) {
                 logger.error("Websocket error: {}", cause.getMessage());
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, cause.getMessage());
-                // reconnectWebsocket();
+                reconnectWebsocket();
             }
         });
 
@@ -182,17 +229,27 @@ public class YandexScenariosHandler extends BaseThingHandler {
         }
     }
 
-    public String encode(int number){
+    private void reconnectWebsocket() {
+        logger.debug("Try to reconnect");
+        Future<?> job = initJob;
+        if (job != null) {
+            job.cancel(true);
+            initJob = null;
+        }
+        initJob = connect();
+    }
+
+    public String encode(int number) {
         String character = "";
         int x = 0;
         char[] nmb = String.valueOf(number).toCharArray();
-        for(char digit: nmb) {
+        for (char digit : nmb) {
             x = x * digits.length + String.valueOf(digits).indexOf(digit);
         }
-        if(x==0){
+        if (x == 0) {
             character = String.valueOf(base_chars[0]);
         } else {
-            while (x>0){
+            while (x > 0) {
                 int dig = x % base_chars.length;
                 character = base_chars[dig] + character;
                 x = x / base_chars.length;
@@ -205,13 +262,13 @@ public class YandexScenariosHandler extends BaseThingHandler {
         String character = "";
         int x = 0;
         char[] nmb = encode.toCharArray();
-        for(char digit: nmb) {
+        for (char digit : nmb) {
             x = x * base_chars.length + String.valueOf(base_chars).indexOf(digit);
         }
-        if(x==0){
+        if (x == 0) {
             character = String.valueOf(digits[0]);
         } else {
-            while (x>0){
+            while (x > 0) {
                 int dig = x % digits.length;
                 character = digits[dig] + character;
                 x = x / digits.length;
