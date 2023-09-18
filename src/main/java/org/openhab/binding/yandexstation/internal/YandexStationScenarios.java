@@ -34,7 +34,7 @@ import com.google.gson.annotations.SerializedName;
 public class YandexStationScenarios {
     private final Logger logger = LoggerFactory.getLogger(YandexStationScenarios.class);
     private int id;
-    APIScenarioResponse.@Nullable Scenarios scn = null;
+    APIScenarioResponse.@Nullable Scenarios scn;
     @Nullable
     Channel channel = null;
     String jsonScenario = "";
@@ -75,7 +75,42 @@ public class YandexStationScenarios {
         Sstate sstate = new Sstate();
         sstate.instance = "text_action";
         if (channel.getConfiguration().get("answer") != null) {
-            sstate.value = channel.getConfiguration().get("answer").toString() + SEPARATOR_CHARS;
+            sstate.value = channel.getConfiguration().get("answer").toString() + SEPARATOR_CHARS + x;
+        } else {
+            sstate.value = "Сделай громкость" + SEPARATOR_CHARS + x;
+        }
+        requestedSpeakerCapabilities.type = "devices.capabilities.quasar.server_action";
+        requestedSpeakerCapabilities.parameters = pparameters;
+        requestedSpeakerCapabilities.sstate = sstate;
+        parameters.requestedSpeakerCapabilities = new RequestedSpeakerCapabilities[] { requestedSpeakerCapabilities };
+        steps.parameters = parameters;
+        scenarioJson.steps = new Steps[] { steps };
+        jsonScenario = gson.toJson(scenarioJson);
+        return jsonScenario;
+    }
+
+    public String updateScenario(String x) {
+        Gson gson = new Gson();
+        @Nullable
+        ScenarioJson scenarioJson = new ScenarioJson();
+        Triggers trigger = new Triggers();
+        scenarioJson.name = SEPARATOR_CHARS + " " + channel.getLabel();
+        scenarioJson.icon = "home";
+        trigger.type = "scenario.trigger.voice";
+        trigger.value = Objects.requireNonNull(channel.getLabel());
+        scenarioJson.triggers = new Triggers[] { trigger };
+        Steps steps = new Steps();
+        steps.type = "scenarios.steps.actions";
+        Parameters parameters = new Parameters();
+        parameters.launch_devices = new String[] {};
+
+        RequestedSpeakerCapabilities requestedSpeakerCapabilities = new RequestedSpeakerCapabilities();
+        Pparameters pparameters = new Pparameters();
+        pparameters.instance = "text_action";
+        Sstate sstate = new Sstate();
+        sstate.instance = "text_action";
+        if (channel.getConfiguration().get("answer") != null) {
+            sstate.value = channel.getConfiguration().get("answer").toString() + SEPARATOR_CHARS + x;
         } else {
             sstate.value = "Сделай громкость" + SEPARATOR_CHARS + x;
         }

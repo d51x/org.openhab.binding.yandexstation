@@ -23,7 +23,6 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
-import org.openhab.core.net.NetworkAddressService;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
@@ -32,7 +31,6 @@ import org.openhab.core.thing.binding.BaseThingHandlerFactory;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerFactory;
 import org.openhab.core.thing.type.ThingType;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,8 +50,6 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
     private final YandexApiFactory apiFactory;
 
     private static final Map<ThingUID, @NonNull YandexStationHandler> handlerMap = new HashMap<>();
-    NetworkAddressService networkAddressService;
-    ConfigurationAdmin configAdmin;
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -66,11 +62,8 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
      * @param apiFactory the api factory
      */
     @Activate
-    public YandexStationHandlerFactory(@Reference YandexApiFactory apiFactory,
-            @Reference NetworkAddressService networkAddressService, @Reference ConfigurationAdmin configAdmin) {
+    public YandexStationHandlerFactory(@Reference YandexApiFactory apiFactory) {
         this.apiFactory = apiFactory;
-        this.networkAddressService = networkAddressService;
-        this.configAdmin = configAdmin;
     }
 
     @Override
@@ -79,7 +72,7 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
 
         if (THING_TYPE_STATION.equals(thingTypeUID)) {
             try {
-                return new YandexStationHandler(thing, apiFactory, networkAddressService, configAdmin);
+                return new YandexStationHandler(thing, apiFactory);
             } catch (ApiException e) {
                 throw new RuntimeException(e);
             }

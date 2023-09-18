@@ -12,10 +12,7 @@
  */
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -80,7 +77,7 @@ public class YandexApiOnline implements YandexApi {
     @Override
     public APIExtendedResponse sendGetRequest(String path, @Nullable String params, @Nullable String token)
             throws ApiException {
-        // String cookie = readCookie();
+        String cookie = readCookie();
         APIExtendedResponse result = new APIExtendedResponse();
         Request request = null;
         httpClient.setConnectTimeout(60 * 1000);
@@ -92,20 +89,27 @@ public class YandexApiOnline implements YandexApi {
         if (token != null) {
             setHeaders(request, null, token);
         } else {
-            setHeaders(request, null, null);
+            setHeaders(request, null, cookie);
         }
+        request.header(HttpHeader.CONTENT_TYPE, "text/html");
+        request.header("charset", "utf-8");
         request.method(HttpMethod.GET);
         String errorReason = "";
         try {
             ContentResponse contentResponse = request.send();
             result.httpCode = contentResponse.getStatus();
             if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
-                result.response = contentResponse.getContentAsString();
-                // cookieStore = httpClient.getCookieStore();
-                // if (!cs.getCookies().isEmpty()) {
-                // List<HttpCookie> cck = cs.getCookies();
-                writeCookie(cookieStore);
+                // if (contentResponse.getHeaders().containsKey("content-encoding")) {
+                // if (contentResponse.getHeaders().get("content-encoding").equals("gzip")) { // check if getting
+                // // brotli
+                // // compressed stream
+                // GZIPContentDecoder gzipHandler = new GZIPContentDecoder();
+                // result.response = String
+                // .valueOf(gzipHandler.decode(ByteBuffer.wrap(contentResponse.getContent())));
                 // }
+                // }
+                result.response = contentResponse.getContentAsString();
+                writeCookie(cookieStore);
                 return result;
             } else {
                 errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
@@ -126,7 +130,7 @@ public class YandexApiOnline implements YandexApi {
 
     @Override
     public APIExtendedResponse sendPostRequest(String path, String data, String token) throws ApiException {
-        // String cookies = readCookie();
+        String cookies = readCookie();
         String errorReason = "";
         APIExtendedResponse result = new APIExtendedResponse();
         httpClient.setConnectTimeout(60 * 1000);
@@ -135,11 +139,9 @@ public class YandexApiOnline implements YandexApi {
         request.method(HttpMethod.POST);
         request.header(HttpHeader.CONTENT_TYPE, "application/x-www-form-urlencoded");
         request.header("charset", "utf-8");
-        // request.header(HttpHeader.CONTENT_LENGTH, Integer.toString(data.length()));
-        // if (cookies != null) {
-        // request.header(HttpHeader.COOKIE, cookies);
-        // }
-        // request.followRedirects(false);
+        if (cookies != null) {
+            request.header(HttpHeader.COOKIE, cookies);
+        }
         request.content(new StringContentProvider(data), "application/x-www-form-urlencoded");
 
         try {
@@ -147,9 +149,6 @@ public class YandexApiOnline implements YandexApi {
             result.httpCode = contentResponse.getStatus();
             if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
                 result.response = contentResponse.getContentAsString();
-                // CookieStore cs = httpClient.getCookieStore();
-                // result.cookies = cs.getCookies();
-                // writeCookie(result.cookies);
                 return result;
             } else {
                 errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
@@ -170,7 +169,7 @@ public class YandexApiOnline implements YandexApi {
     private APIExtendedResponse sendPostRequestForToken(String path, String data) throws ApiException {
         String errorReason = "";
         if (readCookieSession() != null) {
-            // String cookies = readCookie();
+            String cookies = readCookie();
             APIExtendedResponse result = new APIExtendedResponse();
             httpClient.setConnectTimeout(60 * 1000);
             Request request = httpClient.newRequest(path);
@@ -178,13 +177,11 @@ public class YandexApiOnline implements YandexApi {
             request.method(HttpMethod.POST);
             request.header(HttpHeader.CONTENT_TYPE, "application/x-www-form-urlencoded");
             request.header("charset", "utf-8");
-            // request.header(HttpHeader.CONTENT_LENGTH, Integer.toString(data.length()));
             request.header("ya-client-host", "passport.yandex.ru");
             request.header("ya-client-cookie", readCookieSession());
-            // if (cookieStore.getCookies() != null) {
-            // httpClient.setCookieStore(cookieStore);
-            // // request.header(HttpHeader.COOKIE, cookies);
-            // }
+            if (cookies != null) {
+                request.header(HttpHeader.COOKIE, cookies);
+            }
             request.content(new StringContentProvider(data), "application/x-www-form-urlencoded");
 
             try {
@@ -192,12 +189,6 @@ public class YandexApiOnline implements YandexApi {
                 result.httpCode = contentResponse.getStatus();
                 if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
                     result.response = contentResponse.getContentAsString();
-                    // cookieStore = httpClient.getCookieStore();
-                    // if (!cookieStore.getCookies().isEmpty()) {
-                    // result.cookies = cookieStore.getCookies();
-                    // writeCookie(result.cookies);
-                    // }
-                    // Gson gson = new Gson();
                     JsonObject response = JsonParser.parseString(result.response).getAsJsonObject();
                     if (response.has("status") && response.get("status").getAsString().equals("error")) {
                         errorReason = String.format("Yandex API request failed with %s",
@@ -222,17 +213,6 @@ public class YandexApiOnline implements YandexApi {
     }
 
     public void getToken(String username, String password) throws ApiException {
-        // if (readCookie() != null) {
-        // String cookies = readCookie();
-        // if (cookies != null) {
-        // String[] cookiesList = cookies.split(";");
-        // for (String cookie : cookiesList) {
-        // if (cookie.contains("Session_id=")) {
-        // writeCookieSession(cookie);
-        // }
-        // }
-        // }
-        // }
         if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
             HttpCookie sessionCookie = cookieStore.getCookies().stream()
                     .filter((session -> session.getName().equals("Session_id"))).findFirst().get();
@@ -289,14 +269,9 @@ public class YandexApiOnline implements YandexApi {
                                 .filter((session -> session.getName().equals("Session_id"))).findFirst().get();
                         writeCookieSession(sessionCookie.toString());
                     }
-                    // passwordCheck.cookies.forEach(sessionCookie -> {
-                    // if (sessionCookie.getName().equals("Session_id")) {
-                    // writeCookieSession(sessionCookie.toString());
-                    // }
-                    // });
                 } else {
-                    if (JsonParser.parseString(trackIdRequest.response).getAsJsonObject().has("errors")) {
-                        throw new ApiException(JsonParser.parseString(trackIdRequest.response).getAsJsonObject()
+                    if (JsonParser.parseString(passwordCheck.response).getAsJsonObject().has("errors")) {
+                        throw new ApiException(JsonParser.parseString(passwordCheck.response).getAsJsonObject()
                                 .get("errors").getAsJsonArray().toString());
                     } else
                         throw new ApiException("Error sending password");
@@ -325,13 +300,6 @@ public class YandexApiOnline implements YandexApi {
 
             }
         } else {
-            // APIExtendedResponse csrf = sendGetRequest("https://yandex.ru/quasar/iot", null, null);
-            // String getCsrfTokenString = csrf.response.substring(csrf.response.indexOf("csrfToken2"),
-            // csrf.response.indexOf("csrfToken2")
-            // + csrf.response.substring(csrf.response.indexOf("csrfToken2")).indexOf(","));
-            // String[] parseToken = getCsrfTokenString.split(":");
-            // APIExtendedResponse checkCookie = sendGetRequest("https://quasar.yandex.ru/get_account_config", null,
-            // readCookieSession());
             if (readXtoken() == null) {
                 APIExtendedResponse getXToken = sendPostRequestForToken(
                         "https://mobileproxy.passport.yandex.net/1/bundle/oauth/token_by_sessionid",
@@ -361,9 +329,9 @@ public class YandexApiOnline implements YandexApi {
     public APICloudDevicesResponse getDevicesList() throws ApiException {
         APIExtendedResponse response = sendGetRequest("https://iot.quasar.yandex.ru/m/v3/user/devices", null,
                 readCookieSession());
-        APICloudDevicesResponse resp = new APICloudDevicesResponse();
+        new APICloudDevicesResponse();
         Gson gson = new Gson();
-        resp = gson.fromJson(response.response, APICloudDevicesResponse.class);
+        APICloudDevicesResponse resp = gson.fromJson(response.response, APICloudDevicesResponse.class);
         return Objects.requireNonNullElseGet(resp, APICloudDevicesResponse::new);
     }
 
@@ -373,12 +341,10 @@ public class YandexApiOnline implements YandexApi {
 
     private void setHeaders(Request request, @Nullable String token, @Nullable String cookie) {
         request.timeout(60, TimeUnit.SECONDS);
-        request.header(HttpHeader.USER_AGENT, null);
         request.header(HttpHeader.USER_AGENT, YANDEX_USER_AGENT);
         request.header(HttpHeader.CONNECTION, "keep-alive");
         request.header(HttpHeader.ACCEPT, "*/*");
-        request.header(HttpHeader.ACCEPT_ENCODING, null);
-        request.header(HttpHeader.ACCEPT_ENCODING, "gzip, deflate, br");
+        request.header(HttpHeader.ACCEPT_ENCODING, "deflate");
 
         if (token != null) {
             request.header(HttpHeader.AUTHORIZATION, "Bearer " + token);
@@ -386,51 +352,35 @@ public class YandexApiOnline implements YandexApi {
         if (cookie != null) {
             request.header(HttpHeader.COOKIE, cookie);
         }
-        request.followRedirects(true);
+        // request.followRedirects(true);
     }
 
-    // public @Nullable String readCookie() {
-    // File file = new File(
-    // OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "passportCookie");
-    // if (!file.exists()) {
-    // return null;
-    // } else {
-    // List<String> lines = null;
-    // try {
-    // lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-    // } catch (IOException ignored) {
-    // }
-    // return lines == null || lines.isEmpty() ? null : lines.get(0);
-    // }
-    // }
+    public @Nullable String readCookie() {
+        File file = new File(
+                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "captchaProtect");
+        if (!file.exists()) {
+            boolean createOk = file.getParentFile().mkdirs();
+            if (createOk) {
+                logger.debug("Folders {} created", file.getAbsolutePath());
+            }
+            try {
+                Files.writeString(file.toPath(), "", StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                logger.error("Cannot write to file {}", file.getName());
+            }
+            return null;
+        } else {
+            List<String> lines = null;
+            try {
+                lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+            } catch (IOException ignored) {
+            }
+            return lines == null || lines.isEmpty() ? null : lines.get(0);
+        }
+    }
 
     private void writeCookie(CookieStore cookieStore) {
-        // String read = readCookie();
-        // Map<String, String> cl = new HashMap<>();
-        // Set<String> cookSet = new HashSet<>();
-        // if (read != null) {
-        // String[] cookiesSplit = read.split("[;,]");
-        // for (int i = 0; i < cookiesSplit.length; i++) {
-        // cookSet.add(cookiesSplit[i].strip());
-        // String[] sepCook = cookiesSplit[i].strip().split("=");
-        // cl.put(sepCook[0], sepCook[1]);
-        // }
-        // cookies.forEach(cook -> {
-        // for (int i = 0; i < cookiesSplit.length; i++) {
-        // cl.put(cook.getName(), cook.getValue());
-        // cookSet.add(cook.getName() + "=" + cook.getValue());
-        // }
-        // });
-        // // logger.debug("cookies is {}", Arrays.stream(cookiesSplit).toArray());
-        // }
-        // var context = new Object() {
-        // String forWrite = "";
-        // };
-        // cl.forEach((k, v) -> {
-        // context.forWrite = context.forWrite + k + "=" + v + ",";
-        // });
         List<YandexCookies> lislCookies = new ArrayList<>();
-        // YandexCookies cookies = new YandexCookies();
         cookieStore.getCookies().forEach(cookie -> {
             YandexCookies cookies = new YandexCookies();
             cookies.domain = cookie.getDomain();
@@ -548,7 +498,20 @@ public class YandexApiOnline implements YandexApi {
         File file = new File(
                 OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "csrfToken");
         if (!file.exists()) {
-            return null;
+            String[] parseToken = new String[0];
+            try {
+                APIExtendedResponse response = sendGetRequest("https://yandex.ru/quasar/iot", null,
+                        readCookieSession());
+                String getCsrfTokenString = response.response.substring(response.response.indexOf("{\"csrfToken2\":\""),
+                        response.response.indexOf("{\"csrfToken2\":\"") + response.response
+                                .substring(response.response.indexOf("{\"csrfToken2\":\"")).indexOf("\",\"cspNonce\""));
+                logger.debug("csrf_token2 {}", getCsrfTokenString);
+                parseToken = getCsrfTokenString.split("\":\"");
+                Files.writeString(file.toPath(), parseToken[1], StandardCharsets.UTF_8);
+                logger.debug("csrfResponse {}", Arrays.stream(parseToken).toArray());
+            } catch (ApiException | IOException ignored) {
+            }
+            return parseToken[1];
         } else {
             List<String> lines = null;
             try {
@@ -579,19 +542,23 @@ public class YandexApiOnline implements YandexApi {
     public APIExtendedResponse sendPostJsonRequest(String path, String json, String s) throws ApiException {
         String errorReason = "";
         if (readCookieSession() != null) {
-            // String cookies = readCookie();
+            var ref = new Object() {
+                String cookiesAsString = "";
+            };
+            cookieStore.getCookies().forEach(cook -> {
+                ref.cookiesAsString = ref.cookiesAsString + cook.getName() + "=" + cook.getValue() + ";";
+            });
             APIExtendedResponse result = new APIExtendedResponse();
             httpClient.setConnectTimeout(60 * 1000);
             Request request = httpClient.newRequest(path);
             request.timeout(60, TimeUnit.SECONDS);
             request.method(HttpMethod.POST);
             request.header(HttpHeader.CONTENT_TYPE, "application/json");
+            request.header(HttpHeader.COOKIE, ref.cookiesAsString + readCookieSession());
             request.header("charset", "utf-8");
-            request.header("x-csrf-token", Objects.requireNonNull(readCSRFToken()).strip());
-            // request.header(HttpHeader.CONTENT_LENGTH, Integer.toString(json.length()));
-            // if (cookies != null) {
-            // request.header(HttpHeader.COOKIE, cookies);
-            // }
+            if (readCSRFToken() != null) {
+                request.header("x-csrf-token", Objects.requireNonNull(readCSRFToken()).strip());
+            }
             request.content(new StringContentProvider(json), "application/json");
 
             try {
@@ -599,9 +566,83 @@ public class YandexApiOnline implements YandexApi {
                 result.httpCode = contentResponse.getStatus();
                 if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
                     result.response = contentResponse.getContentAsString();
-                    // CookieStore cs = httpClient.getCookieStore();
-                    // result.cookies = cs.getCookies();
-                    // writeCookie(result.cookies);
+                    return result;
+                } else {
+                    errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
+                            contentResponse.getReason());
+                }
+            } catch (InterruptedException | TimeoutException | ExecutionException e) {
+                logger.error("ERROR {}", e.getMessage());
+            }
+        }
+        return new APIExtendedResponse();
+    }
+
+    public APIExtendedResponse sendPutJsonRequest(String path, String json, String s) {
+        String errorReason = "";
+        if (readCookieSession() != null) {
+            var ref = new Object() {
+                String cookiesAsString = "";
+            };
+            cookieStore.getCookies().forEach(cook -> {
+                ref.cookiesAsString = ref.cookiesAsString + cook.getName() + "=" + cook.getValue() + ";";
+            });
+            APIExtendedResponse result = new APIExtendedResponse();
+            httpClient.setConnectTimeout(60 * 1000);
+            Request request = httpClient.newRequest(path);
+            request.timeout(60, TimeUnit.SECONDS);
+            request.method(HttpMethod.PUT);
+            request.header(HttpHeader.CONTENT_TYPE, "application/json");
+            request.header(HttpHeader.COOKIE, ref.cookiesAsString + readCookieSession());
+            request.header("charset", "utf-8");
+            if (readCSRFToken() != null) {
+                request.header("x-csrf-token", Objects.requireNonNull(readCSRFToken()).strip());
+            }
+            request.content(new StringContentProvider(json), "application/json");
+
+            try {
+                ContentResponse contentResponse = request.send();
+                result.httpCode = contentResponse.getStatus();
+                if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
+                    result.response = contentResponse.getContentAsString();
+                    return result;
+                } else {
+                    errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
+                            contentResponse.getReason());
+                }
+            } catch (InterruptedException | TimeoutException | ExecutionException e) {
+                logger.error("ERROR {}", e.getMessage());
+            }
+        }
+        return new APIExtendedResponse();
+    }
+
+    public APIExtendedResponse sendDeleteJsonRequest(String s) {
+        logger.info("deleting {}", s);
+        String errorReason = "";
+        if (readCookieSession() != null) {
+            var ref = new Object() {
+                String cookiesAsString = "";
+            };
+            cookieStore.getCookies().forEach(cook -> {
+                ref.cookiesAsString = ref.cookiesAsString + cook.getName() + "=" + cook.getValue() + ";";
+            });
+            APIExtendedResponse result = new APIExtendedResponse();
+            httpClient.setConnectTimeout(60 * 1000);
+            Request request = httpClient.newRequest(s);
+            request.timeout(60, TimeUnit.SECONDS);
+            request.method(HttpMethod.DELETE);
+            request.header(HttpHeader.COOKIE, ref.cookiesAsString + readCookieSession());
+            request.header("charset", "utf-8");
+            if (readCSRFToken() != null) {
+                request.header("x-csrf-token", Objects.requireNonNull(readCSRFToken()).strip());
+            }
+
+            try {
+                ContentResponse contentResponse = request.send();
+                result.httpCode = contentResponse.getStatus();
+                if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
+                    result.response = contentResponse.getContentAsString();
                     return result;
                 } else {
                     errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
