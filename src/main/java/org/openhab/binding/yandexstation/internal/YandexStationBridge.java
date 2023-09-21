@@ -49,7 +49,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
      */
     public @Nullable YandexStationConfiguration config;
 
-    public YandexApiOnline token;
+    public static YandexApiOnline token;
 
     /**
      * Instantiates a new Yandex station bridge.
@@ -71,17 +71,18 @@ public class YandexStationBridge extends BaseBridgeHandler {
         config = getConfigAs(YandexStationConfiguration.class);
         if (config != null) {
             try {
-                token.getToken(config.username, config.password);
-                if (token.readMusicToken() != null) {
-                    config.yandex_token = Objects.requireNonNull(token.readMusicToken());
-                    updateStatus(ThingStatus.ONLINE);
-                } else {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                            "Can not find Yandex music token");
-                }
-                devicesList = api.getDevices(config.yandex_token);
+                if (token.getToken(config.username, config.password)) {
+                    if (token.readMusicToken() != null) {
+                        config.yandex_token = Objects.requireNonNull(token.readMusicToken());
+                        updateStatus(ThingStatus.ONLINE);
+                    } else {
+                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                                "Can not find Yandex music token");
+                    }
+                    devicesList = api.getDevices(config.yandex_token);
 
-                updateStatus(ThingStatus.ONLINE);
+                    updateStatus(ThingStatus.ONLINE);
+                }
             } catch (ApiException e) {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Error " + e.getMessage());
             }
@@ -101,5 +102,9 @@ public class YandexStationBridge extends BaseBridgeHandler {
      */
     public List<ApiDeviceResponse> getDevices() {
         return devicesList;
+    }
+
+    public static YandexApiOnline getTokenApi() {
+        return token;
     }
 }

@@ -12,12 +12,14 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
+import static org.openhab.binding.yandexstation.internal.YandexStationBridge.getTokenApi;
 import static org.openhab.binding.yandexstation.internal.YandexStationScenarios.SEPARATOR_CHARS;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -25,7 +27,6 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.APIExtendedResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
@@ -48,6 +49,7 @@ import com.google.gson.JsonParser;
 @NonNullByDefault
 public class YandexScenariosHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(YandexScenariosHandler.class);
+    private @Nullable ScheduledFuture<?> refreshPollingJob;
     @Nullable
     YandexStationBridge yandexStationBridge;
     private @Nullable Future<?> initJob;
@@ -60,10 +62,11 @@ public class YandexScenariosHandler extends BaseThingHandler {
     private String url = "";
     char[] base_chars = ",.:".toCharArray();
     char[] digits = "01234567890".toCharArray();
+    boolean dispose;
 
-    public YandexScenariosHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
+    public YandexScenariosHandler(Thing thing) throws ApiException {
         super(thing);
-        this.api = (YandexApiOnline) apiFactory.getToken();
+        this.api = getTokenApi();
     }
 
     @Override
@@ -97,6 +100,10 @@ public class YandexScenariosHandler extends BaseThingHandler {
                                 String json = yaScn.updateScenario(encode(context.x));
                                 APIExtendedResponse response = api.sendPutJsonRequest(
                                         "https://iot.quasar.yandex.ru/m/user/scenarios/" + scn.id, json, "");
+                                if (response.httpCode == 403) {
+                                    response = api.sendPutJsonRequest(
+                                            "https://iot.quasar.yandex.ru/m/user/scenarios/" + scn.id, json, "update");
+                                }
                                 logger.debug("response script update: {}", response.response);
                                 context.x++;
                                 isNew = false;
@@ -139,6 +146,9 @@ public class YandexScenariosHandler extends BaseThingHandler {
                 }
             } catch (ApiException e) {
                 logger.debug("Error {}", e.getMessage());
+            }
+            if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
+                refreshPollingJob = scheduler.scheduleWithFixedDelay(() -> ping(), 0, 1, TimeUnit.MINUTES);
             }
             initJob = connect();
         }
@@ -205,6 +215,9 @@ public class YandexScenariosHandler extends BaseThingHandler {
             @Override
             public void onClose(int statusCode, String reason) {
                 logger.debug("Websocket connection closed");
+                if (!dispose) {
+                    reconnectWebsocket();
+                }
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR,
                         "Connection closed: " + statusCode + " - " + reason);
             }
@@ -249,6 +262,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
         String subst = value.split(SEPARATOR_CHARS)[1];
         int yaScnId = decode(subst);
         YandexStationScenarios scn = scnList.get(yaScnId);
+        triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID());
         updateState(scn.getChannel().getUID(), OnOffType.ON);
     }
 
@@ -300,8 +314,16 @@ public class YandexScenariosHandler extends BaseThingHandler {
         return Integer.parseInt(character);
     }
 
+    private void ping() {
+        // YandexStationCommand sendCommand = new YandexStationCommand(CMD_PING);
+        // YandexStationSendPacket yandexPacket = new YandexStationSendPacket(device_token, sendCommand);
+        // logger.debug("Send packet: {}", yandexPacket);
+        yandexStationWebsocket.sendMessage("{\"ping\"}");
+    }
+
     @Override
     public void dispose() {
+        dispose = true;
         logger.debug("dispose");
         try {
             webSocketClient.stop();

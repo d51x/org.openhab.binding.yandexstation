@@ -6,8 +6,14 @@
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 	<channel-type id="scn">
 		<item-type>Switch</item-type>
-		<label>Trigger</label>
+		<label>Switch</label>
 		<description>Switches if scenario fires</description>
+		<config-description-ref uri="channel-type:yandexstation:scenario-name"/>
+	</channel-type>
+	<channel-type id="scn-trg">
+		<kind>trigger</kind>
+		<label>Trigger</label>
+		<description>Triggers if scenario fires</description>
 		<config-description-ref uri="channel-type:yandexstation:scenario-name"/>
 	</channel-type>
 </thing:thing-descriptions>

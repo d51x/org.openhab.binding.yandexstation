@@ -171,7 +171,6 @@ public class YandexApiImpl implements YandexApi {
                 Type listType = new TypeToken<ArrayList<ApiDeviceResponse>>() {
                 }.getType();
                 List<ApiDeviceResponse> devices = new Gson().fromJson(deviceList, listType);
-                logger.debug("Device list is: {}", devices);
                 if (!devices.isEmpty()) {
                     return devices;
                 } else {

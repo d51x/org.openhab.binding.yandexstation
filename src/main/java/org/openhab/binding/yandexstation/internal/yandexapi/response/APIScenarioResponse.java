@@ -12,23 +12,31 @@
  */
 package org.openhab.binding.yandexstation.internal.yandexapi.response;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+
 /**
  * The {@link APIScenarioResponse} is describing api common success response.
  *
  * @author "Dmintry P (d51x)" - Initial contribution
  */
+@NonNullByDefault
 public class APIScenarioResponse {
     public String status;
     public Scenarios[] scenarios;
 
+    public APIScenarioResponse() {
+        status = "";
+        scenarios = new Scenarios[0];
+    }
+
     public class Scenarios {
-        public String id;
-        public String name;
-        public Triggers[] triggers;
+        public String id = "";
+        public String name = "";
+        public Triggers[] triggers = new Triggers[0];
     }
 
     public class Triggers {
-        public String type;
-        public String value;
+        public String type = "";
+        public String value = "";
     }
 }

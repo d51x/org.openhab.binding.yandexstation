@@ -38,7 +38,7 @@
 		</config-description>
 	</thing-type>
 
-	<thing-type id="scenarios" extensible="scn">
+	<thing-type id="scenarios" extensible="scn, scn-trg">
 		<supported-bridge-type-refs>
 			<bridge-type-ref id="bridge"/>
 		</supported-bridge-type-refs>
