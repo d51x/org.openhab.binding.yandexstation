@@ -42,6 +42,13 @@
 					Yandex one time password
 				</description>
 			</parameter>
+			<parameter name="cookies" type="text">
+				<context>textbox</context>
+				<label>Yandex cookies</label>
+				<description>
+					Yandex cookies
+				</description>
+			</parameter>
 		</config-description>
 	</bridge-type>
 </thing:thing-descriptions>

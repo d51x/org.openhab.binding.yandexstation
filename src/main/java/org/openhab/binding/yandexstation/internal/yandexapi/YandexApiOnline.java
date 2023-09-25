@@ -183,7 +183,11 @@ public class YandexApiOnline implements YandexApi {
         throw new ApiException(errorReason);
     }
 
-    public boolean getToken(String username, String password) throws ApiException {
+    public boolean getToken(String username, String password, String cookies) throws ApiException {
+        if (!cookies.isEmpty()) {
+            writeCookie(cookies);
+            cookieStore = getCookies(cookieManager.getCookieStore());
+        }
         if (cookieStore.getCookies().stream().noneMatch((session -> session.getName().equals("Session_id")))) {
             boolean capcha = false;
             String csrf_token = "";
@@ -436,6 +440,20 @@ public class YandexApiOnline implements YandexApi {
         }
         try {
             Files.writeString(file.toPath(), json, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            logger.error("Cannot write to file {}", file.getName());
+        }
+    }
+
+    private void writeCookie(String cookieStore) {
+        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator
+                + "passportCookie.json");
+        boolean createOk = file.getParentFile().mkdirs();
+        if (createOk) {
+            logger.debug("Folders {} created", file.getAbsolutePath());
+        }
+        try {
+            Files.writeString(file.toPath(), cookieStore, StandardCharsets.UTF_8);
         } catch (IOException e) {
             logger.error("Cannot write to file {}", file.getName());
         }

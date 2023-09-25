@@ -128,7 +128,7 @@ public class YandexApiImpl implements YandexApi {
         request.header(HttpHeader.ACCEPT_ENCODING, "gzip, deflate, br");
 
         if (token != null) {
-            request.header(HttpHeader.AUTHORIZATION, "Bearer " + token);
+            request.header(HttpHeader.AUTHORIZATION, "OAuth " + token);
         }
         request.followRedirects(true);
     }

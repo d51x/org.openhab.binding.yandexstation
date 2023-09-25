@@ -268,6 +268,10 @@ public class YandexScenariosHandler extends BaseThingHandler {
 
     private void reconnectWebsocket() {
         logger.debug("Try to reconnect");
+        try {
+            url = api.getWssUrl();
+        } catch (ApiException ignored) {
+        }
         Future<?> job = initJob;
         if (job != null) {
             job.cancel(true);

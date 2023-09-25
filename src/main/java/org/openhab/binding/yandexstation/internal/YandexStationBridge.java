@@ -71,7 +71,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
         config = getConfigAs(YandexStationConfiguration.class);
         if (config != null) {
             try {
-                if (token.getToken(config.username, config.password)) {
+                if (token.getToken(config.username, config.password, config.cookies)) {
                     if (token.readMusicToken() != null) {
                         config.yandex_token = Objects.requireNonNull(token.readMusicToken());
                         updateStatus(ThingStatus.ONLINE);
