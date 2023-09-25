@@ -41,7 +41,12 @@ import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.Fields;
 import org.eclipse.jetty.util.HttpCookieStore;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 import org.openhab.core.OpenHAB;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -49,11 +54,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The {@link YandexApiOnline} is describing implementaion of api interface.
