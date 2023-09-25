@@ -34,14 +34,14 @@
 		<state readOnly="true"/>
 	</channel-type>
 	<channel-type id="nextId-channel" advanced="true">
-		<item-type>Number</item-type>
+		<item-type>String</item-type>
 		<label>Track Next Id</label>
 		<description>Yandex next track id</description>
 		<category>if:mdi:identifier</category>
 		<state readOnly="true"/>
 	</channel-type>
 	<channel-type id="prevId-channel" advanced="true">
-		<item-type>Number</item-type>
+		<item-type>String</item-type>
 		<label>Track Prev Id</label>
 		<description>Yandex previous track id</description>
 		<category>if:mdi:identifier</category>
