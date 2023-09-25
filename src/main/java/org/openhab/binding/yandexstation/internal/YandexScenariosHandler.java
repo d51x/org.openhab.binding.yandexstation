@@ -17,7 +17,10 @@ import static org.openhab.binding.yandexstation.internal.YandexStationScenarios.
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -26,25 +29,30 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APIExtendedResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
 import org.openhab.core.library.types.OnOffType;
-import org.openhab.core.thing.*;
+import org.openhab.core.thing.Bridge;
+import org.openhab.core.thing.Channel;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.Thing;
+import org.openhab.core.thing.ThingStatus;
+import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.types.Command;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link YandexScenariosHandler} is describing implementaion of api interface.
  *
- * @author "Dmintry P (d51x)" - Initial contribution
+ * @author Petr Shatsillo - Initial contribution
  */
 @NonNullByDefault
 public class YandexScenariosHandler extends BaseThingHandler {
@@ -98,7 +106,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
                                 yaScn.addScenario(scn, channel, encode(context.x));
                                 scnList.put(context.x, yaScn);
                                 String json = yaScn.updateScenario(encode(context.x));
-                                APIExtendedResponse response = api.sendPutJsonRequest(
+                                ApiResponse response = api.sendPutJsonRequest(
                                         "https://iot.quasar.yandex.ru/m/user/scenarios/" + scn.id, json, "");
                                 if (response.httpCode == 403) {
                                     response = api.sendPutJsonRequest(
@@ -115,7 +123,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
                         YandexStationScenarios yaScn = new YandexStationScenarios();
                         String json = yaScn.createScenario(channel, encode(context.x));
                         try {
-                            APIExtendedResponse response = api
+                            ApiResponse response = api
                                     .sendPostJsonRequest("https://iot.quasar.yandex.ru/m/user/scenarios", json, "");
                             logger.debug("response script creation: {}", response.response);
                         } catch (ApiException ignored) {
@@ -138,7 +146,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
                     });
                     if (!ref.present) {
                         if (scn.name.startsWith(SEPARATOR_CHARS)) {
-                            APIExtendedResponse response = api
+                            ApiResponse response = api
                                     .sendDeleteJsonRequest("https://iot.quasar.yandex.ru/m/user/scenarios/" + scn.id);
                             logger.debug("response script delete: {}", response.response);
                         }

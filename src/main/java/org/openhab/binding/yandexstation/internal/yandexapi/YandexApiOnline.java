@@ -12,12 +12,21 @@
  */
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Type;
-import java.net.*;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.CookieStore;
+import java.net.HttpCookie;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -32,12 +41,7 @@ import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.Fields;
 import org.eclipse.jetty.util.HttpCookieStore;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APIExtendedResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
 import org.openhab.core.OpenHAB;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -45,11 +49,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link YandexApiOnline} is describing implementaion of api interface.
  *
- * @author "Dmintry P (d51x)" - Initial contribution
+ * @author Petr Shatsillo - Initial contribution
  */
 @NonNullByDefault
 public class YandexApiOnline implements YandexApi {
@@ -76,9 +85,9 @@ public class YandexApiOnline implements YandexApi {
     }
 
     @Override
-    public APIExtendedResponse sendGetRequest(String path, @Nullable String params, @Nullable String token)
+    public ApiResponse sendGetRequest(String path, @Nullable String params, @Nullable String token)
             throws ApiException {
-        APIExtendedResponse result = new APIExtendedResponse();
+        ApiResponse result = new ApiResponse();
         Request request;
         httpClient.setConnectTimeout(60 * 1000);
         if (params != null) {
@@ -109,14 +118,14 @@ public class YandexApiOnline implements YandexApi {
     }
 
     @Override
-    public APIExtendedResponse sendGetRequest(String path, String token) {
-        return new APIExtendedResponse();
+    public ApiResponse sendGetRequest(String path, String token) {
+        return new ApiResponse();
     }
 
     @Override
-    public APIExtendedResponse sendPostRequest(String path, String data, String token) throws ApiException {
+    public ApiResponse sendPostRequest(String path, String data, String token) throws ApiException {
         String errorReason = "";
-        APIExtendedResponse result = new APIExtendedResponse();
+        ApiResponse result = new ApiResponse();
         httpClient.setConnectTimeout(60 * 1000);
         Request request = httpClient.newRequest(path);
         request.timeout(60, TimeUnit.SECONDS);
@@ -144,10 +153,10 @@ public class YandexApiOnline implements YandexApi {
         throw new ApiException(errorReason);
     }
 
-    private APIExtendedResponse sendPostRequestForToken(String path, String data) throws ApiException {
+    private ApiResponse sendPostRequestForToken(String path, String data) throws ApiException {
         String errorReason = "";
         if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
-            APIExtendedResponse result = new APIExtendedResponse();
+            ApiResponse result = new ApiResponse();
             httpClient.setConnectTimeout(60 * 1000);
             Request request = httpClient.newRequest(path);
             request.timeout(60, TimeUnit.SECONDS);
@@ -194,7 +203,7 @@ public class YandexApiOnline implements YandexApi {
             sendGetRequest(
                     "https://passport.yandex.ru/auth/welcome?retpath=https%3A%2F%2Fpassport.yandex.ru%2F&noreturn=1",
                     null, null);
-            APIExtendedResponse csrfTokenRequest;
+            ApiResponse csrfTokenRequest;
             csrfTokenRequest = sendGetRequest(API_URL + "am?", "app_platform=android", null);
             String title = csrfTokenRequest.response.substring(csrfTokenRequest.response.indexOf("<title"),
                     csrfTokenRequest.response.indexOf("</title>"));
@@ -222,7 +231,7 @@ public class YandexApiOnline implements YandexApi {
                 csrf_token = parseToken[2];
             }
             String trackId = "";
-            APIExtendedResponse trackIdRequest;
+            ApiResponse trackIdRequest;
             if (capcha) {
                 trackIdRequest = sendPostRequest(API_URL + "registration-validations/auth/multi_step/start",
                         "csrf_token=" + csrf_token + "&login=" + username, Objects.requireNonNull(readCaptchaCookie()));
@@ -244,7 +253,7 @@ public class YandexApiOnline implements YandexApi {
             } else {
                 throw new ApiException("Cannot fetch track_id");
             }
-            APIExtendedResponse passwordCheck;
+            ApiResponse passwordCheck;
             if (capcha) {
                 passwordCheck = sendPostRequest(API_URL + "registration-validations/auth/multi_step/commit_password",
                         "csrf_token=" + csrf_token + "&track_id=" + trackId + "&password=" + password,
@@ -270,7 +279,7 @@ public class YandexApiOnline implements YandexApi {
             } else
                 throw new ApiException("Password error");
             if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
-                APIExtendedResponse getUserToken = sendPostRequestForToken(
+                ApiResponse getUserToken = sendPostRequestForToken(
                         "https://mobileproxy.passport.yandex.net/1/bundle/oauth/token_by_sessionid",
                         "client_id=c0ebe342af7d48fbbbfcf2d2eedb8f9e&client_secret=ad0a908f0aa341a182a37ecd75bc319e&track_id="
                                 + trackId);
@@ -281,7 +290,7 @@ public class YandexApiOnline implements YandexApi {
                         writeXtoken(token.get("access_token").getAsString());
                     }
                 }
-                APIExtendedResponse getMusicToken = sendPostRequestForToken("https://oauth.mobile.yandex.net/1/token",
+                ApiResponse getMusicToken = sendPostRequestForToken("https://oauth.mobile.yandex.net/1/token",
                         "client_id=23cabbbdc6cd418abb4b39c32c41195d&client_secret=53bc75238f0c4d08a118e51fe9203300&grant_type=x-token&access_token="
                                 + token.get("access_token").getAsString());
                 JsonObject getMusicTokenJson = JsonParser.parseString(getMusicToken.response).getAsJsonObject();
@@ -292,7 +301,7 @@ public class YandexApiOnline implements YandexApi {
             }
         } else {
             if (readXtoken() == null) {
-                APIExtendedResponse getXToken = sendPostRequestForToken(
+                ApiResponse getXToken = sendPostRequestForToken(
                         "https://mobileproxy.passport.yandex.net/1/bundle/oauth/token_by_sessionid",
                         "client_id=c0ebe342af7d48fbbbfcf2d2eedb8f9e&client_secret=ad0a908f0aa341a182a37ecd75bc319e");
                 // logger.debug("Token resonse is {}", getXToken.response);
@@ -306,7 +315,7 @@ public class YandexApiOnline implements YandexApi {
                 }
             }
 
-            APIExtendedResponse getMusicToken = sendPostRequestForToken("https://oauth.mobile.yandex.net/1/token",
+            ApiResponse getMusicToken = sendPostRequestForToken("https://oauth.mobile.yandex.net/1/token",
                     "client_id=23cabbbdc6cd418abb4b39c32c41195d&client_secret=53bc75238f0c4d08a118e51fe9203300&grant_type=x-token&access_token="
                             + readXtoken());
             JsonObject getMusicTokenJson = JsonParser.parseString(getMusicToken.response).getAsJsonObject();
@@ -318,7 +327,7 @@ public class YandexApiOnline implements YandexApi {
     }
 
     public APICloudDevicesResponse getDevicesList() throws ApiException {
-        APIExtendedResponse response = sendGetRequest("https://iot.quasar.yandex.ru/m/v3/user/devices", null,
+        ApiResponse response = sendGetRequest("https://iot.quasar.yandex.ru/m/v3/user/devices", null,
                 "Session_id=" + cookieStore.getCookies().stream()
                         .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue());
         Gson gson = new Gson();
@@ -564,7 +573,7 @@ public class YandexApiOnline implements YandexApi {
         if (!file.exists()) {
             String[] parseToken = new String[0];
             try {
-                APIExtendedResponse response = sendGetRequest("https://yandex.ru/quasar/iot", null, null);
+                ApiResponse response = sendGetRequest("https://yandex.ru/quasar/iot", null, null);
                 String getCsrfTokenString = response.response.substring(response.response.indexOf("{\"csrfToken2\":\""),
                         response.response.indexOf("{\"csrfToken2\":\"") + response.response
                                 .substring(response.response.indexOf("{\"csrfToken2\":\"")).indexOf("\",\"cspNonce\""));
@@ -586,7 +595,7 @@ public class YandexApiOnline implements YandexApi {
             } else {
                 String[] parseToken = new String[0];
                 try {
-                    APIExtendedResponse response = sendGetRequest("https://yandex.ru/quasar/iot", null,
+                    ApiResponse response = sendGetRequest("https://yandex.ru/quasar/iot", null,
                             "Session_id=" + cookieStore.getCookies().stream()
                                     .filter((session -> session.getName().equals("Session_id"))).findFirst().get()
                                     .getValue());
@@ -608,7 +617,7 @@ public class YandexApiOnline implements YandexApi {
 
     public APIScenarioResponse getScenarios() {
         try {
-            APIExtendedResponse response = sendGetRequest("https://iot.quasar.yandex.ru/m/user/scenarios", null,
+            ApiResponse response = sendGetRequest("https://iot.quasar.yandex.ru/m/user/scenarios", null,
                     "Session_id=" + cookieStore.getCookies().stream()
                             .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue());
             Gson gson = new Gson();
@@ -623,7 +632,7 @@ public class YandexApiOnline implements YandexApi {
         return new APIScenarioResponse();
     }
 
-    public APIExtendedResponse sendPostJsonRequest(String path, String json, String ignoredS) throws ApiException {
+    public ApiResponse sendPostJsonRequest(String path, String json, String ignoredS) throws ApiException {
         String errorReason;
         if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
             var ref = new Object() {
@@ -634,7 +643,7 @@ public class YandexApiOnline implements YandexApi {
                     ref.cookiesAsString = ref.cookiesAsString + cook.getName() + "=" + cook.getValue() + ";";
                 }
             });
-            APIExtendedResponse result = new APIExtendedResponse();
+            ApiResponse result = new ApiResponse();
             httpClient.setConnectTimeout(60 * 1000);
             Request request = httpClient.newRequest(path);
             request.timeout(60, TimeUnit.SECONDS);
@@ -669,17 +678,17 @@ public class YandexApiOnline implements YandexApi {
                 logger.error("ERROR {}", e.getMessage());
             }
         }
-        return new APIExtendedResponse();
+        return new ApiResponse();
     }
 
-    public APIExtendedResponse sendPutJsonRequest(String path, String json, String updateFlag) {
+    public ApiResponse sendPutJsonRequest(String path, String json, String updateFlag) {
         if (!updateFlag.isEmpty()) {
             boolean update = true;
             readCSRFToken(update);
         }
         String errorReason;
         if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
-            APIExtendedResponse result = new APIExtendedResponse();
+            ApiResponse result = new ApiResponse();
             httpClient.setConnectTimeout(60 * 1000);
             Request request = httpClient.newRequest(path);
             request.timeout(60, TimeUnit.SECONDS);
@@ -713,10 +722,10 @@ public class YandexApiOnline implements YandexApi {
                 logger.error("ERROR {}", e.getMessage());
             }
         }
-        return new APIExtendedResponse();
+        return new ApiResponse();
     }
 
-    public APIExtendedResponse sendDeleteJsonRequest(String s) {
+    public ApiResponse sendDeleteJsonRequest(String s) {
         logger.info("deleting {}", s);
         String errorReason;
         if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
@@ -728,7 +737,7 @@ public class YandexApiOnline implements YandexApi {
                     ref.cookiesAsString = ref.cookiesAsString + cook.getName() + "=" + cook.getValue() + ";";
                 }
             });
-            APIExtendedResponse result = new APIExtendedResponse();
+            ApiResponse result = new ApiResponse();
             httpClient.setConnectTimeout(60 * 1000);
             Request request = httpClient.newRequest(s);
             request.timeout(60, TimeUnit.SECONDS);
@@ -761,7 +770,7 @@ public class YandexApiOnline implements YandexApi {
                 logger.error("ERROR {}", e.getMessage());
             }
         }
-        return new APIExtendedResponse();
+        return new ApiResponse();
     }
 
     private CookieManager newCookieManager() {
@@ -776,8 +785,8 @@ public class YandexApiOnline implements YandexApi {
     }
 
     @Override
-    public APIExtendedResponse sendPostRequest(String path, Fields fields, String token) {
-        return new APIExtendedResponse();
+    public ApiResponse sendPostRequest(String path, Fields fields, String token) {
+        return new ApiResponse();
     }
 
     class YandexCookies {

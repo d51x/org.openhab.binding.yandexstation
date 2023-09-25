@@ -17,7 +17,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 /**
  * The {@link APIScenarioResponse} is describing api common success response.
  *
- * @author "Dmintry P (d51x)" - Initial contribution
+ * @author Petr Shatsillo - Initial contribution
  */
 @NonNullByDefault
 public class APIScenarioResponse {

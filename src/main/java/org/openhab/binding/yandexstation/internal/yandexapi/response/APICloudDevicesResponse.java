@@ -17,7 +17,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 /**
  * The {@link APICloudDevicesResponse} is describing implementaion of api interface.
  *
- * @author "Dmintry P (d51x)" - Initial contribution
+ * @author Petr Shatsillo - Initial contribution
  */
 @NonNullByDefault
 public class APICloudDevicesResponse {
