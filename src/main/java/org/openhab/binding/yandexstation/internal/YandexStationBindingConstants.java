@@ -33,6 +33,10 @@ public class YandexStationBindingConstants {
      */
     public static final String THING_TYPE_ID = "station";
     /**
+     * The constant THING_TYPE_SCENARIO_ID.
+     */
+    public static final String THING_TYPE_SCENARIO_ID = "scenarios";
+    /**
      * The constant BRIDGE_TYPE_ID.
      */
     public static final String BRIDGE_TYPE_ID = "bridge";
@@ -41,6 +45,10 @@ public class YandexStationBindingConstants {
      * The constant THING_TYPE_STATION.
      */
     public static final ThingTypeUID THING_TYPE_STATION = new ThingTypeUID(BINDING_ID, THING_TYPE_ID);
+    /**
+     * The constant THING_TYPE_SCENARIO.
+     */
+    public static final ThingTypeUID THING_TYPE_SCENARIO = new ThingTypeUID(BINDING_ID, THING_TYPE_SCENARIO_ID);
     /**
      * The constant THING_TYPE_BRIDGE.
      */

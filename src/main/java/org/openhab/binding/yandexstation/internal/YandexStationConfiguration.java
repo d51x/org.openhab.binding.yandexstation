@@ -61,4 +61,7 @@ public class YandexStationConfiguration {
      * The Server private key.
      */
     public String server_private_key = "";
+    public String username = "";
+    public String password = "";
+    public String cookies = "";
 }
