@@ -61,7 +61,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public YandexStationBridge(Bridge bridge, YandexApiFactory apiFactory) throws ApiException {
         super(bridge);
         api = (YandexApiImpl) apiFactory.getApi();
-        token = (YandexApiOnline) apiFactory.getToken();
+        token = (YandexApiOnline) apiFactory.getToken(this.getThing().getUID().getId());
     }
 
     @Override

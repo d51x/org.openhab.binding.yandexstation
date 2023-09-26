@@ -41,19 +41,20 @@ import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.Fields;
 import org.eclipse.jetty.util.HttpCookieStore;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 import org.openhab.core.OpenHAB;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The {@link YandexApiOnline} is describing implementaion of api interface.
@@ -68,9 +69,11 @@ public class YandexApiOnline implements YandexApi {
     public static final String API_URL = "https://passport.yandex.ru/";
     private final CookieManager cookieManager;
     private volatile CookieStore cookieStore = new HttpCookieStore();
+    private String bridgeID = "";
 
-    public YandexApiOnline(HttpClient httpClient) {
+    public YandexApiOnline(HttpClient httpClient, String bridgeID) {
         this.httpClient = httpClient;
+        this.bridgeID = bridgeID;
         cookieManager = newCookieManager();
         cookieStore = getCookies(cookieManager.getCookieStore());
         this.httpClient.setCookieStore(cookieStore);
@@ -352,8 +355,8 @@ public class YandexApiOnline implements YandexApi {
     }
 
     public @Nullable String readCaptchaCookie() {
-        File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "captchaProtect");
+        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
+                + "_captchaProtect");
         if (!file.exists()) {
             boolean createOk = file.getParentFile().mkdirs();
             if (createOk) {
@@ -375,28 +378,9 @@ public class YandexApiOnline implements YandexApi {
         }
     }
 
-    private void writeCaptchaCookie(CookieStore cookieStore) {
-        var ref = new Object() {
-            String captchaCookieString = "";
-        };
-        cookieStore.getCookies().forEach(cookie -> ref.captchaCookieString = ref.captchaCookieString + cookie.getName()
-                + "=" + cookie.getValue() + ";");
-        File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "captchaProtect");
-        boolean createOk = file.getParentFile().mkdirs();
-        if (createOk) {
-            logger.debug("Folders {} created", file.getAbsolutePath());
-        }
-        try {
-            Files.writeString(file.toPath(), ref.captchaCookieString, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            logger.error("Cannot write to file {}", file.getName());
-        }
-    }
-
     private CookieStore getCookies(CookieStore cookieStore) {
-        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator
-                + "passportCookie.json");
+        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
+                + "_passportCookie.json");
         List<YandexCookies> cookiesList = null;
         if (!file.exists()) {
             return cookieManager.getCookieStore();
@@ -441,8 +425,8 @@ public class YandexApiOnline implements YandexApi {
         });
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         String json = gson.toJson(lislCookies);
-        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator
-                + "passportCookie.json");
+        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
+                + "_passportCookie.json");
         boolean createOk = file.getParentFile().mkdirs();
         if (createOk) {
             logger.debug("Folders {} created", file.getAbsolutePath());
@@ -455,16 +439,24 @@ public class YandexApiOnline implements YandexApi {
     }
 
     private void writeCookie(String cookieStore) {
-        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator
-                + "passportCookie.json");
-        boolean createOk = file.getParentFile().mkdirs();
-        if (createOk) {
-            logger.debug("Folders {} created", file.getAbsolutePath());
-        }
         try {
-            Files.writeString(file.toPath(), cookieStore, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            logger.error("Cannot write to file {}", file.getName());
+            JsonArray testInput = JsonParser.parseString(cookieStore).getAsJsonArray();
+            logger.debug("JSON Cookie from bridge input field: {}", testInput);
+            if (testInput.isJsonArray()) {
+                File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator
+                        + bridgeID + "_passportCookie.json");
+                boolean createOk = file.getParentFile().mkdirs();
+                if (createOk) {
+                    logger.debug("Folders {} created", file.getAbsolutePath());
+                }
+                try {
+                    Files.writeString(file.toPath(), cookieStore, StandardCharsets.UTF_8);
+                } catch (IOException e) {
+                    logger.error("Cannot write to file {}", file.getName());
+                }
+            }
+        } catch (Exception ignored) {
+            logger.error("Input string is not JSON!");
         }
     }
 
@@ -477,8 +469,8 @@ public class YandexApiOnline implements YandexApi {
                 ref.sessionCookie = ref.sessionCookie + cookie.getName() + "=" + cookie.getValue();
             }
         });
-        File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "sessionCookie");
+        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
+                + "_sessionCookie");
         boolean createOk = file.getParentFile().mkdirs();
         if (createOk) {
             logger.debug("Folders {} created", file.getAbsolutePath());
@@ -490,24 +482,9 @@ public class YandexApiOnline implements YandexApi {
         }
     }
 
-    public @Nullable String readCookieSession() {
-        File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "sessionCookie");
-        if (!file.exists()) {
-            return null;
-        } else {
-            List<String> lines = null;
-            try {
-                lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-            } catch (IOException ignored) {
-            }
-            return lines == null || lines.isEmpty() ? null : lines.get(0);
-        }
-    }
-
     private void writeXtoken(String accessToken) {
         File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "xtoken");
+                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID + "_xtoken");
         boolean createOk = file.getParentFile().mkdirs();
         if (createOk) {
             logger.debug("Folders {} created", file.getAbsolutePath());
@@ -521,7 +498,7 @@ public class YandexApiOnline implements YandexApi {
 
     public @Nullable String readXtoken() {
         File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "xtoken");
+                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID + "_xtoken");
         if (!file.exists()) {
             return null;
         } else {
@@ -535,8 +512,8 @@ public class YandexApiOnline implements YandexApi {
     }
 
     private void writeMusicToken(String musicToken) {
-        File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "musicToken");
+        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
+                + "_musicToken");
         boolean createOk = file.getParentFile().mkdirs();
         if (createOk) {
             logger.debug("Folders {} created", file.getAbsolutePath());
@@ -549,8 +526,8 @@ public class YandexApiOnline implements YandexApi {
     }
 
     public @Nullable String readMusicToken() {
-        File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "musicToken");
+        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
+                + "_musicToken");
         if (!file.exists()) {
             return null;
         } else {
@@ -564,8 +541,8 @@ public class YandexApiOnline implements YandexApi {
     }
 
     public @Nullable String readCSRFToken(boolean update) {
-        File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + "csrfToken");
+        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
+                + "_csrfToken");
         if (update) {
             boolean isDeleted = file.delete();
             logger.debug("File {} delete status: {}", file.getName(), isDeleted);

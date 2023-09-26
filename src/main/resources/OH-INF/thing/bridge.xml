@@ -46,7 +46,10 @@
 				<context>textbox</context>
 				<label>Yandex cookies</label>
 				<description>
-					Yandex cookies
+					<![CDATA[
+						You can copy here cookies from "Copy Cookies" (https://chrome.google.com/webstore/detail/copy-cookies/jcbpglbplpblnagieibnemmkiamekcdg) extension for Google Chrome, Edge, Yandex browser
+						</ul>
+					]]>
 				</description>
 			</parameter>
 		</config-description>
