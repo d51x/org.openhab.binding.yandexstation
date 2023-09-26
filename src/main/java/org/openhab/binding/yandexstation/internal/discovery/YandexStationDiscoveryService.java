@@ -46,7 +46,7 @@ public class YandexStationDiscoveryService extends AbstractDiscoveryService {
     /**
      * The constant yandexTokenBridgeBusList.
      */
-    public static List<YandexStationBridge> yandexTokenBridgeBusList = new ArrayList<org.openhab.binding.yandexstation.internal.YandexStationBridge>();
+    public static List<YandexStationBridge> yandexTokenBridgeBusList = new ArrayList<>();
 
     /**
      * Instantiates a new Yandex station discovery service.

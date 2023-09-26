@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-description:config-descriptions
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
+	<config-description uri="channel-type:yandexstation:scenario-name">
+		<parameter name="phrase1" type="text">
+			<label>@text/config.phrase1.label</label>
+			<description>@text/config.phrase1.description</description>
+		</parameter>
+		<parameter name="phrase2" type="text">
+			<label>@text/config.phrase2.label</label>
+			<description>@text/config.phrase2.description</description>
+		</parameter>
+		<parameter name="phrase3" type="text">
+			<label>@text/config.phrase3.label</label>
+			<description>@text/config.phrase3.description</description>
+		</parameter>
+		<parameter name="answer" type="text">
+			<label>@text/config.answer.label</label>
+			<description>@text/config.answer.description</description>
+		</parameter>
+	</config-description>
+</config-description:config-descriptions>

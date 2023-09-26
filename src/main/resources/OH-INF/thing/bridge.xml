@@ -12,7 +12,7 @@
 		<category>Speaker</category>
 
 		<config-description>
-			<parameter name="yandex_token" type="text" required="true">
+			<parameter name="yandex_token" type="text">
 				<context>password</context>
 				<label>Yandex Token</label>
 				<description>
@@ -24,6 +24,30 @@
 						<li>2. The button "Go to the bot" will appear, do not click it, but copy the link</li>
 						<li>3. Inside the link, all letters-numbers after &start= are the token</li>
 						Other options described here: https://github.com/MarshalX/yandex-music-api/discussions/513#discussioncomment-2729781
+						</ul>
+					]]>
+				</description>
+			</parameter>
+			<parameter name="username" type="text">
+				<context>text</context>
+				<label>Yandex username</label>
+				<description>
+					Yandex username
+				</description>
+			</parameter>
+			<parameter name="password" type="text">
+				<context>password</context>
+				<label>Yandex password</label>
+				<description>
+					Yandex one time password
+				</description>
+			</parameter>
+			<parameter name="cookies" type="text">
+				<context>textbox</context>
+				<label>Yandex cookies</label>
+				<description>
+					<![CDATA[
+						You can copy here cookies from "Copy Cookies" (https://chrome.google.com/webstore/detail/copy-cookies/jcbpglbplpblnagieibnemmkiamekcdg) extension for Google Chrome, Edge, Yandex browser
 						</ul>
 					]]>
 				</description>
