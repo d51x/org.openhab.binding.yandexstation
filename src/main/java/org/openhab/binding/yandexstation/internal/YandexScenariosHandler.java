@@ -225,6 +225,8 @@ public class YandexScenariosHandler extends BaseThingHandler {
                 logger.debug("Websocket connection closed");
                 if (!dispose) {
                     reconnectWebsocket();
+                } else {
+                    dispose = false;
                 }
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR,
                         "Connection closed: " + statusCode + " - " + reason);

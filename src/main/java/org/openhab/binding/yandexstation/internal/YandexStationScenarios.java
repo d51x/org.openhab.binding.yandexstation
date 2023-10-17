@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -54,17 +55,41 @@ public class YandexStationScenarios {
     }
 
     public String createScenario(Channel channel, String x) {
+        ArrayList<String> phrasesList = new ArrayList<>();
+        phrasesList.add(Objects.requireNonNull(channel.getLabel()));
+
+        @Nullable
+        ScenarioJson scenarioJson = new ScenarioJson();
+        scenarioJson.name = SEPARATOR_CHARS + " " + channel.getLabel();
+        scenarioJson.icon = "home";
+
+        if (channel.getConfiguration().get("phrase1") != null) {
+            if (!channel.getConfiguration().get("phrase1").toString().isEmpty()) {
+                phrasesList.add(channel.getConfiguration().get("phrase1").toString());
+            }
+        }
+        if (channel.getConfiguration().get("phrase2") != null) {
+            if (!channel.getConfiguration().get("phrase2").toString().isEmpty()) {
+                phrasesList.add(channel.getConfiguration().get("phrase2").toString());
+            }
+        }
+        if (channel.getConfiguration().get("phrase3") != null) {
+            if (!channel.getConfiguration().get("phrase3").toString().isEmpty()) {
+                phrasesList.add(channel.getConfiguration().get("phrase3").toString());
+            }
+        }
+
+        scenarioJson.triggers = new Triggers[phrasesList.size()];
+        for (int i = 0; i < phrasesList.size(); i++) {
+            Triggers trigger = new Triggers();
+            trigger.type = "scenario.trigger.voice";
+            trigger.value = phrasesList.get(i);
+            scenarioJson.triggers[i] = trigger;
+        }
+
         this.channel = channel;
         Gson gson = new Gson();
         if (channel.getConfiguration().get("answer") != null) {
-            @Nullable
-            ScenarioJson scenarioJson = new ScenarioJson();
-            scenarioJson.name = SEPARATOR_CHARS + " " + channel.getLabel();
-            scenarioJson.icon = "home";
-            Triggers trigger = new Triggers();
-            trigger.type = "scenario.trigger.voice";
-            trigger.value = Objects.requireNonNull(channel.getLabel());
-            scenarioJson.triggers = new Triggers[] { trigger };
             Steps steps = new Steps();
             steps.type = "scenarios.steps.actions";
             Parameters parameters = new Parameters();
@@ -80,16 +105,7 @@ public class YandexStationScenarios {
             steps.parameters = parameters;
             scenarioJson.steps = new Steps[] { steps };
             jsonScenario = gson.toJson(scenarioJson);
-            return jsonScenario;
         } else {
-            @Nullable
-            ScenarioJson scenarioJson = new ScenarioJson();
-            Triggers trigger = new Triggers();
-            scenarioJson.name = SEPARATOR_CHARS + " " + channel.getLabel();
-            scenarioJson.icon = "home";
-            trigger.type = "scenario.trigger.voice";
-            trigger.value = Objects.requireNonNull(channel.getLabel());
-            scenarioJson.triggers = new Triggers[] { trigger };
             Steps steps = new Steps();
             steps.type = "scenarios.steps.actions";
             Parameters parameters = new Parameters();
@@ -108,21 +124,46 @@ public class YandexStationScenarios {
             steps.parameters = parameters;
             scenarioJson.steps = new Steps[] { steps };
             jsonScenario = gson.toJson(scenarioJson);
-            return jsonScenario;
         }
+        return jsonScenario;
     }
 
     public String updateScenario(String x) {
-        Gson gson = new Gson();
-        if (channel.getConfiguration().get("answer") != null) {
-            @Nullable
-            ScenarioJson scenarioJson = new ScenarioJson();
-            scenarioJson.name = SEPARATOR_CHARS + " " + channel.getLabel();
-            scenarioJson.icon = "home";
+
+        ArrayList<String> phrasesList = new ArrayList<>();
+        phrasesList.add(Objects.requireNonNull(channel.getLabel()));
+
+        @Nullable
+        ScenarioJson scenarioJson = new ScenarioJson();
+        scenarioJson.name = SEPARATOR_CHARS + " " + channel.getLabel();
+        scenarioJson.icon = "home";
+
+        if (channel.getConfiguration().get("phrase1") != null) {
+            if (!channel.getConfiguration().get("phrase1").toString().isEmpty()) {
+                phrasesList.add(channel.getConfiguration().get("phrase1").toString());
+            }
+        }
+        if (channel.getConfiguration().get("phrase2") != null) {
+            if (!channel.getConfiguration().get("phrase2").toString().isEmpty()) {
+                phrasesList.add(channel.getConfiguration().get("phrase2").toString());
+            }
+        }
+        if (channel.getConfiguration().get("phrase3") != null) {
+            if (!channel.getConfiguration().get("phrase3").toString().isEmpty()) {
+                phrasesList.add(channel.getConfiguration().get("phrase3").toString());
+            }
+        }
+
+        scenarioJson.triggers = new Triggers[phrasesList.size()];
+        for (int i = 0; i < phrasesList.size(); i++) {
             Triggers trigger = new Triggers();
             trigger.type = "scenario.trigger.voice";
-            trigger.value = Objects.requireNonNull(channel.getLabel());
-            scenarioJson.triggers = new Triggers[] { trigger };
+            trigger.value = phrasesList.get(i);
+            scenarioJson.triggers[i] = trigger;
+        }
+
+        Gson gson = new Gson();
+        if (channel.getConfiguration().get("answer") != null) {
             Steps steps = new Steps();
             steps.type = "scenarios.steps.actions";
             Parameters parameters = new Parameters();
@@ -140,14 +181,6 @@ public class YandexStationScenarios {
             jsonScenario = gson.toJson(scenarioJson);
             return jsonScenario;
         } else {
-            @Nullable
-            ScenarioJson scenarioJson = new ScenarioJson();
-            Triggers trigger = new Triggers();
-            scenarioJson.name = SEPARATOR_CHARS + " " + channel.getLabel();
-            scenarioJson.icon = "home";
-            trigger.type = "scenario.trigger.voice";
-            trigger.value = Objects.requireNonNull(channel.getLabel());
-            scenarioJson.triggers = new Triggers[] { trigger };
             Steps steps = new Steps();
             steps.type = "scenarios.steps.actions";
             Parameters parameters = new Parameters();
