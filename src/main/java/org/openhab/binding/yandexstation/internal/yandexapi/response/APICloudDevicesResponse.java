@@ -14,6 +14,8 @@ package org.openhab.binding.yandexstation.internal.yandexapi.response;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * The {@link APICloudDevicesResponse} is describing implementaion of api interface.
  *
@@ -22,26 +24,28 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 @NonNullByDefault
 public class APICloudDevicesResponse {
     public String status = "";
-    Households[] households = new Households[0];
+    public Households[] households = new Households[0];
     public String updates_url = "";
 
     public class Households {
         String id = "";
         String name = "";
-        Rooms[] rooms = new Rooms[0];
+        public Rooms[] rooms = new Rooms[0];
     }
 
     public class Rooms {
         String id = "";
         String name = "";
-        Items[] items = new Items[0];
+        public Items[] items = new Items[0];
     }
 
     public class Items {
-        String id = "";
+        public String id = "";
         String name = "";
         String type = "";
         Capabilities[] capabilities = new Capabilities[0];
+        @SerializedName("quasar_info")
+        public QuasarInfo guasarInfo = new QuasarInfo();
     }
 
     public class Capabilities {
@@ -52,5 +56,11 @@ public class APICloudDevicesResponse {
     public class State {
         String instance = "";
         Object value = "";
+    }
+
+    public static class QuasarInfo {
+        @SerializedName("device_id")
+        public String deviceId = "";
+        public String platform = "";
     }
 }
