@@ -67,6 +67,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     Map<Integer, YandexStationScenarios> scnList = new HashMap<>();
     APIScenarioResponse scenario = new APIScenarioResponse();
+    Map<String, String> device = new HashMap<>();
     private String url = "";
     char[] base_chars = ",.:".toCharArray();
     char[] digits = "01234567890".toCharArray();
@@ -93,6 +94,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
             try {
                 url = api.getWssUrl();
                 scenario = api.getScenarios();
+                device = api.getDevices();
                 List<Channel> channels = thing.getChannels();
                 var context = new Object() {
                     int x = 0;
@@ -241,9 +243,12 @@ public class YandexScenariosHandler extends BaseThingHandler {
                         if (message.get("updated_devices").getAsJsonArray().get(0).getAsJsonObject().get("capabilities")
                                 .getAsJsonArray().get(0).getAsJsonObject().get("type").getAsString()
                                 .equals("devices.capabilities.quasar.server_action")) {
-                            updateChannel(message.get("updated_devices").getAsJsonArray().get(0).getAsJsonObject()
-                                    .get("capabilities").getAsJsonArray().get(0).getAsJsonObject().get("state")
-                                    .getAsJsonObject().get("value").getAsString());
+                            updateChannel(
+                                    message.get("updated_devices").getAsJsonArray().get(0).getAsJsonObject()
+                                            .get("capabilities").getAsJsonArray().get(0).getAsJsonObject().get("state")
+                                            .getAsJsonObject().get("value").getAsString(),
+                                    message.get("updated_devices").getAsJsonArray().get(0).getAsJsonObject().get("id")
+                                            .getAsString());
                         }
                     }
                 }
@@ -268,12 +273,20 @@ public class YandexScenariosHandler extends BaseThingHandler {
         }
     }
 
-    private void updateChannel(String value) {
+    private void updateChannel(String value, String id) {
         String subst = value.split(SEPARATOR_CHARS)[1];
         int yaScnId = decode(subst);
         YandexStationScenarios scn = scnList.get(yaScnId);
-        triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID());
-        updateState(scn.getChannel().getUID(), OnOffType.ON);
+        Map<String, String> device = this.device;
+        String event = device.get(id);
+        if (event != null) {
+            triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID(), event);
+            updateState(scn.getChannel().getUID(), OnOffType.ON);
+        } else {
+            logger.warn("Device with id {} is not recognized", id);
+            triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID());
+            updateState(scn.getChannel().getUID(), OnOffType.ON);
+        }
     }
 
     private void reconnectWebsocket() {

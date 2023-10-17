@@ -23,10 +23,7 @@ import java.net.HttpCookie;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -340,6 +337,22 @@ public class YandexApiOnline implements YandexApi {
 
     public String getWssUrl() throws ApiException {
         return getDevicesList().updates_url;
+    }
+
+    public Map<String, String> getDevices() throws ApiException {
+        Map<String, String> yandexDevices = new HashMap<>();
+        APICloudDevicesResponse devices = getDevicesList();
+        for (APICloudDevicesResponse.Households house : devices.households) {
+            for (APICloudDevicesResponse.Rooms room : house.rooms) {
+                for (APICloudDevicesResponse.Items item : room.items) {
+                    if (item.guasarInfo != null) {
+                        logger.debug("station ID {}", item.guasarInfo.deviceId);
+                        yandexDevices.put(item.id, item.guasarInfo.deviceId);
+                    }
+                }
+            }
+        }
+        return yandexDevices;
     }
 
     private void setHeaders(Request request, @Nullable String token) {
