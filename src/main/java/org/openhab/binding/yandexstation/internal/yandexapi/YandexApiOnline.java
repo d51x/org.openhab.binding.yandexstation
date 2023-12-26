@@ -240,16 +240,12 @@ public class YandexApiOnline implements YandexApi {
                         "csrf_token=" + csrf_token + "&login=" + username, "");
             }
             JsonObject trackIdObj = JsonParser.parseString(trackIdRequest.response).getAsJsonObject();
-            if (trackIdObj.has("status")) {
-                if (trackIdObj.get("status").getAsString().equals("ok")) {
-                    if (trackIdObj.has("can_authorize")) {
-                        if (trackIdObj.get("can_authorize").getAsBoolean()) {
-                            trackId = trackIdObj.get("track_id").getAsString();
-                            logger.debug("track_id {}", trackId);
-                        }
-                    }
-
-                }
+            if (trackIdObj.has("status") && trackIdObj.get("status").getAsString().equals("ok")
+                    && trackIdObj.has("can_authorize")
+                    && Boolean.TRUE.equals(trackIdObj.get("can_authorize").getAsBoolean())
+                    && trackIdObj.has("track_id")) {
+                trackId = trackIdObj.get("track_id").getAsString();
+                logger.debug("track_id {}", trackId);
             } else {
                 throw new ApiException("Cannot fetch track_id");
             }
