@@ -646,7 +646,8 @@ public class YandexStationHandler extends BaseThingHandler {
 
             // config.hostname = device.networkInfo.ipAdresses.get(0);
             config.hostname = Objects.requireNonNull(device.networkInfo.ipAdresses.stream()
-                    .filter(ip -> !ip.startsWith("169.254")).filter(ip -> !ip.contains(":")).findFirst().orElse(null));
+                    .filter(ip -> !ip.startsWith("169.254") && !ip.contains(":"))
+                    .findFirst().orElse(null));
             config.port = String.valueOf(device.networkInfo.port);
 
             Configuration configuration = thing.getConfiguration();
@@ -677,7 +678,8 @@ public class YandexStationHandler extends BaseThingHandler {
         properties.put("Wifi SSID:", device.networkInfo.wifiSSID);
         // properties.put("IP Address:", device.networkInfo.ipAdresses.get(0));
         properties.put("IP Address:", Objects.requireNonNull(device.networkInfo.ipAdresses.stream()
-                .filter(ip -> !ip.startsWith("169.254")).filter(ip -> !ip.contains(":")).findFirst().orElse(null)));
+                .filter(ip -> !ip.startsWith("169.254") && !ip.contains(":"))
+                .findFirst().orElse(null)));
         properties.put("Platform:", device.platform);
         properties.put("Device Name:", YandexStationTypes.getNameByPlatform(device.platform));
         properties.put("Friendly Name:", device.name);
