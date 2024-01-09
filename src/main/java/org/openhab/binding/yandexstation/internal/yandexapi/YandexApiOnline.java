@@ -63,7 +63,8 @@ public class YandexApiOnline implements YandexApi {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected final HttpClient httpClient;
     public static final String YANDEX_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36";
-    public static final String API_URL = "https://passport.yandex.ru/";
+    public static final String API_PASSPORT_URL = "https://passport.yandex.ru/";
+    public static final String SCENARIOUS_URL = "https://iot.quasar.yandex.ru/m/user/scenarios";
     private final CookieManager cookieManager;
     private volatile CookieStore cookieStore = new HttpCookieStore();
     private String bridgeID = "";
@@ -201,16 +202,16 @@ public class YandexApiOnline implements YandexApi {
             boolean capcha = false;
             String csrf_token = "";
             sendGetRequest(
-                    "https://passport.yandex.ru/auth/welcome?retpath=https%3A%2F%2Fpassport.yandex.ru%2F&noreturn=1",
+                    API_PASSPORT_URL + "auth/welcome?retpath=https%3A%2F%2Fpassport.yandex.ru%2F&noreturn=1",
                     null, null);
             ApiResponse csrfTokenRequest;
-            csrfTokenRequest = sendGetRequest(API_URL + "am?", "app_platform=android", null);
+            csrfTokenRequest = sendGetRequest(API_PASSPORT_URL + "am?", "app_platform=android", null);
             String title = csrfTokenRequest.response.substring(csrfTokenRequest.response.indexOf("<title"),
                     csrfTokenRequest.response.indexOf("</title>"));
             if (title.contains("Ой!")) {
                 if (readCaptchaCookie() != null) {
                     capcha = true;
-                    csrfTokenRequest = sendGetRequest(API_URL + "am?", "app_platform=android", readCaptchaCookie());
+                    csrfTokenRequest = sendGetRequest(API_PASSPORT_URL + "am?", "app_platform=android", readCaptchaCookie());
                     if (csrfTokenRequest.response.substring(csrfTokenRequest.response.indexOf("<title"),
                             csrfTokenRequest.response.indexOf("</title>")).contains("Ой!"))
                         throw new ApiException("Please login via browser and copy cookie to passportCookie.json");
@@ -233,10 +234,10 @@ public class YandexApiOnline implements YandexApi {
             String trackId = "";
             ApiResponse trackIdRequest;
             if (capcha) {
-                trackIdRequest = sendPostRequest(API_URL + "registration-validations/auth/multi_step/start",
+                trackIdRequest = sendPostRequest(API_PASSPORT_URL + "registration-validations/auth/multi_step/start",
                         "csrf_token=" + csrf_token + "&login=" + username, Objects.requireNonNull(readCaptchaCookie()));
             } else {
-                trackIdRequest = sendPostRequest(API_URL + "registration-validations/auth/multi_step/start",
+                trackIdRequest = sendPostRequest(API_PASSPORT_URL + "registration-validations/auth/multi_step/start",
                         "csrf_token=" + csrf_token + "&login=" + username, "");
             }
             JsonObject trackIdObj = JsonParser.parseString(trackIdRequest.response).getAsJsonObject();
@@ -251,11 +252,11 @@ public class YandexApiOnline implements YandexApi {
             }
             ApiResponse passwordCheck;
             if (capcha) {
-                passwordCheck = sendPostRequest(API_URL + "registration-validations/auth/multi_step/commit_password",
+                passwordCheck = sendPostRequest(API_PASSPORT_URL + "registration-validations/auth/multi_step/commit_password",
                         "csrf_token=" + csrf_token + "&track_id=" + trackId + "&password=" + password,
                         Objects.requireNonNull(readCaptchaCookie()));
             } else {
-                passwordCheck = sendPostRequest(API_URL + "registration-validations/auth/multi_step/commit_password",
+                passwordCheck = sendPostRequest(API_PASSPORT_URL + "registration-validations/auth/multi_step/commit_password",
                         "csrf_token=" + csrf_token + "&track_id=" + trackId + "&password=" + password, "");
             }
             if (JsonParser.parseString(passwordCheck.response).getAsJsonObject().has("status")) {
@@ -603,7 +604,7 @@ public class YandexApiOnline implements YandexApi {
 
     public APIScenarioResponse getScenarios() {
         try {
-            ApiResponse response = sendGetRequest("https://iot.quasar.yandex.ru/m/user/scenarios", null,
+            ApiResponse response = sendGetRequest(SCENARIOUS_URL, null,
                     "Session_id=" + cookieStore.getCookies().stream()
                             .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue());
             Gson gson = new Gson();
