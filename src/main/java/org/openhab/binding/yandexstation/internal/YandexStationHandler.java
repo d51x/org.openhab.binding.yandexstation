@@ -636,6 +636,8 @@ public class YandexStationHandler extends BaseThingHandler {
         // get device token from https://quasar.yandex.net/glagol/token
         try {
             ApiDeviceResponse device = api.findDevice(config.device_id, yandexStationBridge.config.yandex_token);
+            logger.debug("Yandex device: {}", device);
+
             String token = api.getDeviceToken(yandexStationBridge.config.yandex_token, config.device_id,
                     device.platform);
 

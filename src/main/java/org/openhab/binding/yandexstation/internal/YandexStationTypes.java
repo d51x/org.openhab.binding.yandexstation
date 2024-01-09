@@ -27,11 +27,12 @@ public enum YandexStationTypes {
     /**
      * Platform yandex station max yandex station types.
      */
-    PLATFORM_YANDEX_STATION_MAX("yandexstation", "Яндекс Станция Макс", true),
+    PLATFORM_YANDEX_STATION_MAX("yandexstation_2", "Яндекс Станция Макс", true),
     /**
      * Platform yandex station 2 yandex station types.
      */
     PLATFORM_YANDEX_STATION_2("yandexmidi", "Яндекс Станция 2", true),
+    PLATFORM_YANDEX_STATION_MIDI("cucumber", "Станция Миди", true),
     /**
      * Platform yandex station mini yandex station types.
      */
@@ -85,6 +86,7 @@ public enum YandexStationTypes {
      * The Platform prestigio.
      */
     PLATFORM_PRESTIGIO("prestigio_smart_mate", "Prestigio Smartmate", false),
+    PLATFORM_DISPLAY_XIAOMI("quinglong", "Smart Display 10R X10G", false),
     /**
      * Platform unknown yandex station types.
      */
