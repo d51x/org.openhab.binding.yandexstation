@@ -28,6 +28,7 @@ public enum YandexStationTypes {
      * Platform yandex station max yandex station types.
      */
     PLATFORM_YANDEX_STATION_MAX("yandexstation_2", "Яндекс Станция Макс", true),
+    PLATFORM_YANDEX_STATION_DUO_MAX("chiron", "Яндекс Станция Дуо Макс", true),
     /**
      * Platform yandex station 2 yandex station types.
      */
