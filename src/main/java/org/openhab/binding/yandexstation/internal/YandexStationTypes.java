@@ -87,6 +87,7 @@ public enum YandexStationTypes {
      */
     PLATFORM_PRESTIGIO("prestigio_smart_mate", "Prestigio Smartmate", false),
     PLATFORM_DISPLAY_XIAOMI("quinglong", "Smart Display 10R X10G", false),
+    PLATFORM_ZIGBEE_HUB("saturn", "Yandex Hub", false),
     /**
      * Platform unknown yandex station types.
      */
