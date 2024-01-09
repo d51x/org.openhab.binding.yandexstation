@@ -149,7 +149,8 @@ public enum YandexStationTypes {
      * @return the boolean
      */
     public static Boolean isLocalApi(String platform) {
-        return Arrays.stream(YandexStationTypes.values()).filter(v -> v.getPlatform().equals(platform)).findFirst()
+        return Arrays.stream(YandexStationTypes.values())
+                .filter(v -> v.getPlatform().equals(platform) || platform.contains(v.getPlatform())).findFirst()
                 .orElse(PLATFORM_UNKNOWN).getLocalApi();
     }
 }
