@@ -266,7 +266,12 @@ public class YandexScenariosHandler extends BaseThingHandler {
             Future<?> session = webSocketClient.connect(yandexStationWebsocket, websocketAddress, clientUpgradeRequest);
             return session.isDone();
         } catch (Exception e) {
-            logger.error("Connection error {}", e.getMessage());
+            // logger.error("Connection error {}", e.getMessage());
+            StringBuilder sb = new StringBuilder();
+            for (StackTraceElement s : e.getStackTrace()) {
+                sb.append(s.toString()).append("\n");
+            }
+            logger.error("Connection error: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
             reconnectWebsocket();
             return false;
         }

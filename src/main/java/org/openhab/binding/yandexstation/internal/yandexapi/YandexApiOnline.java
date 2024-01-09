@@ -63,6 +63,10 @@ public class YandexApiOnline implements YandexApi {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected final HttpClient httpClient;
     public static final String YANDEX_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36";
+    public static final String USER_TOKEN_CLIENT_ID = "client_id=c0ebe342af7d48fbbbfcf2d2eedb8f9e&client_secret=ad0a908f0aa341a182a37ecd75bc319e";
+    public static final String MUSIC_TOKEN_CLIENT_ID = "client_id=23cabbbdc6cd418abb4b39c32c41195d&client_secret=53bc75238f0c4d08a118e51fe9203300&grant_type=x-token";
+    public static final String API_PROXY_PASSPORT_URL = "https://mobileproxy.passport.yandex.net/1/bundle/oauth/token_by_sessionid";
+    public static final String OAUTH_MOBILE_URL = "https://oauth.mobile.yandex.net/1/token";
     public static final String API_PASSPORT_URL = "https://passport.yandex.ru";
     public static final String API_REGISTRATION_START_URL = API_PASSPORT_URL
             + "/registration-validations/auth/multi_step/start";
@@ -72,6 +76,8 @@ public class YandexApiOnline implements YandexApi {
     public static final String API_AUTH_WELCOME_URL = API_PASSPORT_URL
             + "/auth/welcome?retpath=https%3A%2F%2Fpassport.yandex.ru%2F&noreturn=1";
     public static final String SCENARIOUS_URL = "https://iot.quasar.yandex.ru/m/user/scenarios";
+    public static final String DEVICES_URL = "https://iot.quasar.yandex.ru/m/v3/user/devices";
+    public static final String QUASAR_IOT_URL = "https://yandex.ru/quasar/iot";
     private final CookieManager cookieManager;
     private volatile CookieStore cookieStore = new HttpCookieStore();
     private String bridgeID = "";
@@ -281,10 +287,8 @@ public class YandexApiOnline implements YandexApi {
             } else
                 throw new ApiException("Password error");
             if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
-                ApiResponse getUserToken = sendPostRequestForToken(
-                        "https://mobileproxy.passport.yandex.net/1/bundle/oauth/token_by_sessionid",
-                        "client_id=c0ebe342af7d48fbbbfcf2d2eedb8f9e&client_secret=ad0a908f0aa341a182a37ecd75bc319e&track_id="
-                                + trackId);
+                ApiResponse getUserToken = sendPostRequestForToken(API_PROXY_PASSPORT_URL,
+                        USER_TOKEN_CLIENT_ID + "&track_id=" + trackId);
                 logger.debug("Token resonse is {}", getUserToken.response);
                 JsonObject token = JsonParser.parseString(getUserToken.response).getAsJsonObject();
                 if (token.has("status")) {
@@ -292,9 +296,8 @@ public class YandexApiOnline implements YandexApi {
                         writeXtoken(token.get("access_token").getAsString());
                     }
                 }
-                ApiResponse getMusicToken = sendPostRequestForToken("https://oauth.mobile.yandex.net/1/token",
-                        "client_id=23cabbbdc6cd418abb4b39c32c41195d&client_secret=53bc75238f0c4d08a118e51fe9203300&grant_type=x-token&access_token="
-                                + token.get("access_token").getAsString());
+                ApiResponse getMusicToken = sendPostRequestForToken(OAUTH_MOBILE_URL,
+                        MUSIC_TOKEN_CLIENT_ID + "&access_token=" + token.get("access_token").getAsString());
                 JsonObject getMusicTokenJson = JsonParser.parseString(getMusicToken.response).getAsJsonObject();
                 if (getMusicTokenJson.has("access_token")) {
                     writeMusicToken(getMusicTokenJson.get("access_token").getAsString());
@@ -303,9 +306,7 @@ public class YandexApiOnline implements YandexApi {
             }
         } else {
             if (readXtoken() == null) {
-                ApiResponse getXToken = sendPostRequestForToken(
-                        "https://mobileproxy.passport.yandex.net/1/bundle/oauth/token_by_sessionid",
-                        "client_id=c0ebe342af7d48fbbbfcf2d2eedb8f9e&client_secret=ad0a908f0aa341a182a37ecd75bc319e");
+                ApiResponse getXToken = sendPostRequestForToken(API_PROXY_PASSPORT_URL, USER_TOKEN_CLIENT_ID);
                 // logger.debug("Token resonse is {}", getXToken.response);
                 JsonObject token = JsonParser.parseString(getXToken.response).getAsJsonObject();
                 if (token.has("status")) {
@@ -317,9 +318,8 @@ public class YandexApiOnline implements YandexApi {
                 }
             }
 
-            ApiResponse getMusicToken = sendPostRequestForToken("https://oauth.mobile.yandex.net/1/token",
-                    "client_id=23cabbbdc6cd418abb4b39c32c41195d&client_secret=53bc75238f0c4d08a118e51fe9203300&grant_type=x-token&access_token="
-                            + readXtoken());
+            ApiResponse getMusicToken = sendPostRequestForToken(OAUTH_MOBILE_URL,
+                    MUSIC_TOKEN_CLIENT_ID + "&access_token=" + readXtoken());
             JsonObject getMusicTokenJson = JsonParser.parseString(getMusicToken.response).getAsJsonObject();
             if (getMusicTokenJson.has("access_token")) {
                 writeMusicToken(getMusicTokenJson.get("access_token").getAsString());
@@ -329,7 +329,7 @@ public class YandexApiOnline implements YandexApi {
     }
 
     public APICloudDevicesResponse getDevicesList() throws ApiException {
-        ApiResponse response = sendGetRequest("https://iot.quasar.yandex.ru/m/v3/user/devices", null,
+        ApiResponse response = sendGetRequest(DEVICES_URL, null,
                 "Session_id=" + cookieStore.getCookies().stream()
                         .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue());
         Gson gson = new Gson();
@@ -565,7 +565,7 @@ public class YandexApiOnline implements YandexApi {
         if (!file.exists()) {
             String[] parseToken = new String[0];
             try {
-                ApiResponse response = sendGetRequest("https://yandex.ru/quasar/iot", null, null);
+                ApiResponse response = sendGetRequest(QUASAR_IOT_URL, null, null);
                 String getCsrfTokenString = response.response.substring(response.response.indexOf("{\"csrfToken2\":\""),
                         response.response.indexOf("{\"csrfToken2\":\"") + response.response
                                 .substring(response.response.indexOf("{\"csrfToken2\":\"")).indexOf("\",\"cspNonce\""));
@@ -587,7 +587,7 @@ public class YandexApiOnline implements YandexApi {
             } else {
                 String[] parseToken = new String[0];
                 try {
-                    ApiResponse response = sendGetRequest("https://yandex.ru/quasar/iot", null,
+                    ApiResponse response = sendGetRequest(QUASAR_IOT_URL, null,
                             "Session_id=" + cookieStore.getCookies().stream()
                                     .filter((session -> session.getName().equals("Session_id"))).findFirst().get()
                                     .getValue());
