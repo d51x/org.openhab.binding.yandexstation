@@ -67,6 +67,7 @@ public class YandexApiOnline implements YandexApi {
     public static final String USER_TOKEN_CLIENT_ID = "client_id=c0ebe342af7d48fbbbfcf2d2eedb8f9e&client_secret=ad0a908f0aa341a182a37ecd75bc319e";
     public static final String MUSIC_TOKEN_CLIENT_ID = "client_id=23cabbbdc6cd418abb4b39c32c41195d&client_secret=53bc75238f0c4d08a118e51fe9203300&grant_type=x-token";
     public static final String API_PROXY_PASSPORT_URL = "https://mobileproxy.passport.yandex.net/1/bundle/oauth/token_by_sessionid";
+    public static final String API_PROXY_AUTH_X_TOKEN_URL = "https://mobileproxy.passport.yandex.net/1/bundle/auth/x_token";
     public static final String OAUTH_MOBILE_URL = "https://oauth.mobile.yandex.net/1/token";
     public static final String API_PASSPORT_URL = "https://passport.yandex.ru";
     public static final String API_REGISTRATION_START_URL = API_PASSPORT_URL
@@ -97,6 +98,46 @@ public class YandexApiOnline implements YandexApi {
 
     @Override
     public void initialize() throws ApiException {
+    }
+
+    public ApiResponse sendGetRequestWithXToken(String path, @Nullable String params, @Nullable String token)
+            throws ApiException {
+        ApiResponse result = new ApiResponse();
+        Request request;
+        httpClient.setConnectTimeout(60 * 1000);
+        httpClient.getProtocolHandlers().remove(WWWAuthenticationProtocolHandler.NAME);
+        if (params != null) {
+            request = httpClient.newRequest(path + params);
+        } else {
+            request = httpClient.newRequest(path);
+        }
+        // setHeadersWithXToken(request, token);
+        request.method(HttpMethod.GET);
+        String errorReason = "";
+        try {
+            ContentResponse contentResponse = request.send();
+            result.httpCode = contentResponse.getStatus();
+            if (result.httpCode == 200 /* || result.httpCode >= 400 && result.httpCode < 500 */) {
+                result.response = contentResponse.getContentAsString();
+                writeCookie(cookieStore);
+                return result;
+            } else if (result.httpCode == 401) {
+                errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                logger.error("sendGetRequest: {}", errorReason);
+            } else {
+                errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
+                        contentResponse.getReason());
+                logger.error("sendGetRequest: {}", errorReason);
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            // logger.error("ERROR {}", e.getMessage());
+            StringBuilder sb = new StringBuilder();
+            for (StackTraceElement s : e.getStackTrace()) {
+                sb.append(s.toString()).append("\n");
+            }
+            logger.error("sendGetRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
+        }
+        throw new ApiException(errorReason);
     }
 
     @Override
@@ -145,6 +186,45 @@ public class YandexApiOnline implements YandexApi {
     @Override
     public ApiResponse sendGetRequest(String path, String token) {
         return new ApiResponse();
+    }
+
+    public ApiResponse sendPostRequestWithXToken(String path, String data, String xToken) throws ApiException {
+        String errorReason = "";
+        ApiResponse result = new ApiResponse();
+        httpClient.setConnectTimeout(60 * 1000);
+        Request request = httpClient.newRequest(path);
+        request.timeout(60, TimeUnit.SECONDS);
+        request.method(HttpMethod.POST);
+        // HttpFields fields = new HttpFields();
+        // fields.add("name", "value");
+        // request.getHeaders().addAll(fields);
+        request.header(HttpHeader.CONTENT_TYPE, "application/x-www-form-urlencoded");
+        request.header("charset", "utf-8");
+        request.header("Ya-Consumer-Authorization", "OAuth " + xToken);
+        request.content(new StringContentProvider(data), "application/x-www-form-urlencoded");
+        try {
+            ContentResponse contentResponse = request.send();
+            result.httpCode = contentResponse.getStatus();
+            if (result.httpCode == 200 /* || result.httpCode >= 400 && result.httpCode < 500 */) {
+                result.response = contentResponse.getContentAsString();
+                return result;
+            } else if (result.httpCode == 401) {
+                errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                logger.error("sendPostRequest: {}", errorReason);
+            } else {
+                errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
+                        contentResponse.getReason());
+                logger.error("sendPostRequest: {}", errorReason);
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            // logger.error("ERROR {}", e.getMessage());
+            StringBuilder sb = new StringBuilder();
+            for (StackTraceElement s : e.getStackTrace()) {
+                sb.append(s.toString()).append("\n");
+            }
+            logger.error("sendPostRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
+        }
+        throw new ApiException(errorReason);
     }
 
     @Override
@@ -357,6 +437,37 @@ public class YandexApiOnline implements YandexApi {
         return true;
     }
 
+    public boolean refreshCookie() throws ApiException {
+        String xToken = readXtoken();
+        if (xToken.isEmpty()) {
+            logger.error("refreshCookie: xToken is empty");
+            return false;
+        }
+        String trackId = "";
+        String passportHost = "";
+
+        String data = "type=x-token&retpath=https://www.yandex.ru";
+        ApiResponse trackIdResponse = sendPostRequestWithXToken(API_PROXY_AUTH_X_TOKEN_URL, data, xToken);
+        JsonObject trackIdObj = JsonParser.parseString(trackIdResponse.response).getAsJsonObject();
+        if (trackIdObj.has("status") && trackIdObj.get("status").getAsString().equals("ok")
+                && trackIdObj.has("track_id") && trackIdObj.has("passport_host")) {
+            trackId = trackIdObj.get("track_id").getAsString();
+            passportHost = trackIdObj.get("passport_host").getAsString();
+            logger.debug("track_id {}", trackId);
+
+            ApiResponse response = sendGetRequestWithXToken(passportHost + "/auth/session/", "?track_id=" + trackId,
+                    xToken);
+            if (response.httpCode != 200) {
+                logger.error("Cannot refresh cookie");
+                throw new ApiException("Cannot refresh cookie");
+            }
+        } else {
+            logger.error("Cannot refresh cookie");
+            throw new ApiException("Cannot fetch track_id");
+        }
+        return true;
+    }
+
     public APICloudDevicesResponse getDevicesList() throws ApiException {
         ApiResponse response = sendGetRequest(DEVICES_URL, null, "Session_id=" + cookieStore.getCookies().stream()
                 .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue());
@@ -395,6 +506,18 @@ public class YandexApiOnline implements YandexApi {
             request.header(HttpHeader.COOKIE, token);
         }
         request.followRedirects(true);
+    }
+
+    private void setHeadersWithXToken(Request request, @Nullable String token) {
+        request.timeout(60, TimeUnit.SECONDS);
+        request.header(HttpHeader.USER_AGENT, YANDEX_USER_AGENT);
+        request.header(HttpHeader.CONNECTION, "keep-alive");
+        request.header(HttpHeader.ACCEPT, "*/*");
+        request.header(HttpHeader.ACCEPT_ENCODING, "deflate");
+        if (token != null) {
+            request.header("Ya-Consumer-Authorization", "OAuth " + token);
+        }
+        request.followRedirects(false);
     }
 
     public @Nullable String readCaptchaCookie() {

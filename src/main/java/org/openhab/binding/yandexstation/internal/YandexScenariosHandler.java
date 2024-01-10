@@ -156,6 +156,15 @@ public class YandexScenariosHandler extends BaseThingHandler {
             } catch (ApiException e) {
                 logger.debug("Error {}", e.getMessage());
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
+                try {
+                    if (api.refreshCookie()) {
+                        url = api.getWssUrl();
+                        scenario = api.getScenarios();
+                        device = api.getDevices();
+                    }
+                } catch (ApiException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
             if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
                 refreshPollingJob = scheduler.scheduleWithFixedDelay(() -> ping(), 0, 1, TimeUnit.MINUTES);
