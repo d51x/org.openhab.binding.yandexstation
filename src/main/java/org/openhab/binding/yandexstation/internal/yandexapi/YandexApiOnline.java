@@ -31,6 +31,7 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.WWWAuthenticationProtocolHandler;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
@@ -104,6 +105,7 @@ public class YandexApiOnline implements YandexApi {
         ApiResponse result = new ApiResponse();
         Request request;
         httpClient.setConnectTimeout(60 * 1000);
+        httpClient.getProtocolHandlers().remove(WWWAuthenticationProtocolHandler.NAME);
         if (params != null) {
             request = httpClient.newRequest(path + params);
         } else {
@@ -117,16 +119,25 @@ public class YandexApiOnline implements YandexApi {
         try {
             ContentResponse contentResponse = request.send();
             result.httpCode = contentResponse.getStatus();
-            if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
+            if (result.httpCode == 200 /* || result.httpCode >= 400 && result.httpCode < 500 */) {
                 result.response = contentResponse.getContentAsString();
                 writeCookie(cookieStore);
                 return result;
+            } else if (result.httpCode == 401) {
+                errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                logger.error("sendGetRequest: {}", errorReason);
             } else {
                 errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
                         contentResponse.getReason());
+                logger.error("sendGetRequest: {}", errorReason);
             }
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            logger.error("ERROR {}", e.getMessage());
+            // logger.error("ERROR {}", e.getMessage());
+            StringBuilder sb = new StringBuilder();
+            for (StackTraceElement s : e.getStackTrace()) {
+                sb.append(s.toString()).append("\n");
+            }
+            logger.error("sendGetRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
         }
         throw new ApiException(errorReason);
     }
@@ -153,16 +164,25 @@ public class YandexApiOnline implements YandexApi {
         try {
             ContentResponse contentResponse = request.send();
             result.httpCode = contentResponse.getStatus();
-            if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
+            if (result.httpCode == 200 /* || result.httpCode >= 400 && result.httpCode < 500 */) {
                 result.response = contentResponse.getContentAsString();
                 writeCookie(cookieStore);
                 return result;
+            } else if (result.httpCode == 401) {
+                errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                logger.error("sendPostRequest: {}", errorReason);
             } else {
                 errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
                         contentResponse.getReason());
+                logger.error("sendPostRequest: {}", errorReason);
             }
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            logger.error("ERROR {}", e.getMessage());
+            // logger.error("ERROR {}", e.getMessage());
+            StringBuilder sb = new StringBuilder();
+            for (StackTraceElement s : e.getStackTrace()) {
+                sb.append(s.toString()).append("\n");
+            }
+            logger.error("sendPostRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
         }
         throw new ApiException(errorReason);
     }
@@ -185,7 +205,7 @@ public class YandexApiOnline implements YandexApi {
             try {
                 ContentResponse contentResponse = request.send();
                 result.httpCode = contentResponse.getStatus();
-                if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
+                if (result.httpCode == 200 /* || result.httpCode >= 400 && result.httpCode < 500 */) {
                     result.response = contentResponse.getContentAsString();
                     JsonObject response = JsonParser.parseString(result.response).getAsJsonObject();
                     if (response.has("status") && response.get("status").getAsString().equals("error")) {
@@ -194,12 +214,21 @@ public class YandexApiOnline implements YandexApi {
                         throw new ApiException(errorReason);
                     }
                     return result;
+                } else if (result.httpCode == 401) {
+                    errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                    logger.error("sendPostRequestForToken: {}", errorReason);
                 } else {
                     errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
                             contentResponse.getReason());
+                    logger.error("sendPostRequestForToken: {}", errorReason);
                 }
             } catch (InterruptedException | TimeoutException | ExecutionException e) {
-                logger.error("ERROR {}", e.getMessage());
+                // logger.error("ERROR {}", e.getMessage());
+                StringBuilder sb = new StringBuilder();
+                for (StackTraceElement s : e.getStackTrace()) {
+                    sb.append(s.toString()).append("\n");
+                }
+                logger.error("sendPostRequestForToken ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
             }
         }
 
@@ -329,9 +358,8 @@ public class YandexApiOnline implements YandexApi {
     }
 
     public APICloudDevicesResponse getDevicesList() throws ApiException {
-        ApiResponse response = sendGetRequest(DEVICES_URL, null,
-                "Session_id=" + cookieStore.getCookies().stream()
-                        .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue());
+        ApiResponse response = sendGetRequest(DEVICES_URL, null, "Session_id=" + cookieStore.getCookies().stream()
+                .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue());
         Gson gson = new Gson();
         APICloudDevicesResponse resp = gson.fromJson(response.response, APICloudDevicesResponse.class);
         return Objects.requireNonNullElseGet(resp, APICloudDevicesResponse::new);
@@ -657,16 +685,26 @@ public class YandexApiOnline implements YandexApi {
             try {
                 ContentResponse contentResponse = request.send();
                 result.httpCode = contentResponse.getStatus();
-                if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
+                if (result.httpCode == 200 /* || result.httpCode >= 400 && result.httpCode < 500 */) {
                     result.response = contentResponse.getContentAsString();
                     return result;
+                } else if (result.httpCode == 401) {
+                    errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                    logger.error("sendPostJsonRequest: {}", errorReason);
+                    throw new ApiException(errorReason);
                 } else {
                     errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
                             contentResponse.getReason());
+                    logger.error("sendPostJsonRequest: {}", errorReason);
                     throw new ApiException(errorReason);
                 }
             } catch (InterruptedException | TimeoutException | ExecutionException | ApiException e) {
-                logger.error("ERROR {}", e.getMessage());
+                // logger.error("ERROR {}", e.getMessage());
+                StringBuilder sb = new StringBuilder();
+                for (StackTraceElement s : e.getStackTrace()) {
+                    sb.append(s.toString()).append("\n");
+                }
+                logger.error("sendPostJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
             }
         }
         return new ApiResponse();
@@ -701,16 +739,26 @@ public class YandexApiOnline implements YandexApi {
             try {
                 ContentResponse contentResponse = request.send();
                 result.httpCode = contentResponse.getStatus();
-                if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
+                if (result.httpCode == 200 /* || result.httpCode >= 400 && result.httpCode < 500 */) {
                     result.response = contentResponse.getContentAsString();
                     return result;
+                } else if (result.httpCode == 401) {
+                    errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                    logger.error("sendPutJsonRequest: {}", errorReason);
+                    throw new ApiException(errorReason);
                 } else {
                     errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
                             contentResponse.getReason());
+                    logger.error("sendPutJsonRequest: {}", errorReason);
                     throw new ApiException(errorReason);
                 }
             } catch (InterruptedException | TimeoutException | ExecutionException | ApiException e) {
-                logger.error("ERROR {}", e.getMessage());
+                // logger.error("ERROR {}", e.getMessage());
+                StringBuilder sb = new StringBuilder();
+                for (StackTraceElement s : e.getStackTrace()) {
+                    sb.append(s.toString()).append("\n");
+                }
+                logger.error("sendPutJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
             }
         }
         return new ApiResponse();
@@ -749,16 +797,26 @@ public class YandexApiOnline implements YandexApi {
             try {
                 ContentResponse contentResponse = request.send();
                 result.httpCode = contentResponse.getStatus();
-                if (result.httpCode == 200 || result.httpCode >= 400 && result.httpCode < 500) {
+                if (result.httpCode == 200 /* || result.httpCode >= 400 && result.httpCode < 500 */) {
                     result.response = contentResponse.getContentAsString();
                     return result;
+                } else if (result.httpCode == 401) {
+                    errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                    logger.error("sendDeleteJsonRequest: {}", errorReason);
+                    throw new ApiException(errorReason);
                 } else {
                     errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
                             contentResponse.getReason());
+                    logger.error("sendDeleteJsonRequest: {}", errorReason);
                     throw new ApiException(errorReason);
                 }
             } catch (InterruptedException | TimeoutException | ExecutionException | ApiException e) {
-                logger.error("ERROR {}", e.getMessage());
+                // logger.error("ERROR {}", e.getMessage());
+                StringBuilder sb = new StringBuilder();
+                for (StackTraceElement s2 : e.getStackTrace()) {
+                    sb.append(s2.toString()).append("\n");
+                }
+                logger.error("sendDeleteJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
             }
         }
         return new ApiResponse();

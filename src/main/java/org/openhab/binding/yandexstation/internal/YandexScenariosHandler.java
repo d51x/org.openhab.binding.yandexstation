@@ -155,6 +155,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
                 }
             } catch (ApiException e) {
                 logger.debug("Error {}", e.getMessage());
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
             }
             if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
                 refreshPollingJob = scheduler.scheduleWithFixedDelay(() -> ping(), 0, 1, TimeUnit.MINUTES);
@@ -205,6 +206,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
         } catch (URISyntaxException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.CONFIGURATION_ERROR,
                     "Initialize web socket failed: " + e.getMessage());
+            logger.error("Initialize web socket failed: {}", e.getMessage());
             return false;
         }
 
@@ -263,6 +265,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
 
         try {
             webSocketClient.start();
+            logger.info("YandexScenarios connect to {}", websocketAddress);
             Future<?> session = webSocketClient.connect(yandexStationWebsocket, websocketAddress, clientUpgradeRequest);
             return session.isDone();
         } catch (Exception e) {
@@ -297,7 +300,8 @@ public class YandexScenariosHandler extends BaseThingHandler {
         logger.debug("Try to reconnect");
         try {
             url = api.getWssUrl();
-        } catch (ApiException ignored) {
+        } catch (ApiException e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
         }
         Future<?> job = initJob;
         if (job != null) {
