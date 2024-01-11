@@ -12,7 +12,6 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import static org.openhab.binding.yandexstation.internal.YandexStationBridge.getTokenApi;
 import static org.openhab.binding.yandexstation.internal.YandexStationScenarios.SEPARATOR_CHARS;
 import static org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline.SCENARIOUS_URL;
 
@@ -78,7 +77,89 @@ public class YandexScenariosHandler extends BaseThingHandler {
 
     public YandexScenariosHandler(Thing thing) throws ApiException {
         super(thing);
-        this.api = getTokenApi();
+        this.api = yandexStationBridge.getTokenApi();
+    }
+
+    private void updateScenarious() throws ApiException {
+        List<Channel> channels = thing.getChannels();
+        var context = new Object() {
+            int x = 0;
+        };
+
+        for (Channel channel : channels) {
+            // channels.forEach(channel -> {
+            boolean isNew = true;
+            for (APIScenarioResponse.Scenarios scn : scenario.scenarios) {
+                if (scn.name.startsWith(SEPARATOR_CHARS)) {
+                    if (Objects.equals(channel.getLabel(), scn.name.substring(4))) {
+                        YandexStationScenarios yaScn = new YandexStationScenarios();
+                        yaScn.addScenario(scn, channel, encode(context.x));
+                        scnList.put(context.x, yaScn);
+                        String json = yaScn.updateScenario(encode(context.x));
+                        ApiResponse response = null;
+                        // try {
+                        response = api.sendPutJsonRequest(SCENARIOUS_URL + "/" + scn.id, json, "");
+                        if (response.httpCode == 403) {
+                            response = api.sendPutJsonRequest(SCENARIOUS_URL + "/" + scn.id, json, "update");
+                            if (response.httpCode != 200) {
+                                // try {
+                                throw new ApiException(response.response);
+                                // } catch (ApiException e) {
+                                // throw new RuntimeException(e);
+                                // }
+                            }
+                        }
+
+                        logger.debug("response script update: {}", response.response);
+                        context.x++;
+                        isNew = false;
+                    }
+                }
+            }
+            if (isNew) {
+                logger.debug("Channel {} is new. Creating...", channel.getLabel());
+                YandexStationScenarios yaScn = new YandexStationScenarios();
+                String json = yaScn.createScenario(channel, encode(context.x));
+                try {
+                    ApiResponse response = api.sendPostJsonRequest(SCENARIOUS_URL, json, "");
+                    logger.debug("response script creation: {}", response.response);
+                } catch (ApiException ignored) {
+                }
+                scnList.put(context.x, yaScn);
+                context.x++;
+                isNew = false;
+            }
+            // });
+        }
+    }
+
+    private void deleteScenarious() throws ApiException {
+        for (APIScenarioResponse.Scenarios scn : scenario.scenarios) {
+            var ref = new Object() {
+                boolean present = false;
+            };
+            scnList.forEach((k, v) -> {
+                if (v.getScn() != null) {
+                    if (v.getScn().id.equals(scn.id)) {
+                        ref.present = true;
+                    }
+                }
+            });
+            if (!ref.present) {
+                if (scn.name.startsWith(SEPARATOR_CHARS)) {
+                    ApiResponse response = api.sendDeleteJsonRequest(SCENARIOUS_URL + "/" + scn.id);
+                    logger.debug("response script delete: {}", response.response);
+                }
+            }
+        }
+    }
+
+    private void initScenarious() throws ApiException {
+        url = api.getWssUrl();
+        scenario = api.getScenarios();
+        device = api.getDevices();
+        updateScenarious();
+        deleteScenarious();
     }
 
     @Override
@@ -95,72 +176,13 @@ public class YandexScenariosHandler extends BaseThingHandler {
                 }
             }
             try {
-                url = api.getWssUrl();
-                scenario = api.getScenarios();
-                device = api.getDevices();
-                List<Channel> channels = thing.getChannels();
-                var context = new Object() {
-                    int x = 0;
-                };
-                channels.forEach(channel -> {
-                    boolean isNew = true;
-                    for (APIScenarioResponse.Scenarios scn : scenario.scenarios) {
-                        if (scn.name.startsWith(SEPARATOR_CHARS)) {
-                            if (Objects.equals(channel.getLabel(), scn.name.substring(4))) {
-                                YandexStationScenarios yaScn = new YandexStationScenarios();
-                                yaScn.addScenario(scn, channel, encode(context.x));
-                                scnList.put(context.x, yaScn);
-                                String json = yaScn.updateScenario(encode(context.x));
-                                ApiResponse response = api.sendPutJsonRequest(SCENARIOUS_URL + "/" + scn.id, json, "");
-                                if (response.httpCode == 403) {
-                                    response = api.sendPutJsonRequest(SCENARIOUS_URL + "/" + scn.id, json, "update");
-                                }
-                                logger.debug("response script update: {}", response.response);
-                                context.x++;
-                                isNew = false;
-                            }
-                        }
-                    }
-                    if (isNew) {
-                        logger.debug("Channel {} is new. Creating...", channel.getLabel());
-                        YandexStationScenarios yaScn = new YandexStationScenarios();
-                        String json = yaScn.createScenario(channel, encode(context.x));
-                        try {
-                            ApiResponse response = api.sendPostJsonRequest(SCENARIOUS_URL, json, "");
-                            logger.debug("response script creation: {}", response.response);
-                        } catch (ApiException ignored) {
-                        }
-                        scnList.put(context.x, yaScn);
-                        context.x++;
-                        isNew = false;
-                    }
-                });
-                for (APIScenarioResponse.Scenarios scn : scenario.scenarios) {
-                    var ref = new Object() {
-                        boolean present = false;
-                    };
-                    scnList.forEach((k, v) -> {
-                        if (v.getScn() != null) {
-                            if (v.getScn().id.equals(scn.id)) {
-                                ref.present = true;
-                            }
-                        }
-                    });
-                    if (!ref.present) {
-                        if (scn.name.startsWith(SEPARATOR_CHARS)) {
-                            ApiResponse response = api.sendDeleteJsonRequest(SCENARIOUS_URL + "/" + scn.id);
-                            logger.debug("response script delete: {}", response.response);
-                        }
-                    }
-                }
+                initScenarious();
             } catch (ApiException e) {
                 logger.debug("Error {}", e.getMessage());
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
                 try {
                     if (api.refreshCookie()) {
-                        url = api.getWssUrl();
-                        scenario = api.getScenarios();
-                        device = api.getDevices();
+                        initScenarious();
                     }
                 } catch (ApiException ex) {
                     throw new RuntimeException(ex);

@@ -228,7 +228,7 @@ public class YandexApiOnline implements YandexApi {
     }
 
     @Override
-    public ApiResponse sendPostRequest(String path, String data, String token) throws ApiException {
+    public ApiResponse sendPostRequest(String path, String data, @Nullable String token) throws ApiException {
         String errorReason = "";
         ApiResponse result = new ApiResponse();
         httpClient.setConnectTimeout(60 * 1000);
@@ -315,126 +315,145 @@ public class YandexApiOnline implements YandexApi {
         throw new ApiException(errorReason);
     }
 
-    public boolean getToken(String username, String password, String cookies) throws ApiException {
-        if (!cookies.isEmpty()) {
-            writeCookie(cookies);
-            cookieStore = getCookies(cookieManager.getCookieStore());
+    public boolean isCookieHasSessionId(CookieStore store) {
+        return store.getCookies().stream().anyMatch(session -> session.getName().equals("Session_id"));
+    }
+
+    public String extractCSRFToken(String body) {
+        String token = "";
+        String data = body.substring(body.indexOf("<title"), body.indexOf("</title>"));
+        if (data.contains("Ой") || data.contains("Капча")) {
+            token = "captcha";
+        } else {
+            token = data.substring(data.indexOf("name=\"csrf_token\""), data.indexOf("name=\"csrf_token\"")
+                    + data.substring(data.indexOf("name=\"csrf_token\"")).indexOf("\"/>"));
+            String[] parseToken = token.replace("\"", "").split("=");
+            if (Arrays.asList(parseToken).contains("csrf_token value")) {
+                logger.debug("csrf_token {}", parseToken[2]);
+                token = parseToken[2];
+            }
         }
-        if (cookieStore.getCookies().stream().noneMatch((session -> session.getName().equals("Session_id")))) {
-            boolean capcha = false;
-            String csrf_token = "";
-            sendGetRequest(API_AUTH_WELCOME_URL, null, null);
-            ApiResponse csrfTokenRequest;
-            csrfTokenRequest = sendGetRequest(API_CSRF_TOKEN_URL, "app_platform=android", null);
-            String title = csrfTokenRequest.response.substring(csrfTokenRequest.response.indexOf("<title"),
-                    csrfTokenRequest.response.indexOf("</title>"));
-            if (title.contains("Ой!")) {
-                if (readCaptchaCookie() != null) {
-                    capcha = true;
-                    csrfTokenRequest = sendGetRequest(API_CSRF_TOKEN_URL, "app_platform=android", readCaptchaCookie());
-                    if (csrfTokenRequest.response.substring(csrfTokenRequest.response.indexOf("<title"),
-                            csrfTokenRequest.response.indexOf("</title>")).contains("Ой!"))
-                        throw new ApiException("Please login via browser and copy cookie to passportCookie.json");
+        return token;
+    }
+
+    public String fetchCsrfToken() throws ApiException {
+        ApiResponse csrfTokenRequest = sendGetRequest(API_CSRF_TOKEN_URL, "app_platform=android", null);
+        String csrfToken = extractCSRFToken(csrfTokenRequest.response);
+
+        if (csrfToken.isEmpty()) {
+            logger.error("csrf_token not found");
+            throw new ApiException("XXXX");
+        } else if (csrfToken.equals("captcha")) {
+            if (readCaptchaCookie() != null) {
+                csrfTokenRequest = sendGetRequest(API_CSRF_TOKEN_URL, "app_platform=android", readCaptchaCookie());
+                csrfToken = extractCSRFToken(csrfTokenRequest.response);
+                if (csrfToken.isEmpty()) {
+                    logger.error("csrf_token not found");
+                    throw new ApiException("XXXX");
+                } else if (csrfToken.equals("captcha")) {
+                    throw new ApiException("Please login via browser and copy cookie to passportCookie.json");
                 } else {
                     throw new ApiException(
                             "Capcha requred. Please login via browser and copy cookie to passportCookie.json or fill captchaProtect file from browser");
                 }
-            }
-            // logger.debug("{}", title);
-            String getCsrfTokenString = csrfTokenRequest.response
-                    .substring(csrfTokenRequest.response.indexOf("name=\"csrf_token\""),
-                            csrfTokenRequest.response.indexOf("name=\"csrf_token\"") + csrfTokenRequest.response
-                                    .substring(csrfTokenRequest.response.indexOf("name=\"csrf_token\""))
-                                    .indexOf("\"/>"));
-            String[] parseToken = getCsrfTokenString.replace("\"", "").split("=");
-            if (Arrays.asList(parseToken).contains("csrf_token value")) {
-                logger.debug("csrf_token {}", parseToken[2]);
-                csrf_token = parseToken[2];
-            }
-            String trackId = "";
-            ApiResponse trackIdRequest;
-            if (capcha) {
-                trackIdRequest = sendPostRequest(API_REGISTRATION_START_URL,
-                        "csrf_token=" + csrf_token + "&login=" + username, Objects.requireNonNull(readCaptchaCookie()));
             } else {
-                trackIdRequest = sendPostRequest(API_REGISTRATION_START_URL,
-                        "csrf_token=" + csrf_token + "&login=" + username, "");
-            }
-            JsonObject trackIdObj = JsonParser.parseString(trackIdRequest.response).getAsJsonObject();
-            if (trackIdObj.has("status") && trackIdObj.get("status").getAsString().equals("ok")
-                    && trackIdObj.has("can_authorize")
-                    && Boolean.TRUE.equals(trackIdObj.get("can_authorize").getAsBoolean())
-                    && trackIdObj.has("track_id")) {
-                trackId = trackIdObj.get("track_id").getAsString();
-                logger.debug("track_id {}", trackId);
-            } else {
-                throw new ApiException("Cannot fetch track_id");
-            }
-            ApiResponse passwordCheck;
-            if (capcha) {
-                passwordCheck = sendPostRequest(API_REGISTRATION_COMMIT_URL,
-                        "csrf_token=" + csrf_token + "&track_id=" + trackId + "&password=" + password,
-                        Objects.requireNonNull(readCaptchaCookie()));
-            } else {
-                passwordCheck = sendPostRequest(API_REGISTRATION_COMMIT_URL,
-                        "csrf_token=" + csrf_token + "&track_id=" + trackId + "&password=" + password, "");
-            }
-            if (JsonParser.parseString(passwordCheck.response).getAsJsonObject().has("status")) {
-                if (JsonParser.parseString(passwordCheck.response).getAsJsonObject().get("status").getAsString()
-                        .equals("ok")) {
-                    if (cookieStore.getCookies().stream()
-                            .anyMatch((session -> session.getName().equals("Session_id")))) {
-                        writeCookieSession(cookieStore);
-                    }
-                } else {
-                    if (JsonParser.parseString(passwordCheck.response).getAsJsonObject().has("errors")) {
-                        throw new ApiException(JsonParser.parseString(passwordCheck.response).getAsJsonObject()
-                                .get("errors").getAsJsonArray().toString());
-                    } else
-                        throw new ApiException("Error sending password");
-                }
-            } else
-                throw new ApiException("Password error");
-            if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
-                ApiResponse getUserToken = sendPostRequestForToken(API_PROXY_PASSPORT_URL,
-                        USER_TOKEN_CLIENT_ID + "&track_id=" + trackId);
-                logger.debug("Token resonse is {}", getUserToken.response);
-                JsonObject token = JsonParser.parseString(getUserToken.response).getAsJsonObject();
-                if (token.has("status")) {
-                    if (token.get("status").getAsString().equals("ok")) {
-                        writeXtoken(token.get("access_token").getAsString());
-                    }
-                }
-                ApiResponse getMusicToken = sendPostRequestForToken(OAUTH_MOBILE_URL,
-                        MUSIC_TOKEN_CLIENT_ID + "&access_token=" + token.get("access_token").getAsString());
-                JsonObject getMusicTokenJson = JsonParser.parseString(getMusicToken.response).getAsJsonObject();
-                if (getMusicTokenJson.has("access_token")) {
-                    writeMusicToken(getMusicTokenJson.get("access_token").getAsString());
-                }
-
-            }
-        } else {
-            if (readXtoken() == null) {
-                ApiResponse getXToken = sendPostRequestForToken(API_PROXY_PASSPORT_URL, USER_TOKEN_CLIENT_ID);
-                // logger.debug("Token resonse is {}", getXToken.response);
-                JsonObject token = JsonParser.parseString(getXToken.response).getAsJsonObject();
-                if (token.has("status")) {
-                    if (token.get("status").getAsString().equals("ok")) {
-                        writeXtoken(token.get("access_token").getAsString());
-                    } else {
-                        logger.debug("Cannot fetch Xtoken");
-                    }
-                }
-            }
-
-            ApiResponse getMusicToken = sendPostRequestForToken(OAUTH_MOBILE_URL,
-                    MUSIC_TOKEN_CLIENT_ID + "&access_token=" + readXtoken());
-            JsonObject getMusicTokenJson = JsonParser.parseString(getMusicToken.response).getAsJsonObject();
-            if (getMusicTokenJson.has("access_token")) {
-                writeMusicToken(getMusicTokenJson.get("access_token").getAsString());
+                throw new ApiException("Please login via browser and copy cookie to passportCookie.json");
             }
         }
-        return true;
+
+        return csrfToken;
+    }
+
+    public String fetchTrackId(String login, String csrfToken) throws ApiException {
+        String trackId = "";
+        ApiResponse trackIdRequest = sendPostRequest(API_REGISTRATION_START_URL,
+                "csrf_token=" + csrfToken + "&login=" + login, readCaptchaCookie());
+
+        JsonObject trackIdObj = JsonParser.parseString(trackIdRequest.response).getAsJsonObject();
+        if (trackIdObj.has("status") && trackIdObj.get("status").getAsString().equals("ok")
+                && trackIdObj.has("can_authorize")
+                && Boolean.TRUE.equals(trackIdObj.get("can_authorize").getAsBoolean()) && trackIdObj.has("track_id")) {
+            trackId = trackIdObj.get("track_id").getAsString();
+            logger.debug("track_id {}", trackId);
+        } else {
+            throw new ApiException("Cannot fetch track_id");
+        }
+        return trackId;
+    }
+
+    public void passwordCheck(String csrfToken, String trackId, String password) throws ApiException {
+        ApiResponse response = sendPostRequest(API_REGISTRATION_COMMIT_URL,
+                "csrf_token=" + csrfToken + "&track_id=" + trackId + "&password=" + password, readCaptchaCookie());
+
+        JsonObject result = JsonParser.parseString(response.response).getAsJsonObject();
+        if (result.has("status") && result.get("status").getAsString().equals("ok")) {
+            if (isCookieHasSessionId(cookieStore)) {
+                writeCookieSession(cookieStore);
+            }
+        } else if (result.has("errors")) {
+            throw new ApiException(result.get("errors").getAsJsonArray().toString());
+        } else {
+            throw new ApiException("Error sending password");
+        }
+    }
+
+    public String fetchXToken(String additionalParams) throws ApiException {
+        String xToken = "";
+        ApiResponse xTokenResponse = sendPostRequestForToken(API_PROXY_PASSPORT_URL,
+                USER_TOKEN_CLIENT_ID + additionalParams);
+
+        JsonObject xTokenJson = JsonParser.parseString(xTokenResponse.response).getAsJsonObject();
+        if (xTokenJson.has("status")) {
+            if (xTokenJson.get("status").getAsString().equals("ok")) {
+                xToken = xTokenJson.get("access_token").getAsString();
+                writeXtoken(xToken);
+            } else {
+                logger.debug("Cannot fetch xToken");
+            }
+        }
+        return xToken;
+    }
+
+    public String fetchMusicToken(String xToken) throws ApiException {
+        String musicToken = "";
+        ApiResponse getMusicToken = sendPostRequestForToken(OAUTH_MOBILE_URL,
+                MUSIC_TOKEN_CLIENT_ID + "&access_token=" + xToken);
+        JsonObject getMusicTokenJson = JsonParser.parseString(getMusicToken.response).getAsJsonObject();
+        if (getMusicTokenJson.has("access_token")) {
+            musicToken = getMusicTokenJson.get("access_token").getAsString();
+            writeMusicToken(musicToken);
+        }
+        return musicToken;
+    }
+
+    public YandexSession createSession(String username, String password, String cookies) throws ApiException {
+        YandexSession yaSession = new YandexSession(username, password);
+
+        if (!cookies.isEmpty()) {
+            writeCookie(cookies);
+            cookieStore = getCookies(cookieManager.getCookieStore());
+        }
+        if (!isCookieHasSessionId(cookieStore)) {
+
+            sendGetRequest(API_AUTH_WELCOME_URL, null, null); // why?
+
+            yaSession.csrfToken = fetchCsrfToken();
+            yaSession.trackId = fetchTrackId(username, yaSession.csrfToken);
+
+            passwordCheck(yaSession.csrfToken, yaSession.trackId, password);
+
+            if (isCookieHasSessionId(cookieStore)) {
+                yaSession.xToken = fetchXToken("&track_id=" + yaSession.trackId);
+                yaSession.musicToken = fetchMusicToken(yaSession.xToken);
+            }
+        } else {
+            yaSession.xToken = readXtoken();
+            if (yaSession.xToken.isEmpty()) {
+                yaSession.xToken = fetchXToken("");
+            }
+            yaSession.musicToken = fetchMusicToken(yaSession.xToken);
+        }
+        return yaSession;
     }
 
     public boolean refreshCookie() throws ApiException {
@@ -465,6 +484,7 @@ public class YandexApiOnline implements YandexApi {
             logger.error("Cannot refresh cookie");
             throw new ApiException("Cannot fetch track_id");
         }
+        readCSRFToken(true);
         return true;
     }
 
@@ -662,18 +682,18 @@ public class YandexApiOnline implements YandexApi {
         }
     }
 
-    public @Nullable String readXtoken() {
+    public String readXtoken() {
         File file = new File(
                 OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID + "_xtoken");
         if (!file.exists()) {
-            return null;
+            return "";
         } else {
             List<String> lines = null;
             try {
                 lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
             } catch (IOException ignored) {
             }
-            return lines == null || lines.isEmpty() ? null : lines.get(0);
+            return lines == null || lines.isEmpty() ? "" : lines.get(0);
         }
     }
 
@@ -821,7 +841,7 @@ public class YandexApiOnline implements YandexApi {
                     logger.error("sendPostJsonRequest: {}", errorReason);
                     throw new ApiException(errorReason);
                 }
-            } catch (InterruptedException | TimeoutException | ExecutionException | ApiException e) {
+            } catch (InterruptedException | TimeoutException | ExecutionException e) {
                 // logger.error("ERROR {}", e.getMessage());
                 StringBuilder sb = new StringBuilder();
                 for (StackTraceElement s : e.getStackTrace()) {
@@ -868,7 +888,15 @@ public class YandexApiOnline implements YandexApi {
                 } else if (result.httpCode == 401) {
                     errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
                     logger.error("sendPutJsonRequest: {}", errorReason);
-                    throw new ApiException(errorReason);
+                    // throw new ApiException(errorReason);
+                    result.response = errorReason;
+                    return result;
+                } else if (result.httpCode == 403) {
+                    errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                    logger.error("sendPutJsonRequest: {}", errorReason);
+                    result.response = errorReason;
+                    return result;
+                    // throw new ApiException(errorReason);
                 } else {
                     errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
                             contentResponse.getReason());
@@ -876,18 +904,22 @@ public class YandexApiOnline implements YandexApi {
                     throw new ApiException(errorReason);
                 }
             } catch (InterruptedException | TimeoutException | ExecutionException | ApiException e) {
-                // logger.error("ERROR {}", e.getMessage());
-                StringBuilder sb = new StringBuilder();
-                for (StackTraceElement s : e.getStackTrace()) {
-                    sb.append(s.toString()).append("\n");
+                if (e instanceof ApiException) {
+
+                } else {
+                    // logger.error("ERROR {}", e.getMessage());
+                    StringBuilder sb = new StringBuilder();
+                    for (StackTraceElement s : e.getStackTrace()) {
+                        sb.append(s.toString()).append("\n");
+                    }
+                    logger.error("sendPutJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
                 }
-                logger.error("sendPutJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
             }
         }
         return new ApiResponse();
     }
 
-    public ApiResponse sendDeleteJsonRequest(String s) {
+    public ApiResponse sendDeleteJsonRequest(String s) throws ApiException {
         logger.info("deleting {}", s);
         String errorReason;
         if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
@@ -933,7 +965,7 @@ public class YandexApiOnline implements YandexApi {
                     logger.error("sendDeleteJsonRequest: {}", errorReason);
                     throw new ApiException(errorReason);
                 }
-            } catch (InterruptedException | TimeoutException | ExecutionException | ApiException e) {
+            } catch (InterruptedException | TimeoutException | ExecutionException e) {
                 // logger.error("ERROR {}", e.getMessage());
                 StringBuilder sb = new StringBuilder();
                 for (StackTraceElement s2 : e.getStackTrace()) {
