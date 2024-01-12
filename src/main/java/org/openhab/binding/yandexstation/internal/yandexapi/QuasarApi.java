@@ -353,7 +353,7 @@ public class QuasarApi implements YandexApi {
 
     public String readCaptchaCookie() {
         String cookie = "";
-        File file = getFile(CAPTCHA);
+        File file = getFile(FILE_CAPTCHA);
         try {
             if (!file.exists()) {
                 file.getParentFile().mkdirs();
