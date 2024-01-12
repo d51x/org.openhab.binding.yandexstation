@@ -185,7 +185,8 @@ public class YandexScenariosHandler extends BaseThingHandler {
                         initScenarios();
                     }
                 } catch (ApiException ex) {
-                    throw new RuntimeException(ex);
+                    // throw new RuntimeException(ex);
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
                 }
             }
             if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
