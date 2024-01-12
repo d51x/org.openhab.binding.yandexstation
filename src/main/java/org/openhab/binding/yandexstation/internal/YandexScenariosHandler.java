@@ -13,7 +13,6 @@
 package org.openhab.binding.yandexstation.internal;
 
 import static org.openhab.binding.yandexstation.internal.YandexStationScenarios.SEPARATOR_CHARS;
-import static org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline.SCENARIOUS_URL;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,9 +29,9 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline;
+import org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
@@ -63,108 +62,108 @@ public class YandexScenariosHandler extends BaseThingHandler {
     @Nullable
     YandexStationBridge yandexStationBridge;
     private @Nullable Future<?> initJob;
-    private final YandexApiOnline api;
+    private QuasarApi quasar;
     private WebSocketClient webSocketClient = new WebSocketClient();
     private YandexStationWebsocket yandexStationWebsocket = new YandexStationWebsocket();
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
-    Map<Integer, YandexStationScenarios> scnList = new HashMap<>();
-    APIScenarioResponse scenario = new APIScenarioResponse();
+    Map<Integer, YandexStationScenarios> scenarioList = new HashMap<>();
+    APIScenarioResponse scenarioResponse = new APIScenarioResponse();
     Map<String, String> device = new HashMap<>();
     private String url = "";
     char[] base_chars = ",.:".toCharArray();
     char[] digits = "01234567890".toCharArray();
     boolean dispose;
 
-    public YandexScenariosHandler(Thing thing) throws ApiException {
+    /**
+     * Instantiates a new Yandex station handler.
+     *
+     * @param thing the thing
+     * @param apiFactory the api factory
+     * @throws ApiException the api exception
+     */
+    public YandexScenariosHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
         super(thing);
-        this.api = yandexStationBridge.getTokenApi();
+        this.quasar = (QuasarApi) apiFactory.getApiOnline(this.getThing().getUID().getId());
     }
 
-    private void updateScenarious() throws ApiException {
+    private void updateScenarios() throws ApiException {
         List<Channel> channels = thing.getChannels();
         var context = new Object() {
             int x = 0;
         };
 
         for (Channel channel : channels) {
-            // channels.forEach(channel -> {
             boolean isNew = true;
-            for (APIScenarioResponse.Scenarios scn : scenario.scenarios) {
-                if (scn.name.startsWith(SEPARATOR_CHARS)) {
-                    if (Objects.equals(channel.getLabel(), scn.name.substring(4))) {
-                        YandexStationScenarios yaScn = new YandexStationScenarios();
-                        yaScn.addScenario(scn, channel, encode(context.x));
-                        scnList.put(context.x, yaScn);
-                        String json = yaScn.updateScenario(encode(context.x));
-                        ApiResponse response = null;
-                        // try {
-                        response = api.sendPutJsonRequest(SCENARIOUS_URL + "/" + scn.id, json, "");
-                        if (response.httpCode == 403) {
-                            response = api.sendPutJsonRequest(SCENARIOUS_URL + "/" + scn.id, json, "update");
-                            if (response.httpCode != 200) {
-                                // try {
-                                throw new ApiException(response.response);
-                                // } catch (ApiException e) {
-                                // throw new RuntimeException(e);
-                                // }
-                            }
+            for (APIScenarioResponse.Scenarios scenario : scenarioResponse.scenarios) {
+                if (scenario.name.startsWith(SEPARATOR_CHARS)) {
+                    if (Objects.equals(channel.getLabel(), scenario.name.substring(4))) {
+                        YandexStationScenarios yaScenario = new YandexStationScenarios();
+                        yaScenario.addScenario(scenario, channel);
+                        scenarioList.put(context.x, yaScenario);
+                        String json = yaScenario.updateScenario(encode(context.x));
+                        if (quasar.updateScenario(scenario.id, json)) {
+                            logger.debug("scenario \"{}\" updated successfully", channel.getLabel());
+                        } else {
+                            logger.error("fail to update scenario \"{}\"", channel.getLabel());
                         }
-
-                        logger.debug("response script update: {}", response.response);
                         context.x++;
                         isNew = false;
                     }
                 }
             }
             if (isNew) {
-                logger.debug("Channel {} is new. Creating...", channel.getLabel());
-                YandexStationScenarios yaScn = new YandexStationScenarios();
-                String json = yaScn.createScenario(channel, encode(context.x));
+                logger.debug("Channel \"{}\" is new. Creating...", channel.getLabel());
+                YandexStationScenarios scenario = new YandexStationScenarios();
+                String json = scenario.createScenario(channel, encode(context.x));
                 try {
-                    ApiResponse response = api.sendPostJsonRequest(SCENARIOUS_URL, json, "");
-                    logger.debug("response script creation: {}", response.response);
+                    if (quasar.createScenario(json)) {
+                        logger.debug("scenario \"{}\" created successfully", channel.getLabel());
+                    } else {
+                        logger.error("fail to create scenario \"{}\"", channel.getLabel());
+                    }
                 } catch (ApiException ignored) {
                 }
-                scnList.put(context.x, yaScn);
+                scenarioList.put(context.x, scenario);
                 context.x++;
-                isNew = false;
             }
-            // });
         }
     }
 
-    private void deleteScenarious() throws ApiException {
-        for (APIScenarioResponse.Scenarios scn : scenario.scenarios) {
+    private void deleteScenarios() throws ApiException {
+        for (APIScenarioResponse.Scenarios scenario : scenarioResponse.scenarios) {
             var ref = new Object() {
                 boolean present = false;
             };
-            scnList.forEach((k, v) -> {
-                if (v.getScn() != null) {
-                    if (v.getScn().id.equals(scn.id)) {
+            scenarioList.forEach((k, v) -> {
+                if (v.getScenarios() != null) {
+                    if (v.getScenarios().id.equals(scenario.id)) {
                         ref.present = true;
                     }
                 }
             });
             if (!ref.present) {
-                if (scn.name.startsWith(SEPARATOR_CHARS)) {
-                    ApiResponse response = api.sendDeleteJsonRequest(SCENARIOUS_URL + "/" + scn.id);
-                    logger.debug("response script delete: {}", response.response);
+                if (scenario.name.startsWith(SEPARATOR_CHARS)) {
+                    if (quasar.deleteScenario(scenario.id)) {
+                        logger.debug("scenario with id \"{}\" deleted successfully", scenario.id);
+                    } else {
+                        logger.error("fail to delete scenario with id \"{}\"", scenario.id);
+                    }
                 }
             }
         }
     }
 
-    private void initScenarious() throws ApiException {
-        url = api.getWssUrl();
-        scenario = api.getScenarios();
-        device = api.getDevices();
-        updateScenarious();
-        deleteScenarious();
+    private void initScenarios() throws ApiException {
+        url = quasar.getWssUrl();
+        scenarioResponse = quasar.getScenarios();
+        device = quasar.getDevices();
+        updateScenarios();
+        deleteScenarios();
     }
 
     @Override
     public void initialize() {
-        scnList = new HashMap<>();
+        scenarioList = new HashMap<>();
         updateStatus(ThingStatus.UNKNOWN);
         yandexStationBridge = getBridgeHandler();
         if (yandexStationBridge == null) {
@@ -175,14 +174,15 @@ public class YandexScenariosHandler extends BaseThingHandler {
                     break;
                 }
             }
+            this.quasar = yandexStationBridge.getQuasarApi();
             try {
-                initScenarious();
+                initScenarios();
             } catch (ApiException e) {
                 logger.debug("Error {}", e.getMessage());
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
                 try {
-                    if (api.refreshCookie()) {
-                        initScenarious();
+                    if (quasar.refreshCookie()) {
+                        initScenarios();
                     }
                 } catch (ApiException ex) {
                     throw new RuntimeException(ex);
@@ -305,7 +305,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
             for (StackTraceElement s : e.getStackTrace()) {
                 sb.append(s.toString()).append("\n");
             }
-            logger.error("Connection error: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
+            logger.error("Connection error: {}. Stacktrace: \n{}", e.getMessage(), sb);
             reconnectWebsocket();
             return false;
         }
@@ -314,7 +314,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
     private void updateChannel(String value, String id) {
         String subst = value.split(SEPARATOR_CHARS)[1];
         int yaScnId = decode(subst);
-        YandexStationScenarios scn = scnList.get(yaScnId);
+        YandexStationScenarios scn = scenarioList.get(yaScnId);
         Map<String, String> device = this.device;
         String event = device.get(id);
         if (event != null) {
@@ -330,7 +330,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
     private void reconnectWebsocket() {
         logger.debug("Try to reconnect");
         try {
-            url = api.getWssUrl();
+            url = quasar.getWssUrl();
         } catch (ApiException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
         }

@@ -12,7 +12,6 @@
  */
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jetty.util.Fields;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
@@ -47,7 +46,7 @@ public interface YandexApi {
      * @return the api response
      * @throws ApiException the api exception
      */
-    ApiResponse sendGetRequest(String path, @NonNull String params, String token) throws ApiException;
+    ApiResponse sendGetRequest(String path, String params, String token) throws ApiException;
 
     /**
      * Send get request api response.

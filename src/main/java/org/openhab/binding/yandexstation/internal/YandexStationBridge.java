@@ -40,7 +40,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
     /**
      * The Api Online (Quasar).
      */
-    public YandexApiOnline apiOnline;
+    public QuasarApi quasarApi;
 
     /**
      * The Devices list.
@@ -61,7 +61,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public YandexStationBridge(Bridge bridge, YandexApiFactory apiFactory) throws ApiException {
         super(bridge);
         api = (YandexApiImpl) apiFactory.getApi();
-        apiOnline = (YandexApiOnline) apiFactory.getApiOnline(this.getThing().getUID().getId());
+        quasarApi = (QuasarApi) apiFactory.getApiOnline(this.getThing().getUID().getId());
     }
 
     @Override
@@ -71,7 +71,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
         config = getConfigAs(YandexStationConfiguration.class);
         if (config != null) {
             try {
-                YandexSession yaSession = apiOnline.createSession(config.username, config.password, config.cookies);
+                YandexSession yaSession = quasarApi.createSession(config.username, config.password, config.cookies);
                 if (!yaSession.musicToken.isEmpty()) {
                     config.yandex_token = yaSession.musicToken;
                     updateStatus(ThingStatus.ONLINE);
@@ -101,7 +101,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
         return devicesList;
     }
 
-    public YandexApiOnline getTokenApi() {
-        return apiOnline;
+    public QuasarApi getQuasarApi() {
+        return quasarApi;
     }
 }

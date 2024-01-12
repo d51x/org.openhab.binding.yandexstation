@@ -84,7 +84,7 @@ public class YandexStationHandlerFactory extends BaseThingHandlerFactory {
             }
         } else if (THING_TYPE_SCENARIO.equals(thingTypeUID)) {
             try {
-                return new YandexScenariosHandler(thing);
+                return new YandexScenariosHandler(thing, apiFactory);
             } catch (ApiException e) {
                 throw new RuntimeException(e);
             }

@@ -13,6 +13,7 @@
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 
 /**
  * The {@link ApiException} is responsible for handling api exceptions.
@@ -22,6 +23,8 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 @NonNullByDefault
 public class ApiException extends Exception {
     private static final long serialVersionUID = -1748312966538510299L;
+
+    public ApiResponse response = new ApiResponse();
 
     /**
      * Instantiates a new Api exception.
@@ -40,5 +43,17 @@ public class ApiException extends Exception {
      */
     public ApiException(String message, Throwable e) {
         super(message, e);
+    }
+
+    /**
+     * Instantiates a new Api exception.
+     *
+     * @param response the ApiResponse
+     * @param message the message
+     * @param e the e
+     */
+    public ApiException(ApiResponse response, String message, Throwable e) {
+        super(message, e);
+        this.response = response;
     }
 }

@@ -23,12 +23,15 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
  */
 @NonNullByDefault
 public class YandexSession {
-    public String login;
-    public String password;
+    public String login = "";
+    public String password = "";
     public String csrfToken = "";
     public String xToken = "";
     public String musicToken = "";
     public String trackId = "";
+
+    public YandexSession() {
+    }
 
     public YandexSession(String login, String password) {
         this.login = login;
