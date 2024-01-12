@@ -343,30 +343,6 @@ public class QuasarApi implements YandexApi {
         return yandexDevices;
     }
 
-    private void setHeaders(Request request, @Nullable String token) {
-        request.timeout(60, TimeUnit.SECONDS);
-        request.header(HttpHeader.USER_AGENT, YANDEX_USER_AGENT);
-        request.header(HttpHeader.CONNECTION, "keep-alive");
-        request.header(HttpHeader.ACCEPT, "*/*");
-        request.header(HttpHeader.ACCEPT_ENCODING, "deflate");
-        if (token != null) {
-            request.header(HttpHeader.COOKIE, token);
-        }
-        request.followRedirects(true);
-    }
-
-    private void setHeadersWithXToken(Request request, @Nullable String token) {
-        request.timeout(60, TimeUnit.SECONDS);
-        request.header(HttpHeader.USER_AGENT, YANDEX_USER_AGENT);
-        request.header(HttpHeader.CONNECTION, "keep-alive");
-        request.header(HttpHeader.ACCEPT, "*/*");
-        request.header(HttpHeader.ACCEPT_ENCODING, "deflate");
-        if (token != null) {
-            request.header("Ya-Consumer-Authorization", "OAuth " + token);
-        }
-        request.followRedirects(false);
-    }
-
     public String readCaptchaCookie() {
         String cookie = "";
         File file = getFile("captchaProtect");
@@ -447,12 +423,8 @@ public class QuasarApi implements YandexApi {
     }
 
     private File getFile(String name) {
-        return new File(getFullFileName(name));
-    }
-
-    private String getFullFileName(String nameWithExt) {
-        return OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID + "_"
-                + nameWithExt;
+        return new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID + "_"
+                + name);
     }
 
     private void writeCookie(String cookieStore) {
