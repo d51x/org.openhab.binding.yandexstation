@@ -80,6 +80,14 @@ public class QuasarApi implements YandexApi {
     public static final String SCENARIOUS_URL = "https://iot.quasar.yandex.ru/m/user/scenarios";
     public static final String DEVICES_URL = "https://iot.quasar.yandex.ru/m/v3/user/devices";
     public static final String QUASAR_IOT_URL = "https://yandex.ru/quasar/iot";
+
+    public static final String FILE_CAPTCHA = "captchaProtect";
+    public static final String FILE_PASSPORT_COOKIE = "passportCookie.json";
+    public static final String FILE_SESSION_COOKIE = "sessionCookie";
+    public static final String FILE_X_TOKEN = "xtoken";
+    public static final String FILE_MUSIC_TOKEN = "musicToken";
+    public static final String FILE_CSRF_TOKEN = "csrfToken";
+
     private final CookieManager cookieManager;
     private volatile CookieStore cookieStore = new HttpCookieStore();
     private String bridgeID = "";
@@ -345,7 +353,7 @@ public class QuasarApi implements YandexApi {
 
     public String readCaptchaCookie() {
         String cookie = "";
-        File file = getFile("captchaProtect");
+        File file = getFile(CAPTCHA);
         try {
             if (!file.exists()) {
                 file.getParentFile().mkdirs();
@@ -363,7 +371,7 @@ public class QuasarApi implements YandexApi {
     }
 
     private CookieStore getCookies(CookieStore cookieStore) {
-        File file = getFile("passportCookie.json");
+        File file = getFile(FILE_PASSPORT_COOKIE);
         List<YandexCookies> cookiesList = null;
         try {
             if (!file.exists()) {
@@ -410,7 +418,7 @@ public class QuasarApi implements YandexApi {
         });
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         String json = gson.toJson(lislCookies);
-        File file = getFile("passportCookie.json");
+        File file = getFile(FILE_PASSPORT_COOKIE);
         boolean createOk = file.getParentFile().mkdirs();
         if (createOk) {
             logger.debug("Folders {} created", file.getAbsolutePath());
@@ -423,8 +431,8 @@ public class QuasarApi implements YandexApi {
     }
 
     private File getFile(String name) {
-        return new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID + "_"
-                + name);
+        return new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" +
+                File.separator + bridgeID + "_" + name);
     }
 
     private void writeCookie(String cookieStore) {
@@ -432,7 +440,7 @@ public class QuasarApi implements YandexApi {
             JsonArray testInput = JsonParser.parseString(cookieStore).getAsJsonArray();
             logger.debug("JSON Cookie from bridge input field: {}", testInput);
             if (testInput.isJsonArray()) {
-                File file = getFile("passportCookie.json");
+                File file = getFile(FILE_PASSPORT_COOKIE);
                 if (file.getParentFile().mkdirs()) {
                     logger.debug("Folders {} created", file.getAbsolutePath());
                 }
@@ -457,7 +465,7 @@ public class QuasarApi implements YandexApi {
             }
         });
 
-        File file = getFile("sessionCookie");
+        File file = getFile(FILE_SESSION_COOKIE);
         if (file.getParentFile().mkdirs()) {
             logger.debug("Folders {} created", file.getAbsolutePath());
         }
@@ -470,7 +478,7 @@ public class QuasarApi implements YandexApi {
     }
 
     private void writeXtoken(String accessToken) {
-        File file = getFile("xtoken");
+        File file = getFile(FILE_X_TOKEN);
         if (file.getParentFile().mkdirs()) {
             logger.debug("Folders {} created", file.getAbsolutePath());
         }
@@ -484,7 +492,7 @@ public class QuasarApi implements YandexApi {
 
     public String readXtoken() {
         String token = "";
-        File file = getFile("xtoken");
+        File file = getFile(FILE_X_TOKEN);
         try {
             if (file.exists()) {
                 List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
@@ -499,7 +507,7 @@ public class QuasarApi implements YandexApi {
     }
 
     private void writeMusicToken(String musicToken) {
-        File file = getFile("musicToken");
+        File file = getFile(FILE_MUSIC_TOKEN);
         if (file.getParentFile().mkdirs()) {
             logger.debug("Folders {} created", file.getAbsolutePath());
         }
@@ -512,7 +520,7 @@ public class QuasarApi implements YandexApi {
 
     public String readMusicToken() {
         String token = "";
-        File file = getFile("musicToken");
+        File file = getFile(FILE_MUSIC_TOKEN);
         try {
             if (file.exists()) {
                 List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
@@ -527,7 +535,7 @@ public class QuasarApi implements YandexApi {
     }
 
     public void deleteCookieFile() {
-        File file = getFile("passportCookie.json");
+        File file = getFile(FILE_PASSPORT_COOKIE);
         file.delete();
     }
 
@@ -544,7 +552,7 @@ public class QuasarApi implements YandexApi {
 
     public String readCSRFToken(boolean update) {
         String csrfToken = "";
-        File file = getFile("csrfToken");
+        File file = getFile(FILE_CSRF_TOKEN);
         if (update) {
             boolean isDeleted = file.delete();
             logger.debug("File {} delete status: {}", file.getName(), isDeleted);
