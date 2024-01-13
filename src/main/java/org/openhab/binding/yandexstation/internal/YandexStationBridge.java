@@ -28,6 +28,8 @@ import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseBridgeHandler;
 import org.openhab.core.types.Command;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link YandexStationBindingConstants} class defines common constants, which are
@@ -36,6 +38,7 @@ import org.openhab.core.types.Command;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 public class YandexStationBridge extends BaseBridgeHandler {
+    private final Logger logger = LoggerFactory.getLogger(YandexStationBridge.class);
     /**
      * The Api.
      */
@@ -49,7 +52,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
      */
     public @Nullable YandexStationConfiguration config;
 
-    public QuasarApi token;
+    public QuasarApi quasarApi;
 
     /**
      * Instantiates a new Yandex station bridge.
@@ -61,7 +64,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public YandexStationBridge(Bridge bridge, YandexApiFactory apiFactory) throws ApiException {
         super(bridge);
         api = (YandexApiImpl) apiFactory.getApi();
-        token = (QuasarApi) apiFactory.getTokenApi(this.getThing().getUID().getId());
+        quasarApi = (QuasarApi) apiFactory.getTokenApi(this.getThing().getUID().getId());
     }
 
     @Override
@@ -71,9 +74,9 @@ public class YandexStationBridge extends BaseBridgeHandler {
         config = getConfigAs(YandexStationConfiguration.class);
         if (config != null) {
             try {
-                if (token.getToken(config.username, config.password, config.cookies)) {
-                    if (token.readMusicToken() != null) {
-                        config.yandex_token = Objects.requireNonNull(token.readMusicToken());
+                if (quasarApi.getToken(config.username, config.password, config.cookies)) {
+                    if (quasarApi.readMusicToken() != null) {
+                        config.yandex_token = Objects.requireNonNull(quasarApi.readMusicToken());
                         updateStatus(ThingStatus.ONLINE);
                     } else {
                         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
@@ -95,6 +98,18 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
     }
 
+    @Override
+    public void handleRemoval() {
+        super.handleRemoval();
+        logger.debug("thing removed");
+        quasarApi.deleteCookieFile();
+        quasarApi.deleteCaptchaFile();
+        quasarApi.deleteSessionFile();
+        quasarApi.deleteXTokenFile();
+        quasarApi.deleteMusicTokenFile();
+        quasarApi.deleteCsrfTokenFile();
+    }
+
     /**
      * Gets devices.
      *
@@ -105,6 +120,6 @@ public class YandexStationBridge extends BaseBridgeHandler {
     }
 
     public QuasarApi getTokenApi() {
-        return token;
+        return quasarApi;
     }
 }
