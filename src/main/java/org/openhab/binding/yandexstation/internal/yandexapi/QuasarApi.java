@@ -112,7 +112,7 @@ public class QuasarApi implements YandexApi {
     public void initialize() throws ApiException {
     }
 
-    public ApiResponse sendPostRequestWithXToken(String path, String data, String xToken) throws ApiException {
+    public ApiResponse getTrackIdRequest(String path, String data, String xToken) throws ApiException {
         HttpFields headers = new HttpFields();
 
         if (yaSession.csrfToken.isEmpty()) {
@@ -129,16 +129,16 @@ public class QuasarApi implements YandexApi {
         return sendRequest(path, "", content, HttpMethod.POST, headers);
     }
 
-    private ApiResponse sendPostRequestForToken(String path, String data) throws ApiException {
+    private ApiResponse getXTokenRequest(String path, String data) throws ApiException {
         if (isCookieHasSessionId(cookieStore)) {
             HttpFields headers = new HttpFields();
 
-            if (yaSession.csrfToken.isEmpty()) {
-                yaSession.csrfToken = readCSRFToken(true).strip();
-            }
-            logger.trace("csrf is: {}", yaSession.csrfToken);
+            //if (yaSession.csrfToken.isEmpty()) {
+            //    yaSession.csrfToken = readCSRFToken(true).strip();
+            //}
+            //logger.trace("csrf is: {}", yaSession.csrfToken);
 
-            headers.add("x-csrf-token", yaSession.csrfToken);
+            //headers.add("x-csrf-token", yaSession.csrfToken);
             headers.add(HttpHeader.CONTENT_TYPE, "application/x-www-form-urlencoded");
             headers.add("charset", "utf-8");
             headers.add("ya-client-host", "passport.yandex.ru");
@@ -161,7 +161,7 @@ public class QuasarApi implements YandexApi {
         return new ApiResponse();
     }
 
-    private String fetchCsrfToken() throws ApiException {
+    private String getCsrfToken() throws ApiException {
         ApiResponse csrfTokenRequest = sendGetRequest(API_CSRF_TOKEN_URL, "app_platform=android", "");
         String csrfToken = extractCSRFToken(csrfTokenRequest.response);
         logger.debug("csrf_token {}", csrfToken);
@@ -193,7 +193,7 @@ public class QuasarApi implements YandexApi {
         return csrfToken;
     }
 
-    private String fetchTrackId(String login, String csrfToken) throws ApiException {
+    private String getTrackId(String login, String csrfToken) throws ApiException {
         String trackId = "";
         String data = "csrf_token=" + csrfToken + "&login=" + login;
         String cookie = readCaptchaCookie();
@@ -210,6 +210,34 @@ public class QuasarApi implements YandexApi {
             throw new ApiException("Cannot fetch track_id");
         }
         return trackId;
+    }
+
+    private String getXToken(String additionalParams) throws ApiException {
+        String xToken = "";
+        String data = USER_TOKEN_CLIENT_ID + additionalParams;
+        ApiResponse xTokenResponse = getXTokenRequest(API_PROXY_PASSPORT_URL, data);
+
+        xToken = extractAccessToken(xTokenResponse.response);
+        if (!xToken.isBlank()) {
+            writeXtoken(xToken);
+        } else {
+            logger.debug("Cannot fetch xToken");
+        }
+        return xToken;
+    }
+
+    private String getMusicToken(String xToken) throws ApiException {
+        String musicToken = "";
+        String data = MUSIC_TOKEN_CLIENT_ID + "&access_token=" + xToken;
+        ApiResponse getMusicToken = getXTokenRequest(OAUTH_MOBILE_URL, data);
+
+        musicToken = extractAccessToken(getMusicToken.response);
+        if (!musicToken.isBlank()) {
+            writeMusicToken(musicToken);
+        } else {
+            logger.debug("Cannot fetch musicToken");
+        }
+        return musicToken;
     }
 
     private void passwordCheck(String csrfToken, String trackId, String password) throws ApiException {
@@ -230,34 +258,6 @@ public class QuasarApi implements YandexApi {
         }
     }
 
-    private String fetchXToken(String additionalParams) throws ApiException {
-        String xToken = "";
-        String data = USER_TOKEN_CLIENT_ID + additionalParams;
-        ApiResponse xTokenResponse = sendPostRequestForToken(API_PROXY_PASSPORT_URL, data);
-
-        xToken = extractAccessToken(xTokenResponse.response);
-        if (!xToken.isBlank()) {
-            writeXtoken(xToken);
-        } else {
-            logger.debug("Cannot fetch xToken");
-        }
-        return xToken;
-    }
-
-    private String fetchMusicToken(String xToken) throws ApiException {
-        String musicToken = "";
-        String data = MUSIC_TOKEN_CLIENT_ID + "&access_token=" + xToken;
-        ApiResponse getMusicToken = sendPostRequestForToken(OAUTH_MOBILE_URL, data);
-
-        musicToken = extractAccessToken(getMusicToken.response);
-        if (!musicToken.isBlank()) {
-            writeMusicToken(musicToken);
-        } else {
-            logger.debug("Cannot fetch musicToken");
-        }
-        return musicToken;
-    }
-
     public YandexSession createSession(String username, String password, String cookies) throws ApiException {
         yaSession = new YandexSession(username, password);
 
@@ -267,26 +267,29 @@ public class QuasarApi implements YandexApi {
         } else {
             deleteCookieFile();
         }
-        if (!isCookieHasSessionId(cookieStore)) {
+
+        cookieStore = getCookies(cookieManager.getCookieStore());
+
+        if (isCookieNoSessionId(cookieStore)) {
 
             sendGetRequest(API_AUTH_WELCOME_URL, "", ""); // why?
 
-            yaSession.csrfToken = fetchCsrfToken();
-            yaSession.trackId = fetchTrackId(username, yaSession.csrfToken);
+            yaSession.csrfToken = getCsrfToken();
+            yaSession.trackId = getTrackId(username, yaSession.csrfToken);
 
             passwordCheck(yaSession.csrfToken, yaSession.trackId, password);
 
             if (isCookieHasSessionId(cookieStore)) {
-                yaSession.xToken = fetchXToken("&track_id=" + yaSession.trackId);
-                yaSession.musicToken = fetchMusicToken(yaSession.xToken);
+                yaSession.xToken = getXToken("&track_id=" + yaSession.trackId);
+                yaSession.musicToken = getMusicToken(yaSession.xToken);
             }
         } else {
-            yaSession.csrfToken = readCSRFToken(false);
+            //yaSession.csrfToken = readCSRFToken(false);
             yaSession.xToken = readXtoken();
             if (yaSession.xToken.isEmpty()) {
-                yaSession.xToken = fetchXToken("");
+                yaSession.xToken = getXToken("");
             }
-            yaSession.musicToken = fetchMusicToken(yaSession.xToken);
+            yaSession.musicToken = getMusicToken(yaSession.xToken);
         }
         return yaSession;
     }
@@ -301,7 +304,7 @@ public class QuasarApi implements YandexApi {
         String passportHost = "";
 
         String data = "type=x-token&retpath=https://www.yandex.ru";
-        ApiResponse trackIdResponse = sendPostRequestWithXToken(API_PROXY_AUTH_X_TOKEN_URL, data, xToken);
+        ApiResponse trackIdResponse = getTrackIdRequest(API_PROXY_AUTH_X_TOKEN_URL, data, xToken);
 
         JsonObject trackIdObj = JsonParser.parseString(trackIdResponse.response).getAsJsonObject();
         if (trackIdObj.has("status") && trackIdObj.get("status").getAsString().equals("ok")
@@ -320,6 +323,13 @@ public class QuasarApi implements YandexApi {
             throw new ApiException("Cannot fetch track_id");
         }
         // readCSRFToken(true);
+        cookieStore = getCookies(cookieManager.getCookieStore());
+        if (isCookieHasSessionId(cookieStore)) {
+            // String cookie = "Session_id=" + extractSessionIdFromCookie(cookieStore);
+            String csrfToken = refreshCSRFToken();
+            yaSession.csrfToken = csrfToken;
+            // Files.writeString(file.toPath(), csrfToken, StandardCharsets.UTF_8);
+        }
         return true;
     }
 
@@ -539,10 +549,40 @@ public class QuasarApi implements YandexApi {
         file.delete();
     }
 
-    private String refreshCSRFToken(String cookie) {
+    public void deleteCaptchaFile() {
+        File file = getFile(FILE_CAPTCHA);
+        file.delete();
+    }
+
+    public void deleteSessionFile() {
+        File file = getFile(FILE_SESSION_COOKIE);
+        file.delete();
+    }
+
+    public void deleteXTokenFile() {
+        File file = getFile(FILE_X_TOKEN);
+        file.delete();
+    }
+
+    public void deleteMusicTokenFile() {
+        File file = getFile(FILE_MUSIC_TOKEN);
+        file.delete();
+    }
+
+    public void deleteCsrfTokenFile() {
+        File file = getFile(FILE_CSRF_TOKEN);
+        file.delete();
+    }
+
+    private String refreshCSRFToken() {
         String csrfToken = "";
+        HttpCookie session = extractParamFromCookie("Session_id", cookieStore);
+        HttpCookie yandexUid = extractParamFromCookie("yandexuid", cookieStore);
+        String cookies = session.getName() + "=" + session.getValue() + ";" + yandexUid.getName() + "="
+                + yandexUid.getValue();
+
         try {
-            ApiResponse response = sendGetRequest(QUASAR_IOT_URL, "", cookie);
+            ApiResponse response = sendGetRequest(QUASAR_IOT_URL, "", cookies);
             csrfToken = extractCSRFToken2(response.response);
             logger.debug("csrf_token2 {}", csrfToken);
         } catch (ApiException ignored) {
@@ -559,15 +599,15 @@ public class QuasarApi implements YandexApi {
         }
         try {
             if (!file.exists()) {
-                csrfToken = refreshCSRFToken("");
+                csrfToken = refreshCSRFToken();
                 Files.writeString(file.toPath(), csrfToken, StandardCharsets.UTF_8);
             } else {
                 List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
                 if (!lines.isEmpty()) {
                     csrfToken = lines.get(0);
                 } else {
-                    String cookie = "Session_id=" + extractSessionIdFromCookie(cookieStore);
-                    csrfToken = refreshCSRFToken(cookie);
+                    // String cookie = "Session_id=" + extractSessionIdFromCookie(cookieStore);
+                    csrfToken = refreshCSRFToken();
                     Files.writeString(file.toPath(), csrfToken, StandardCharsets.UTF_8);
                 }
             }
@@ -645,49 +685,56 @@ public class QuasarApi implements YandexApi {
             httpClient.getProtocolHandlers().remove(WWWAuthenticationProtocolHandler.NAME);
         }
 
-        ApiResponse result = new ApiResponse();
-        Request request = httpClient.newRequest(path + (params.isEmpty() ? "" : params));
-
-        request.header(HttpHeader.USER_AGENT, YANDEX_USER_AGENT);
-
-        if (headers.size() > 0) {
-            request.getHeaders().addAll(headers);
-        }
-
-        request.method(method);
-
         String errorReason = "";
-        try {
-            if (content != null) {
-                request.content(content);
+        Integer retry = 3;
+        while (retry > 0) {
+            ApiResponse result = new ApiResponse();
+            Request request = httpClient.newRequest(path + (params.isEmpty() ? "" : params));
+            request.getHeaders().put(HttpHeader.USER_AGENT, YANDEX_USER_AGENT);
+
+            if (headers.size() > 0) {
+                request.getHeaders().addAll(headers);
             }
 
-            ContentResponse contentResponse = request.send();
-            result.httpCode = contentResponse.getStatus();
-            if (result.httpCode == 200) {
-                result.response = contentResponse.getContentAsString();
-                writeCookie(cookieStore);
-                return result;
-            } else if (result.httpCode == 401) {
-                // TODO: refresh cookie
-                errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
-                logger.error("sendRequest {}: {}", method, errorReason);
-            } else if (result.httpCode == 403) {
-                yaSession.csrfToken = "";
-                // TODO: refresh csrfToken
-                errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
-                logger.error("sendRequest {}: {}", method, errorReason);
-            } else {
-                errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
-                        contentResponse.getReason());
-                logger.error("sendRequest {}: {}", method, errorReason);
+            request.method(method);
+
+            try {
+                if (content != null) {
+                    request.content(content);
+                }
+
+                ContentResponse contentResponse = request.send();
+                result.httpCode = contentResponse.getStatus();
+                if (result.httpCode == 200) {
+                    result.response = contentResponse.getContentAsString();
+                    writeCookie(cookieStore);
+                    return result;
+                } else if (result.httpCode == 401) {
+                    // TODO: refresh cookie
+                    errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                    logger.error("sendRequest {}: {}", method, errorReason);
+                    retry = 0;
+                } else if (result.httpCode == 403) {
+                    yaSession.csrfToken = "";
+                    // TODO: refresh csrfToken
+                    errorReason = contentResponse.getStatus() + " " + contentResponse.getReason();
+                    yaSession.csrfToken = refreshCSRFToken();
+                    retry--;
+                    logger.error("sendRequest {}: {}", method, errorReason);
+                } else {
+                    errorReason = String.format("Yandex API request failed with %d: %s", contentResponse.getStatus(),
+                            contentResponse.getReason());
+                    logger.error("sendRequest {}: {}", method, errorReason);
+                    retry = 0;
+                }
+            } catch (InterruptedException | TimeoutException | ExecutionException e) {
+                retry = 0;
+                StringBuilder sb = new StringBuilder();
+                for (StackTraceElement s : e.getStackTrace()) {
+                    sb.append(s.toString()).append("\n");
+                }
+                logger.error("sendRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb);
             }
-        } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            StringBuilder sb = new StringBuilder();
-            for (StackTraceElement s : e.getStackTrace()) {
-                sb.append(s.toString()).append("\n");
-            }
-            logger.error("sendRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb);
         }
         throw new ApiException(errorReason);
     }

@@ -315,16 +315,20 @@ public class YandexScenariosHandler extends BaseThingHandler {
     private void updateChannel(String value, String id) {
         String subst = value.split(SEPARATOR_CHARS)[1];
         int yaScnId = decode(subst);
-        YandexStationScenarios scn = scenarioList.get(yaScnId);
-        Map<String, String> device = this.device;
-        String event = device.get(id);
-        if (event != null) {
-            triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID(), event);
-            updateState(scn.getChannel().getUID(), OnOffType.ON);
+        if (scenarioList.containsKey(yaScnId)) {
+            YandexStationScenarios scn = scenarioList.get(yaScnId);
+            Map<String, String> device = this.device;
+            String event = device.get(id);
+            if (event != null) {
+                triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID(), event);
+                updateState(scn.getChannel().getUID(), OnOffType.ON);
+            } else {
+                logger.warn("Device with id {} is not recognized", id);
+                triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID());
+                updateState(scn.getChannel().getUID(), OnOffType.ON);
+            }
         } else {
-            logger.warn("Device with id {} is not recognized", id);
-            triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID());
-            updateState(scn.getChannel().getUID(), OnOffType.ON);
+            logger.error("unknown scenario {} executed", yaScnId);
         }
     }
 

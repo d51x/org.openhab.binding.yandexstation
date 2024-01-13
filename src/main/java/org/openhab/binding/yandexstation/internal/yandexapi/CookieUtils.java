@@ -40,15 +40,20 @@ public class CookieUtils {
         return store.getCookies().stream().anyMatch(session -> session.getName().equals("Session_id"));
     }
 
+    public static boolean isCookieNoSessionId(CookieStore store) {
+        return store.getCookies().stream().noneMatch(session -> session.getName().equals("Session_id"));
+    }
+
     public static String extractCSRFToken(String body) {
         String token = "";
-        String data = body.substring(body.indexOf("<title"), body.indexOf("</title>"));
-        if (data.contains("Ой") || data.contains("Капча")) {
+        String title = body.substring(body.indexOf("<title"), body.indexOf("</title>"));
+        if (title.contains("Ой") || title.contains("Капча")) {
             token = "captcha";
         } else {
+            String data = body.substring(body.indexOf("<body"), body.indexOf("</body>"));
             token = data.substring(data.indexOf("name=\"csrf_token\""), data.indexOf("name=\"csrf_token\"")
                     + data.substring(data.indexOf("name=\"csrf_token\"")).indexOf("\"/>"));
-            String[] parseToken = token.replace("\"", "").split("=");
+            String[] parseToken = token.replaceAll("\"", "").split("=");
             if (Arrays.asList(parseToken).contains("csrf_token value")) {
                 token = parseToken[2];
             }
