@@ -18,9 +18,9 @@ import java.util.Objects;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.discovery.YandexStationDiscoveryService;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
@@ -49,7 +49,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
      */
     public @Nullable YandexStationConfiguration config;
 
-    public YandexApiOnline token;
+    public QuasarApi token;
 
     /**
      * Instantiates a new Yandex station bridge.
@@ -61,7 +61,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public YandexStationBridge(Bridge bridge, YandexApiFactory apiFactory) throws ApiException {
         super(bridge);
         api = (YandexApiImpl) apiFactory.getApi();
-        token = (YandexApiOnline) apiFactory.getTokenApi(this.getThing().getUID().getId());
+        token = (QuasarApi) apiFactory.getTokenApi(this.getThing().getUID().getId());
     }
 
     @Override
@@ -104,7 +104,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
         return devicesList;
     }
 
-    public YandexApiOnline getTokenApi() {
+    public QuasarApi getTokenApi() {
         return token;
     }
 }

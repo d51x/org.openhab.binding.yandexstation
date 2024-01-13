@@ -53,6 +53,6 @@ public class YandexApiFactory {
     }
 
     public YandexApi getTokenApi(String bridgeID) throws ApiException {
-        return new YandexApiOnline(httpClient, bridgeID);
+        return new QuasarApi(httpClient, bridgeID);
     }
 }

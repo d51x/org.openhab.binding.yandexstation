@@ -55,12 +55,12 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
 /**
- * The {@link YandexApiOnline} is describing implementaion of api interface.
+ * The {@link QuasarApi} is describing implementaion of api interface.
  *
  * @author Petr Shatsillo - Initial contribution
  */
 @NonNullByDefault
-public class YandexApiOnline implements YandexApi {
+public class QuasarApi implements YandexApi {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected final HttpClient httpClient;
     public static final String YANDEX_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36";
@@ -84,7 +84,7 @@ public class YandexApiOnline implements YandexApi {
     private volatile CookieStore cookieStore = new HttpCookieStore();
     private String bridgeID = "";
 
-    public YandexApiOnline(HttpClient httpClient, String bridgeID) {
+    public QuasarApi(HttpClient httpClient, String bridgeID) {
         this.httpClient = httpClient;
         this.bridgeID = bridgeID;
         cookieManager = newCookieManager();

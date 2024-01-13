@@ -13,7 +13,7 @@
 package org.openhab.binding.yandexstation.internal;
 
 import static org.openhab.binding.yandexstation.internal.YandexStationScenarios.SEPARATOR_CHARS;
-import static org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline.SCENARIOUS_URL;
+import static org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi.SCENARIOUS_URL;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,8 +30,8 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 import org.openhab.core.library.types.OnOffType;
@@ -59,7 +59,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
     @Nullable
     YandexStationBridge yandexStationBridge;
     private @Nullable Future<?> initJob;
-    private YandexApiOnline api;
+    private QuasarApi api;
     private WebSocketClient webSocketClient = new WebSocketClient();
     private YandexStationWebsocket yandexStationWebsocket = new YandexStationWebsocket();
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
@@ -73,7 +73,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
 
     public YandexScenariosHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
         super(thing);
-        this.api = (YandexApiOnline) apiFactory.getTokenApi(Objects.requireNonNull(thing.getBridgeUID()).getId());
+        this.api = (QuasarApi) apiFactory.getTokenApi(Objects.requireNonNull(thing.getBridgeUID()).getId());
     }
 
     @Override
