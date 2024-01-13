@@ -12,7 +12,6 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import static org.openhab.binding.yandexstation.internal.YandexStationBridge.getTokenApi;
 import static org.openhab.binding.yandexstation.internal.YandexStationScenarios.SEPARATOR_CHARS;
 import static org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline.SCENARIOUS_URL;
 
@@ -31,16 +30,12 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiOnline;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 import org.openhab.core.library.types.OnOffType;
-import org.openhab.core.thing.Bridge;
-import org.openhab.core.thing.Channel;
-import org.openhab.core.thing.ChannelUID;
-import org.openhab.core.thing.Thing;
-import org.openhab.core.thing.ThingStatus;
-import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.*;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.types.Command;
@@ -64,7 +59,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
     @Nullable
     YandexStationBridge yandexStationBridge;
     private @Nullable Future<?> initJob;
-    private final YandexApiOnline api;
+    private YandexApiOnline api;
     private WebSocketClient webSocketClient = new WebSocketClient();
     private YandexStationWebsocket yandexStationWebsocket = new YandexStationWebsocket();
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
@@ -76,9 +71,9 @@ public class YandexScenariosHandler extends BaseThingHandler {
     char[] digits = "01234567890".toCharArray();
     boolean dispose;
 
-    public YandexScenariosHandler(Thing thing) throws ApiException {
+    public YandexScenariosHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
         super(thing);
-        this.api = getTokenApi();
+        this.api = (YandexApiOnline) apiFactory.getTokenApi(Objects.requireNonNull(thing.getBridgeUID()).getId());
     }
 
     @Override

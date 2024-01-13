@@ -49,7 +49,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
      */
     public @Nullable YandexStationConfiguration config;
 
-    public static YandexApiOnline token;
+    public YandexApiOnline token;
 
     /**
      * Instantiates a new Yandex station bridge.
@@ -61,7 +61,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public YandexStationBridge(Bridge bridge, YandexApiFactory apiFactory) throws ApiException {
         super(bridge);
         api = (YandexApiImpl) apiFactory.getApi();
-        token = (YandexApiOnline) apiFactory.getToken(this.getThing().getUID().getId());
+        token = (YandexApiOnline) apiFactory.getTokenApi(this.getThing().getUID().getId());
     }
 
     @Override
@@ -104,7 +104,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
         return devicesList;
     }
 
-    public static YandexApiOnline getTokenApi() {
+    public YandexApiOnline getTokenApi() {
         return token;
     }
 }
