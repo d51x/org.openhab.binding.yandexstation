@@ -26,25 +26,27 @@ import com.google.gson.JsonParser;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 public class CookieUtils {
+    public CookieUtils() {
+    }
 
-    public static HttpCookie extractParamFromCookie(String name, CookieStore cookieStore) {
+    public HttpCookie extractParamFromCookie(String name, CookieStore cookieStore) {
         return cookieStore.getCookies().stream().filter(session -> session.getName().equals(name)).findFirst()
                 .orElseGet(() -> new HttpCookie(name, ""));
     }
 
-    public static String extractSessionIdFromCookie(CookieStore cookieStore) {
+    public String extractSessionIdFromCookie(CookieStore cookieStore) {
         return extractParamFromCookie("Session_id", cookieStore).getValue();
     }
 
-    public static boolean isCookieHasSessionId(CookieStore store) {
+    public boolean isCookieHasSessionId(CookieStore store) {
         return store.getCookies().stream().anyMatch(session -> session.getName().equals("Session_id"));
     }
 
-    public static boolean isCookieNoSessionId(CookieStore store) {
+    public boolean isCookieNoSessionId(CookieStore store) {
         return store.getCookies().stream().noneMatch(session -> session.getName().equals("Session_id"));
     }
 
-    public static String extractCSRFToken(String body) {
+    public String extractCSRFToken(String body) {
         String token = "";
         String title = body.substring(body.indexOf("<title"), body.indexOf("</title>"));
         if (title.contains("Ой") || title.contains("Капча")) {
@@ -61,14 +63,14 @@ public class CookieUtils {
         return token;
     }
 
-    public static String extractCSRFToken2(String data) {
+    public String extractCSRFToken2(String data) {
         String token = data.substring(data.indexOf("{\"csrfToken2\":\""), data.indexOf("{\"csrfToken2\":\"")
                 + data.substring(data.indexOf("{\"csrfToken2\":\"")).indexOf("\",\"cspNonce\""));
         String[] parseToken = token.split("\":\"");
         return parseToken[1];
     }
 
-    public static String extractAccessToken(String json) {
+    public String extractAccessToken(String json) {
         String token = "";
         JsonObject tokenJson = JsonParser.parseString(json).getAsJsonObject();
         if (tokenJson.has("status") && tokenJson.get("status").getAsString().equals("ok")

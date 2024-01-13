@@ -24,9 +24,9 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.util.Fields;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiTokenResponse;
@@ -115,7 +115,7 @@ public class YandexApiImpl implements YandexApi {
     }
 
     @Override
-    public ApiResponse sendPostRequest(String path, Fields fields, String token) {
+    public ApiResponse sendPostRequest(String path, HttpFields fields, String token) {
 
         return new ApiResponse();
     }

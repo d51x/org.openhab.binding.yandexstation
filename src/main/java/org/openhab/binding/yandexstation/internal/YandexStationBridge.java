@@ -143,7 +143,4 @@ public class YandexStationBridge extends BaseBridgeHandler {
         return devicesList;
     }
 
-    public QuasarApi getQuasarApi() {
-        return quasarApi;
-    }
 }

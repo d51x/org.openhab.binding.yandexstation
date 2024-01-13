@@ -13,7 +13,7 @@
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jetty.util.Fields;
+import org.eclipse.jetty.http.HttpFields;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 
 /**
@@ -78,5 +78,5 @@ public interface YandexApi {
      * @return the api response
      * @throws ApiException the api exception
      */
-    ApiResponse sendPostRequest(String path, Fields fields, String token) throws ApiException;
+    ApiResponse sendPostRequest(String path, HttpFields fields, String token) throws ApiException;
 }

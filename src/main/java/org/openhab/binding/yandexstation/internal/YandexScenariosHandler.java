@@ -83,7 +83,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
      */
     public YandexScenariosHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
         super(thing);
-        this.quasar = (QuasarApi) apiFactory.getApiOnline(this.getThing().getUID().getId());
+        this.quasar = (QuasarApi) apiFactory.getApiOnline(Objects.requireNonNull(thing.getBridgeUID()).getId());
     }
 
     private void updateScenarios() throws ApiException {
@@ -174,20 +174,20 @@ public class YandexScenariosHandler extends BaseThingHandler {
                     break;
                 }
             }
-            this.quasar = yandexStationBridge.getQuasarApi();
+
             try {
                 initScenarios();
             } catch (ApiException e) {
                 logger.debug("Error {}", e.getMessage());
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
-                try {
-                    if (quasar.refreshCookie()) {
-                        initScenarios();
-                    }
-                } catch (ApiException ex) {
-                    // throw new RuntimeException(ex);
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
-                }
+                // try {
+                // if (quasar.refreshCookie()) {
+                // initScenarios();
+                // }
+                // } catch (ApiException ex) {
+                // // throw new RuntimeException(ex);
+                // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
+                // }
             }
             if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
                 refreshPollingJob = scheduler.scheduleWithFixedDelay(() -> ping(), 0, 1, TimeUnit.MINUTES);
