@@ -63,7 +63,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
     private WebSocketClient webSocketClient = new WebSocketClient();
     private YandexStationWebsocket yandexStationWebsocket = new YandexStationWebsocket();
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
-    Map<Integer, YandexStationScenarios> scnList = new HashMap<>();
+    Map<Integer, YandexStationScenarios> scenarioList = new HashMap<>();
     APIScenarioResponse scenario = new APIScenarioResponse();
     Map<String, String> device = new HashMap<>();
     private String url = "";
@@ -78,7 +78,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
-        scnList = new HashMap<>();
+        scenarioList = new HashMap<>();
         updateStatus(ThingStatus.UNKNOWN);
         yandexStationBridge = getBridgeHandler();
         if (yandexStationBridge == null) {
@@ -104,7 +104,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
                             if (Objects.equals(channel.getLabel(), scn.name.substring(4))) {
                                 YandexStationScenarios yaScn = new YandexStationScenarios();
                                 yaScn.addScenario(scn, channel, encode(context.x));
-                                scnList.put(context.x, yaScn);
+                                scenarioList.put(context.x, yaScn);
                                 String json = yaScn.updateScenario(encode(context.x));
                                 ApiResponse response = api.sendPutJsonRequest(SCENARIOUS_URL + "/" + scn.id, json, "");
                                 if (response.httpCode == 403) {
@@ -125,7 +125,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
                             logger.debug("response script creation: {}", response.response);
                         } catch (ApiException ignored) {
                         }
-                        scnList.put(context.x, yaScn);
+                        scenarioList.put(context.x, yaScn);
                         context.x++;
                         isNew = false;
                     }
@@ -134,7 +134,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
                     var ref = new Object() {
                         boolean present = false;
                     };
-                    scnList.forEach((k, v) -> {
+                    scenarioList.forEach((k, v) -> {
                         if (v.getScn() != null) {
                             if (v.getScn().id.equals(scn.id)) {
                                 ref.present = true;
@@ -287,16 +287,20 @@ public class YandexScenariosHandler extends BaseThingHandler {
     private void updateChannel(String value, String id) {
         String subst = value.split(SEPARATOR_CHARS)[1];
         int yaScnId = decode(subst);
-        YandexStationScenarios scn = scnList.get(yaScnId);
-        Map<String, String> device = this.device;
-        String event = device.get(id);
-        if (event != null) {
-            triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID(), event);
-            updateState(scn.getChannel().getUID(), OnOffType.ON);
+        if (scenarioList.containsKey(yaScnId)) {
+            YandexStationScenarios scn = scenarioList.get(yaScnId);
+            Map<String, String> device = this.device;
+            String event = device.get(id);
+            if (event != null) {
+                triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID(), event);
+                updateState(scn.getChannel().getUID(), OnOffType.ON);
+            } else {
+                logger.warn("Device with id {} is not recognized", id);
+                triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID());
+                updateState(scn.getChannel().getUID(), OnOffType.ON);
+            }
         } else {
-            logger.warn("Device with id {} is not recognized", id);
-            triggerChannel(Objects.requireNonNull(scn.getChannel()).getUID());
-            updateState(scn.getChannel().getUID(), OnOffType.ON);
+            logger.error("unknown scenario {} executed", yaScnId);
         }
     }
 
