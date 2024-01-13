@@ -80,12 +80,26 @@ public class QuasarApi implements YandexApi {
     public static final String SCENARIOUS_URL = "https://iot.quasar.yandex.ru/m/user/scenarios";
     public static final String DEVICES_URL = "https://iot.quasar.yandex.ru/m/v3/user/devices";
     public static final String QUASAR_IOT_URL = "https://yandex.ru/quasar/iot";
+
+    public static final String FILE_CAPTCHA = "captchaProtect";
+    public static final String FILE_PASSPORT_COOKIE = "passportCookie.json";
+    public static final String FILE_SESSION_COOKIE = "sessionCookie";
+    public static final String FILE_X_TOKEN = "xtoken";
+    public static final String FILE_MUSIC_TOKEN = "musicToken";
+    public static final String FILE_CSRF_TOKEN = "csrfToken";
+
     private final CookieManager cookieManager;
     private volatile CookieStore cookieStore = new HttpCookieStore();
     private String bridgeID = "";
 
+    private volatile YandexSession yaSession = new YandexSession();
+    private CookieUtils cookieUtils = new CookieUtils();
+    private Gson gson = new Gson();
+
     public QuasarApi(HttpClient httpClient, String bridgeID) {
         this.httpClient = httpClient;
+        this.httpClient.setConnectTimeout(60 * 1000);
+
         this.bridgeID = bridgeID;
         cookieManager = newCookieManager();
         cookieStore = getCookies(cookieManager.getCookieStore());
@@ -100,11 +114,15 @@ public class QuasarApi implements YandexApi {
     public void initialize() throws ApiException {
     }
 
+    private File getFile(String name) {
+        return new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID + "_"
+                + name);
+    }
+
     public ApiResponse sendGetRequestWithXToken(String path, @Nullable String params, @Nullable String token)
             throws ApiException {
         ApiResponse result = new ApiResponse();
         Request request;
-        httpClient.setConnectTimeout(60 * 1000);
         httpClient.getProtocolHandlers().remove(WWWAuthenticationProtocolHandler.NAME);
         if (params != null) {
             request = httpClient.newRequest(path + params);
@@ -145,7 +163,6 @@ public class QuasarApi implements YandexApi {
             throws ApiException {
         ApiResponse result = new ApiResponse();
         Request request;
-        httpClient.setConnectTimeout(60 * 1000);
         httpClient.getProtocolHandlers().remove(WWWAuthenticationProtocolHandler.NAME);
         if (params != null) {
             request = httpClient.newRequest(path + params);
@@ -191,13 +208,9 @@ public class QuasarApi implements YandexApi {
     public ApiResponse sendPostRequestWithXToken(String path, String data, String xToken) throws ApiException {
         String errorReason = "";
         ApiResponse result = new ApiResponse();
-        httpClient.setConnectTimeout(60 * 1000);
         Request request = httpClient.newRequest(path);
         request.timeout(60, TimeUnit.SECONDS);
         request.method(HttpMethod.POST);
-        // HttpFields fields = new HttpFields();
-        // fields.add("name", "value");
-        // request.getHeaders().addAll(fields);
         request.header(HttpHeader.CONTENT_TYPE, "application/x-www-form-urlencoded");
         request.header("charset", "utf-8");
         request.header("Ya-Consumer-Authorization", "OAuth " + xToken);
@@ -231,7 +244,6 @@ public class QuasarApi implements YandexApi {
     public ApiResponse sendPostRequest(String path, String data, String token) throws ApiException {
         String errorReason = "";
         ApiResponse result = new ApiResponse();
-        httpClient.setConnectTimeout(60 * 1000);
         Request request = httpClient.newRequest(path);
         request.timeout(60, TimeUnit.SECONDS);
         request.method(HttpMethod.POST);
@@ -269,9 +281,8 @@ public class QuasarApi implements YandexApi {
 
     private ApiResponse sendPostRequestForToken(String path, String data) throws ApiException {
         String errorReason = "";
-        if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
+        if (cookieUtils.isCookieHasSessionId(cookieStore)) {
             ApiResponse result = new ApiResponse();
-            httpClient.setConnectTimeout(60 * 1000);
             Request request = httpClient.newRequest(path);
             request.timeout(60, TimeUnit.SECONDS);
             request.method(HttpMethod.POST);
@@ -320,7 +331,7 @@ public class QuasarApi implements YandexApi {
             writeCookie(cookies);
             cookieStore = getCookies(cookieManager.getCookieStore());
         }
-        if (cookieStore.getCookies().stream().noneMatch((session -> session.getName().equals("Session_id")))) {
+        if (cookieUtils.isCookieNoSessionId(cookieStore)) {
             boolean capcha = false;
             String csrf_token = "";
             sendGetRequest(API_AUTH_WELCOME_URL, null, null);
@@ -382,8 +393,7 @@ public class QuasarApi implements YandexApi {
             if (JsonParser.parseString(passwordCheck.response).getAsJsonObject().has("status")) {
                 if (JsonParser.parseString(passwordCheck.response).getAsJsonObject().get("status").getAsString()
                         .equals("ok")) {
-                    if (cookieStore.getCookies().stream()
-                            .anyMatch((session -> session.getName().equals("Session_id")))) {
+                    if (cookieUtils.isCookieHasSessionId(cookieStore)) {
                         writeCookieSession(cookieStore);
                     }
                 } else {
@@ -395,7 +405,7 @@ public class QuasarApi implements YandexApi {
                 }
             } else
                 throw new ApiException("Password error");
-            if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
+            if (cookieUtils.isCookieHasSessionId(cookieStore)) {
                 ApiResponse getUserToken = sendPostRequestForToken(API_PROXY_PASSPORT_URL,
                         USER_TOKEN_CLIENT_ID + "&track_id=" + trackId);
                 logger.debug("Token resonse is {}", getUserToken.response);
@@ -414,9 +424,8 @@ public class QuasarApi implements YandexApi {
 
             }
         } else {
-            if (readXtoken() == null) {
+            if (readXtoken().isBlank()) {
                 ApiResponse getXToken = sendPostRequestForToken(API_PROXY_PASSPORT_URL, USER_TOKEN_CLIENT_ID);
-                // logger.debug("Token resonse is {}", getXToken.response);
                 JsonObject token = JsonParser.parseString(getXToken.response).getAsJsonObject();
                 if (token.has("status")) {
                     if (token.get("status").getAsString().equals("ok")) {
@@ -439,7 +448,7 @@ public class QuasarApi implements YandexApi {
 
     public boolean refreshCookie() throws ApiException {
         String xToken = readXtoken();
-        if (xToken.isEmpty()) {
+        if (xToken.isBlank()) {
             logger.error("refreshCookie: xToken is empty");
             return false;
         }
@@ -498,10 +507,7 @@ public class QuasarApi implements YandexApi {
 
     private void setHeaders(Request request, @Nullable String token) {
         request.timeout(60, TimeUnit.SECONDS);
-        request.header(HttpHeader.USER_AGENT, YANDEX_USER_AGENT);
-        request.header(HttpHeader.CONNECTION, "keep-alive");
-        request.header(HttpHeader.ACCEPT, "*/*");
-        request.header(HttpHeader.ACCEPT_ENCODING, "deflate");
+
         if (token != null) {
             request.header(HttpHeader.COOKIE, token);
         }
@@ -510,56 +516,49 @@ public class QuasarApi implements YandexApi {
 
     private void setHeadersWithXToken(Request request, @Nullable String token) {
         request.timeout(60, TimeUnit.SECONDS);
-        request.header(HttpHeader.USER_AGENT, YANDEX_USER_AGENT);
-        request.header(HttpHeader.CONNECTION, "keep-alive");
-        request.header(HttpHeader.ACCEPT, "*/*");
-        request.header(HttpHeader.ACCEPT_ENCODING, "deflate");
+
         if (token != null) {
             request.header("Ya-Consumer-Authorization", "OAuth " + token);
         }
         request.followRedirects(false);
     }
 
-    public @Nullable String readCaptchaCookie() {
-        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
-                + "_captchaProtect");
-        if (!file.exists()) {
-            boolean createOk = file.getParentFile().mkdirs();
-            if (createOk) {
-                logger.debug("Folders {} created", file.getAbsolutePath());
-            }
-            try {
+    public String readCaptchaCookie() {
+        String cookie = "";
+        File file = getFile(FILE_CAPTCHA);
+        try {
+            if (!file.exists()) {
+                file.getParentFile().mkdirs();
                 Files.writeString(file.toPath(), "", StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                logger.error("Cannot write to file {}", file.getName());
+            } else {
+                List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+                if (!lines.isEmpty()) {
+                    cookie = lines.get(0);
+                }
             }
-            return null;
-        } else {
-            List<String> lines = null;
-            try {
-                lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-            } catch (IOException ignored) {
-            }
-            return lines == null || lines.isEmpty() ? null : lines.get(0);
+        } catch (IOException e) {
+            logger.error("Cannot write to file {}", file.getName());
         }
+        return cookie;
     }
 
     private CookieStore getCookies(CookieStore cookieStore) {
-        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
-                + "_passportCookie.json");
+        File file = getFile(FILE_PASSPORT_COOKIE);
         List<YandexCookies> cookiesList = null;
-        if (!file.exists()) {
-            return cookieManager.getCookieStore();
-        } else {
-            try {
+        try {
+            if (!file.exists()) {
+                return cookieManager.getCookieStore();
+            } else {
                 JsonReader reader = new JsonReader(new FileReader(file));
                 Type listType = new TypeToken<ArrayList<YandexCookies>>() {
                 }.getType();
-                cookiesList = new Gson().fromJson(reader, listType);
+                cookiesList = gson.fromJson(reader, listType);
                 reader.close();
-            } catch (IOException ignored) {
             }
+        } catch (IOException e) {
+            logger.error("Can't read passportCookie.json: {}", e.getMessage());
         }
+
         if (cookiesList != null) {
             cookiesList.forEach(cookie -> {
                 HttpCookie httpCookie = new HttpCookie(cookie.name, cookie.value);
@@ -591,10 +590,9 @@ public class QuasarApi implements YandexApi {
         });
         Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         String json = gson.toJson(lislCookies);
-        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
-                + "_passportCookie.json");
-        boolean createOk = file.getParentFile().mkdirs();
-        if (createOk) {
+        File file = getFile(FILE_PASSPORT_COOKIE);
+
+        if (file.getParentFile().mkdirs()) {
             logger.debug("Folders {} created", file.getAbsolutePath());
         }
         try {
@@ -609,10 +607,8 @@ public class QuasarApi implements YandexApi {
             JsonArray testInput = JsonParser.parseString(cookieStore).getAsJsonArray();
             logger.debug("JSON Cookie from bridge input field: {}", testInput);
             if (testInput.isJsonArray()) {
-                File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator
-                        + bridgeID + "_passportCookie.json");
-                boolean createOk = file.getParentFile().mkdirs();
-                if (createOk) {
+                File file = getFile(FILE_PASSPORT_COOKIE);
+                if (file.getParentFile().mkdirs()) {
                     logger.debug("Folders {} created", file.getAbsolutePath());
                 }
                 try {
@@ -635,10 +631,9 @@ public class QuasarApi implements YandexApi {
                 ref.sessionCookie = ref.sessionCookie + cookie.getName() + "=" + cookie.getValue();
             }
         });
-        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
-                + "_sessionCookie");
-        boolean createOk = file.getParentFile().mkdirs();
-        if (createOk) {
+
+        File file = getFile(FILE_SESSION_COOKIE);
+        if (file.getParentFile().mkdirs()) {
             logger.debug("Folders {} created", file.getAbsolutePath());
         }
         try {
@@ -649,12 +644,11 @@ public class QuasarApi implements YandexApi {
     }
 
     private void writeXtoken(String accessToken) {
-        File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID + "_xtoken");
-        boolean createOk = file.getParentFile().mkdirs();
-        if (createOk) {
+        File file = getFile(FILE_X_TOKEN);
+        if (file.getParentFile().mkdirs()) {
             logger.debug("Folders {} created", file.getAbsolutePath());
         }
+
         try {
             Files.writeString(file.toPath(), accessToken, StandardCharsets.UTF_8);
         } catch (IOException e) {
@@ -662,26 +656,25 @@ public class QuasarApi implements YandexApi {
         }
     }
 
-    public @Nullable String readXtoken() {
-        File file = new File(
-                OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID + "_xtoken");
-        if (!file.exists()) {
-            return null;
-        } else {
-            List<String> lines = null;
-            try {
-                lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-            } catch (IOException ignored) {
+    public String readXtoken() {
+        String token = "";
+        File file = getFile(FILE_X_TOKEN);
+        try {
+            if (file.exists()) {
+                List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+                if (!lines.isEmpty()) {
+                    token = lines.get(0);
+                }
             }
-            return lines == null || lines.isEmpty() ? null : lines.get(0);
+        } catch (IOException e) {
+            logger.error("Can't read xtoken file");
         }
+        return token;
     }
 
     private void writeMusicToken(String musicToken) {
-        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
-                + "_musicToken");
-        boolean createOk = file.getParentFile().mkdirs();
-        if (createOk) {
+        File file = getFile(FILE_MUSIC_TOKEN);
+        if (file.getParentFile().mkdirs()) {
             logger.debug("Folders {} created", file.getAbsolutePath());
         }
         try {
@@ -691,84 +684,94 @@ public class QuasarApi implements YandexApi {
         }
     }
 
-    public @Nullable String readMusicToken() {
-        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
-                + "_musicToken");
-        if (!file.exists()) {
-            return null;
-        } else {
-            List<String> lines = null;
-            try {
-                lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-            } catch (IOException ignored) {
+    public String readMusicToken() {
+        String token = "";
+        File file = getFile(FILE_MUSIC_TOKEN);
+        try {
+            if (file.exists()) {
+                List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+                if (!lines.isEmpty()) {
+                    token = lines.get(0);
+                }
             }
-            return lines == null || lines.isEmpty() ? null : lines.get(0);
+        } catch (IOException e) {
+            logger.error("Can't read musicToken file");
         }
+        return token;
+    }
+
+    public void deleteCookieFile() {
+        File file = getFile(FILE_PASSPORT_COOKIE);
+        file.delete();
+    }
+
+    public void deleteCaptchaFile() {
+        File file = getFile(FILE_CAPTCHA);
+        file.delete();
+    }
+
+    public void deleteSessionFile() {
+        File file = getFile(FILE_SESSION_COOKIE);
+        file.delete();
+    }
+
+    public void deleteXTokenFile() {
+        File file = getFile(FILE_X_TOKEN);
+        file.delete();
+    }
+
+    public void deleteMusicTokenFile() {
+        File file = getFile(FILE_MUSIC_TOKEN);
+        file.delete();
+    }
+
+    public void deleteCsrfTokenFile() {
+        File file = getFile(FILE_CSRF_TOKEN);
+        file.delete();
     }
 
     public @Nullable String readCSRFToken(boolean update) {
-        File file = new File(OpenHAB.getUserDataFolder() + File.separator + "YandexStation" + File.separator + bridgeID
-                + "_csrfToken");
+        String csrfToken = "";
+        File file = getFile(FILE_CSRF_TOKEN);
         if (update) {
             boolean isDeleted = file.delete();
             logger.debug("File {} delete status: {}", file.getName(), isDeleted);
         }
-        if (!file.exists()) {
-            String[] parseToken = new String[0];
-            try {
+        try {
+            if (!file.exists()) {
                 ApiResponse response = sendGetRequest(QUASAR_IOT_URL, null, null);
-                String getCsrfTokenString = response.response.substring(response.response.indexOf("{\"csrfToken2\":\""),
-                        response.response.indexOf("{\"csrfToken2\":\"") + response.response
-                                .substring(response.response.indexOf("{\"csrfToken2\":\"")).indexOf("\",\"cspNonce\""));
-                logger.debug("csrf_token2 {}", getCsrfTokenString);
-                parseToken = getCsrfTokenString.split("\":\"");
-                Files.writeString(file.toPath(), parseToken[1], StandardCharsets.UTF_8);
-                logger.debug("csrfResponse {}", parseToken[1]);
-            } catch (ApiException | IOException ignored) {
-            }
-            return parseToken[1];
-        } else {
-            List<String> lines = null;
-            try {
-                lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-            } catch (IOException ignored) {
-            }
-            if (lines != null) {
-                return lines.get(0);
+                csrfToken = cookieUtils.extractCSRFToken2(response.response);
+                ;
+                logger.debug("csrf_token2 {}", csrfToken);
+                Files.writeString(file.toPath(), csrfToken, StandardCharsets.UTF_8);
             } else {
-                String[] parseToken = new String[0];
-                try {
-                    ApiResponse response = sendGetRequest(QUASAR_IOT_URL, null,
-                            "Session_id=" + cookieStore.getCookies().stream()
-                                    .filter((session -> session.getName().equals("Session_id"))).findFirst().get()
-                                    .getValue());
-                    String getCsrfTokenString = response.response
-                            .substring(response.response.indexOf("{\"csrfToken2\":\""),
-                                    response.response.indexOf("{\"csrfToken2\":\"") + response.response
-                                            .substring(response.response.indexOf("{\"csrfToken2\":\""))
-                                            .indexOf("\",\"cspNonce\""));
-                    logger.debug("csrf_token2 {}", getCsrfTokenString);
-                    parseToken = getCsrfTokenString.split("\":\"");
-                    Files.writeString(file.toPath(), parseToken[1], StandardCharsets.UTF_8);
-                    logger.debug("csrfResponse {}", parseToken[1]);
-                } catch (ApiException | IOException ignored) {
+                List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+                if (!lines.isEmpty()) {
+                    csrfToken = lines.get(0);
+                } else {
+                    String cookie = "Session_id=" + cookieUtils.extractSessionIdFromCookie(cookieStore);
+                    ApiResponse response = sendGetRequest(QUASAR_IOT_URL, null, cookie);
+                    csrfToken = cookieUtils.extractCSRFToken2(response.response);
+                    ;
+                    logger.debug("csrf_token2 {}", csrfToken);
+                    Files.writeString(file.toPath(), csrfToken, StandardCharsets.UTF_8);
                 }
-                return parseToken[1];
             }
+        } catch (IOException e) {
+
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
         }
+        return csrfToken;
     }
 
     public APIScenarioResponse getScenarios() {
         try {
-            ApiResponse response = sendGetRequest(SCENARIOUS_URL, null, "Session_id=" + cookieStore.getCookies()
-                    .stream().filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue());
-            Gson gson = new Gson();
-            APIScenarioResponse scenarioJson = gson.fromJson(response.response, APIScenarioResponse.class);
+            String cookie = "Session_id=" + cookieUtils.extractSessionIdFromCookie(cookieStore);
+            ApiResponse response = sendGetRequest(SCENARIOUS_URL, null, cookie);
             logger.debug("Scenarios json is: {}", response.response);
-            if (scenarioJson != null) {
-                return scenarioJson;
-            }
-
+            APIScenarioResponse resp = gson.fromJson(response.response, APIScenarioResponse.class);
+            return resp != null ? resp : new APIScenarioResponse();
         } catch (ApiException ignored) {
         }
         return new APIScenarioResponse();
@@ -776,33 +779,23 @@ public class QuasarApi implements YandexApi {
 
     public ApiResponse sendPostJsonRequest(String path, String json, String ignoredS) throws ApiException {
         String errorReason;
-        if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
-            var ref = new Object() {
-                String cookiesAsString = "";
-            };
-            cookieStore.getCookies().forEach(cook -> {
-                if (!cook.getName().equals("yandexuid")) {
-                    ref.cookiesAsString = ref.cookiesAsString + cook.getName() + "=" + cook.getValue() + ";";
-                }
-            });
+        if (cookieUtils.isCookieHasSessionId(cookieStore)) {
             ApiResponse result = new ApiResponse();
-            httpClient.setConnectTimeout(60 * 1000);
             Request request = httpClient.newRequest(path);
             request.timeout(60, TimeUnit.SECONDS);
             request.method(HttpMethod.POST);
             request.header(HttpHeader.CONTENT_TYPE, "application/json");
             request.header("charset", "utf-8");
-            request.header(HttpHeader.COOKIE, cookieStore.getCookies().stream()
-                    .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getName()
-                    + "=" + cookieStore.getCookies().stream()
-                            .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue()
-                    + ";"
-                    + cookieStore.getCookies().stream().filter((session -> session.getName().equals("yandexuid")))
-                            .findFirst().get().getName()
-                    + "=" + cookieStore.getCookies().stream().filter((session -> session.getName().equals("yandexuid")))
-                            .findFirst().get().getValue());
-            logger.debug("csrf is: {}", Objects.requireNonNull(readCSRFToken(false)).strip());
-            request.header("x-csrf-token", Objects.requireNonNull(readCSRFToken(false)).strip());
+
+            HttpCookie session = cookieUtils.extractParamFromCookie("Session_id", cookieStore);
+            HttpCookie yandexuid = cookieUtils.extractParamFromCookie("yandexuid", cookieStore);
+            String cookie = session.getName() + "=" + session.getValue() + ";" + yandexuid.getName() + "="
+                    + yandexuid.getValue();
+            request.header(HttpHeader.COOKIE, cookie);
+
+            String csrfToken = Objects.requireNonNull(readCSRFToken(false)).strip();
+            logger.debug("csrf is: {}", csrfToken);
+            request.header("x-csrf-token", csrfToken);
             request.content(new StringContentProvider(json), "application/json");
 
             try {
@@ -827,7 +820,7 @@ public class QuasarApi implements YandexApi {
                 for (StackTraceElement s : e.getStackTrace()) {
                     sb.append(s.toString()).append("\n");
                 }
-                logger.error("sendPostJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
+                logger.error("sendPostJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb);
             }
         }
         return new ApiResponse();
@@ -839,26 +832,26 @@ public class QuasarApi implements YandexApi {
             readCSRFToken(update);
         }
         String errorReason;
-        if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
+        if (cookieUtils.isCookieHasSessionId(cookieStore)) {
             ApiResponse result = new ApiResponse();
-            httpClient.setConnectTimeout(60 * 1000);
             Request request = httpClient.newRequest(path);
             request.timeout(60, TimeUnit.SECONDS);
             request.method(HttpMethod.PUT);
             request.header(HttpHeader.CONTENT_TYPE, "application/json");
             request.header("charset", "utf-8");
-            logger.debug("csrf is: {}", Objects.requireNonNull(readCSRFToken(false)).strip());
-            request.header("x-csrf-token", Objects.requireNonNull(readCSRFToken(false)).strip());
+
+            String csrfToken = Objects.requireNonNull(readCSRFToken(false)).strip();
+            logger.debug("csrf is: {}", csrfToken);
+            request.header("x-csrf-token", csrfToken);
+
             request.content(new StringContentProvider(json), "application/json");
-            request.header(HttpHeader.COOKIE, cookieStore.getCookies().stream()
-                    .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getName()
-                    + "=" + cookieStore.getCookies().stream()
-                            .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue()
-                    + ";"
-                    + cookieStore.getCookies().stream().filter((session -> session.getName().equals("yandexuid")))
-                            .findFirst().get().getName()
-                    + "=" + cookieStore.getCookies().stream().filter((session -> session.getName().equals("yandexuid")))
-                            .findFirst().get().getValue());
+
+            HttpCookie session = cookieUtils.extractParamFromCookie("Session_id", cookieStore);
+            HttpCookie yandexuid = cookieUtils.extractParamFromCookie("yandexuid", cookieStore);
+            String cookie = session.getName() + "=" + session.getValue() + ";" + yandexuid.getName() + "="
+                    + yandexuid.getValue();
+            request.header(HttpHeader.COOKIE, cookie);
+
             try {
                 ContentResponse contentResponse = request.send();
                 result.httpCode = contentResponse.getStatus();
@@ -881,7 +874,7 @@ public class QuasarApi implements YandexApi {
                 for (StackTraceElement s : e.getStackTrace()) {
                     sb.append(s.toString()).append("\n");
                 }
-                logger.error("sendPutJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
+                logger.error("sendPutJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb);
             }
         }
         return new ApiResponse();
@@ -890,32 +883,22 @@ public class QuasarApi implements YandexApi {
     public ApiResponse sendDeleteJsonRequest(String s) {
         logger.info("deleting {}", s);
         String errorReason;
-        if (cookieStore.getCookies().stream().anyMatch((session -> session.getName().equals("Session_id")))) {
-            var ref = new Object() {
-                String cookiesAsString = "";
-            };
-            cookieStore.getCookies().forEach(cook -> {
-                if (!cook.getName().equals("yandexuid")) {
-                    ref.cookiesAsString = ref.cookiesAsString + cook.getName() + "=" + cook.getValue() + ";";
-                }
-            });
+        if (cookieUtils.isCookieHasSessionId(cookieStore)) {
             ApiResponse result = new ApiResponse();
-            httpClient.setConnectTimeout(60 * 1000);
             Request request = httpClient.newRequest(s);
             request.timeout(60, TimeUnit.SECONDS);
             request.method(HttpMethod.DELETE);
             request.header("charset", "utf-8");
-            request.header(HttpHeader.COOKIE, cookieStore.getCookies().stream()
-                    .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getName()
-                    + "=" + cookieStore.getCookies().stream()
-                            .filter((session -> session.getName().equals("Session_id"))).findFirst().get().getValue()
-                    + ";"
-                    + cookieStore.getCookies().stream().filter((session -> session.getName().equals("yandexuid")))
-                            .findFirst().get().getName()
-                    + "=" + cookieStore.getCookies().stream().filter((session -> session.getName().equals("yandexuid")))
-                            .findFirst().get().getValue());
-            logger.debug("csrf is: {}", Objects.requireNonNull(readCSRFToken(false)).strip());
-            request.header("x-csrf-token", Objects.requireNonNull(readCSRFToken(false)).strip());
+
+            HttpCookie session = cookieUtils.extractParamFromCookie("Session_id", cookieStore);
+            HttpCookie yandexuid = cookieUtils.extractParamFromCookie("yandexuid", cookieStore);
+            String cookie = session.getName() + "=" + session.getValue() + ";" + yandexuid.getName() + "="
+                    + yandexuid.getValue();
+            request.header(HttpHeader.COOKIE, cookie);
+
+            String csrfToken = Objects.requireNonNull(readCSRFToken(false)).strip();
+            logger.debug("csrf is: {}", csrfToken);
+            request.header("x-csrf-token", csrfToken);
 
             try {
                 ContentResponse contentResponse = request.send();
@@ -939,7 +922,7 @@ public class QuasarApi implements YandexApi {
                 for (StackTraceElement s2 : e.getStackTrace()) {
                     sb.append(s2.toString()).append("\n");
                 }
-                logger.error("sendDeleteJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
+                logger.error("sendDeleteJsonRequest ERROR: {}. Stacktrace: \n{}", e.getMessage(), sb);
             }
         }
         return new ApiResponse();

@@ -82,7 +82,6 @@ public class YandexApiImpl implements YandexApi {
     public ApiResponse sendGetRequest(String path, String token) throws ApiException {
         String url = API_URL + path;
         ApiResponse result = new ApiResponse();
-        httpClient.setConnectTimeout(60 * 1000);
 
         Request request = httpClient.newRequest(url);
         setHeaders(request, token);
