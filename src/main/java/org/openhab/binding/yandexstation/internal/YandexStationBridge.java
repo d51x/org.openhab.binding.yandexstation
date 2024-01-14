@@ -142,5 +142,4 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public List<ApiDeviceResponse> getDevices() {
         return devicesList;
     }
-
 }

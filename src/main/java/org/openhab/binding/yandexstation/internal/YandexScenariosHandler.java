@@ -189,10 +189,14 @@ public class YandexScenariosHandler extends BaseThingHandler {
                 // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
                 // }
             }
-            if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
-                refreshPollingJob = scheduler.scheduleWithFixedDelay(() -> ping(), 0, 1, TimeUnit.MINUTES);
-            }
+
             initJob = connect(0);
+        }
+    }
+
+    private void startRefreshPollingJob() {
+        if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
+            refreshPollingJob = scheduler.scheduleWithFixedDelay(() -> ping(), 0, 1, TimeUnit.MINUTES);
         }
     }
 
@@ -221,11 +225,12 @@ public class YandexScenariosHandler extends BaseThingHandler {
     }
 
     private Future<?> connect(int wait) {
-        logger.warn("Try connect after: {} sec", wait);
+        logger.warn("Yandex Scenario try connect websocket in {} sec", wait);
         return scheduler.schedule(() -> {
             boolean thingReachable = connectStation(url);
             if (thingReachable) {
                 updateStatus(ThingStatus.ONLINE);
+                startRefreshPollingJob();
             }
         }, wait, TimeUnit.SECONDS);
     }
@@ -333,17 +338,15 @@ public class YandexScenariosHandler extends BaseThingHandler {
     }
 
     private void reconnectWebsocket() {
-        logger.debug("Try to reconnect");
+        logger.debug("Yandex Scenario Handler try to reconnect websocket");
         try {
             url = quasar.getWssUrl();
         } catch (ApiException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
         }
-        Future<?> job = initJob;
-        if (job != null) {
-            job.cancel(true);
-            initJob = null;
-        }
+
+        cancelInitJob();
+        cancelPollingJob();
         initJob = connect(reconnectInterval);
     }
 
@@ -386,23 +389,33 @@ public class YandexScenariosHandler extends BaseThingHandler {
     }
 
     private void ping() {
-        // YandexStationCommand sendCommand = new YandexStationCommand(CMD_PING);
-        // YandexStationSendPacket yandexPacket = new YandexStationSendPacket(device_token, sendCommand);
-        // logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage("{\"ping\"}");
+    }
+
+    private void cancelInitJob() {
+        Future<?> job = initJob;
+        if (job != null) {
+            job.cancel(true);
+            initJob = null;
+        }
+    }
+
+    private void cancelPollingJob() {
+        Future<?> job = refreshPollingJob;
+        if (job != null) {
+            job.cancel(true);
+            refreshPollingJob = null;
+        }
     }
 
     @Override
     public void dispose() {
         dispose = true;
-        logger.debug("dispose");
+        logger.debug("Yandex Scenarios Handler dispose");
         try {
             webSocketClient.stop();
-            Future<?> job = initJob;
-            if (job != null) {
-                job.cancel(true);
-                initJob = null;
-            }
+            cancelInitJob();
+            cancelPollingJob();
         } catch (Exception ignored) {
         }
         super.dispose();

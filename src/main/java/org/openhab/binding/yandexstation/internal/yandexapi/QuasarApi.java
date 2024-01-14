@@ -243,7 +243,7 @@ public class QuasarApi implements YandexApi {
 
     private void passwordCheck(String csrfToken, String trackId, String password) throws ApiException {
         String data = "csrf_token=" + csrfToken + "&track_id=" + trackId + "&password=" + password;
-        String cookie = readCaptchaCookie();
+        String cookie = ""; // readCaptchaCookie();
         ApiResponse response = sendPostRequest(API_REGISTRATION_COMMIT_URL, data, "application/x-www-form-urlencoded",
                 cookie);
 
