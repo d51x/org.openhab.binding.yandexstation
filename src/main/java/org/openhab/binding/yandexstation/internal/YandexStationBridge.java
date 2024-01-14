@@ -13,15 +13,13 @@
 package org.openhab.binding.yandexstation.internal;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.yandexstation.internal.discovery.YandexStationDiscoveryService;
-import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
-import org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
+import org.openhab.binding.yandexstation.internal.yandexapi.*;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
+import org.openhab.core.config.core.Configuration;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.ThingStatus;
@@ -38,11 +36,18 @@ import org.slf4j.LoggerFactory;
  * @author "Dmintry P (d51x)" - Initial contribution
  */
 public class YandexStationBridge extends BaseBridgeHandler {
+
     private final Logger logger = LoggerFactory.getLogger(YandexStationBridge.class);
     /**
-     * The Api.
+     * The Api (Glagol).
      */
     public YandexApiImpl api;
+
+    /**
+     * The Api Online (Quasar).
+     */
+    public QuasarApi quasarApi;
+
     /**
      * The Devices list.
      */
@@ -51,8 +56,6 @@ public class YandexStationBridge extends BaseBridgeHandler {
      * The Config.
      */
     public @Nullable YandexStationConfiguration config;
-
-    public QuasarApi quasarApi;
 
     /**
      * Instantiates a new Yandex station bridge.
@@ -64,7 +67,44 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public YandexStationBridge(Bridge bridge, YandexApiFactory apiFactory) throws ApiException {
         super(bridge);
         api = (YandexApiImpl) apiFactory.getApi();
-        quasarApi = (QuasarApi) apiFactory.getTokenApi(this.getThing().getUID().getId());
+        quasarApi = (QuasarApi) apiFactory.getApiOnline(this.getThing().getUID().getId());
+    }
+
+    @Override
+    public void handleRemoval() {
+        logger.debug("{} removing ...", getThing().getLabel());
+        super.handleRemoval();
+        quasarApi.deleteCookieFile();
+        quasarApi.deleteCaptchaFile();
+        quasarApi.deleteSessionFile();
+        quasarApi.deleteXTokenFile();
+        quasarApi.deleteMusicTokenFile();
+        quasarApi.deleteCsrfTokenFile();
+        quasarApi.deleteScenariosFile();
+    }
+
+    @Override
+    protected void updateConfiguration(Configuration configuration) {
+        super.updateConfiguration(configuration);
+        logger.debug("thing updateConfiguration");
+        // if (configuration.containsKey("cookies")) {
+        // Object cookies = configuration.get("cookies");
+        // if (cookies == null) {
+        // quasarApi.deleteCookieFile();
+        // }
+        // }
+    }
+
+    @Override
+    public void handleConfigurationUpdate(Map<String, Object> configurationParameters) {
+        super.handleConfigurationUpdate(configurationParameters);
+        logger.info("thing handleConfigurationUpdate");
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        logger.debug("{} disabled", getThing().getLabel());
     }
 
     @Override
@@ -74,20 +114,17 @@ public class YandexStationBridge extends BaseBridgeHandler {
         config = getConfigAs(YandexStationConfiguration.class);
         if (config != null) {
             try {
-                if (quasarApi.getToken(config.username, config.password, config.cookies)) {
-                    if (quasarApi.readMusicToken() != null) {
-                        config.yandex_token = Objects.requireNonNull(quasarApi.readMusicToken());
-                        updateStatus(ThingStatus.ONLINE);
-                    } else {
-                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                                "Can not find Yandex music token");
-                    }
-                    devicesList = api.getDevices(config.yandex_token);
-
+                YandexSession yaSession = quasarApi.createSession(config.username, config.password, config.cookies);
+                if (!yaSession.musicToken.isEmpty()) {
+                    config.yandex_token = yaSession.musicToken;
                     updateStatus(ThingStatus.ONLINE);
+                    devicesList = api.getDevices(config.yandex_token);
+                } else {
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                            "Can not find Yandex music token");
                 }
             } catch (ApiException e) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Error " + e.getMessage());
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
             }
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Check bridge configuration");
@@ -98,18 +135,6 @@ public class YandexStationBridge extends BaseBridgeHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
     }
 
-    @Override
-    public void handleRemoval() {
-        super.handleRemoval();
-        logger.debug("thing removed");
-        quasarApi.deleteCookieFile();
-        quasarApi.deleteCaptchaFile();
-        quasarApi.deleteSessionFile();
-        quasarApi.deleteXTokenFile();
-        quasarApi.deleteMusicTokenFile();
-        quasarApi.deleteCsrfTokenFile();
-    }
-
     /**
      * Gets devices.
      *
@@ -117,9 +142,5 @@ public class YandexStationBridge extends BaseBridgeHandler {
      */
     public List<ApiDeviceResponse> getDevices() {
         return devicesList;
-    }
-
-    public QuasarApi getTokenApi() {
-        return quasarApi;
     }
 }

@@ -21,13 +21,12 @@ import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.util.Fields;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiTokenResponse;
@@ -70,7 +69,7 @@ public class YandexApiImpl implements YandexApi {
     }
 
     @Override
-    public ApiResponse sendGetRequest(String path, @NonNull String params, String token) throws ApiException {
+    public ApiResponse sendGetRequest(String path, String params, String token) throws ApiException {
         String pathWithParams = path;
         if (!params.isEmpty()) {
             pathWithParams += "?" + params;
@@ -115,12 +114,12 @@ public class YandexApiImpl implements YandexApi {
     }
 
     @Override
-    public ApiResponse sendPostRequest(String path, Fields fields, String token) {
+    public ApiResponse sendPostRequest(String path, HttpFields fields, String token) {
 
         return new ApiResponse();
     }
 
-    private void setHeaders(Request request, @Nullable String token) {
+    private void setHeaders(Request request, String token) {
         request.timeout(60, TimeUnit.SECONDS);
         request.header(HttpHeader.USER_AGENT, null);
         request.header(HttpHeader.USER_AGENT, YANDEX_USER_AGENT);
@@ -130,7 +129,7 @@ public class YandexApiImpl implements YandexApi {
         request.header(HttpHeader.ACCEPT_ENCODING, null);
         request.header(HttpHeader.ACCEPT_ENCODING, "gzip, deflate, br");
 
-        if (token != null) {
+        if (!token.isEmpty()) {
             request.header(HttpHeader.AUTHORIZATION, "OAuth " + token);
         }
         request.followRedirects(true);

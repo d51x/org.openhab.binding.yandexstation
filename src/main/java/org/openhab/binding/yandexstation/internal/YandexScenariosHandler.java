@@ -13,10 +13,15 @@
 package org.openhab.binding.yandexstation.internal;
 
 import static org.openhab.binding.yandexstation.internal.YandexStationScenarios.SEPARATOR_CHARS;
-import static org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi.SCENARIOUS_URL;
+import static org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi.FILE_SCENARIOS;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +38,13 @@ import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
 import org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi;
 import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 import org.openhab.core.library.types.OnOffType;
-import org.openhab.core.thing.*;
+import org.openhab.core.thing.Bridge;
+import org.openhab.core.thing.Channel;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.Thing;
+import org.openhab.core.thing.ThingStatus;
+import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.types.Command;
@@ -59,21 +68,119 @@ public class YandexScenariosHandler extends BaseThingHandler {
     @Nullable
     YandexStationBridge yandexStationBridge;
     private @Nullable Future<?> initJob;
-    private QuasarApi api;
+    private QuasarApi quasar;
     private WebSocketClient webSocketClient = new WebSocketClient();
     private YandexStationWebsocket yandexStationWebsocket = new YandexStationWebsocket();
     private ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
     Map<Integer, YandexStationScenarios> scenarioList = new HashMap<>();
-    APIScenarioResponse scenario = new APIScenarioResponse();
+    APIScenarioResponse scenarioResponse = new APIScenarioResponse();
     Map<String, String> device = new HashMap<>();
     private String url = "";
     char[] base_chars = ",.:".toCharArray();
     char[] digits = "01234567890".toCharArray();
     boolean dispose;
 
+    /**
+     * Instantiates a new Yandex station handler.
+     *
+     * @param thing the thing
+     * @param apiFactory the api factory
+     * @throws ApiException the api exception
+     */
     public YandexScenariosHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
         super(thing);
-        this.api = (QuasarApi) apiFactory.getTokenApi(Objects.requireNonNull(thing.getBridgeUID()).getId());
+        this.quasar = (QuasarApi) apiFactory.getApiOnline(Objects.requireNonNull(thing.getBridgeUID()).getId());
+    }
+
+    private void saveScenariosToFile() {
+        File f = quasar.getFile(FILE_SCENARIOS);
+        if (f.exists()) {
+            f.delete();
+        }
+        Arrays.stream(scenarioResponse.scenarios).forEach(scenario -> {
+            try {
+                Files.writeString(f.toPath(), scenario.id + ": " + scenario.name, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    private void updateScenarios() throws ApiException {
+        List<Channel> channels = thing.getChannels();
+        var context = new Object() {
+            int x = 0;
+        };
+
+        for (Channel channel : channels) {
+            boolean isNew = true;
+            for (APIScenarioResponse.Scenarios scenario : scenarioResponse.scenarios) {
+                if (scenario.name.startsWith(SEPARATOR_CHARS)) {
+                    if (Objects.equals(channel.getLabel(), scenario.name.substring(4))) {
+                        YandexStationScenarios yaScenario = new YandexStationScenarios();
+                        yaScenario.addScenario(scenario, channel);
+                        scenarioList.put(context.x, yaScenario);
+                        String json = yaScenario.updateScenario(encode(context.x));
+                        if (quasar.updateScenario(scenario.id, json)) {
+                            logger.debug("scenario \"{}\" updated successfully", channel.getLabel());
+                        } else {
+                            logger.error("fail to update scenario \"{}\"", channel.getLabel());
+                        }
+                        context.x++;
+                        isNew = false;
+                    }
+                }
+            }
+            if (isNew) {
+                logger.debug("Channel \"{}\" is new. Creating...", channel.getLabel());
+                YandexStationScenarios scenario = new YandexStationScenarios();
+                String json = scenario.createScenario(channel, encode(context.x));
+                try {
+                    if (quasar.createScenario(json)) {
+                        logger.debug("scenario \"{}\" created successfully", channel.getLabel());
+                    } else {
+                        logger.error("fail to create scenario \"{}\"", channel.getLabel());
+                    }
+                } catch (ApiException ignored) {
+                }
+                scenarioList.put(context.x, scenario);
+                context.x++;
+            }
+        }
+    }
+
+    private void deleteScenarios() throws ApiException {
+        for (APIScenarioResponse.Scenarios scenario : scenarioResponse.scenarios) {
+            var ref = new Object() {
+                boolean present = false;
+            };
+            scenarioList.forEach((k, v) -> {
+                if (v.getScenarios() != null) {
+                    if (v.getScenarios().id.equals(scenario.id)) {
+                        ref.present = true;
+                    }
+                }
+            });
+            if (!ref.present) {
+                if (scenario.name.startsWith(SEPARATOR_CHARS)) {
+                    if (quasar.deleteScenario(scenario.id)) {
+                        logger.debug("scenario with id \"{}\" deleted successfully", scenario.id);
+                    } else {
+                        logger.error("fail to delete scenario with id \"{}\"", scenario.id);
+                    }
+                }
+            }
+        }
+    }
+
+    private void initScenarios() throws ApiException {
+        url = quasar.getWssUrl();
+        scenarioResponse = quasar.getScenarios();
+        saveScenariosToFile();
+
+        device = quasar.getDevices();
+        updateScenarios();
+        deleteScenarios();
     }
 
     @Override
@@ -89,82 +196,21 @@ public class YandexScenariosHandler extends BaseThingHandler {
                     break;
                 }
             }
+
             try {
-                url = api.getWssUrl();
-                scenario = api.getScenarios();
-                device = api.getDevices();
-                List<Channel> channels = thing.getChannels();
-                var context = new Object() {
-                    int x = 0;
-                };
-                channels.forEach(channel -> {
-                    boolean isNew = true;
-                    for (APIScenarioResponse.Scenarios scn : scenario.scenarios) {
-                        if (scn.name.startsWith(SEPARATOR_CHARS)) {
-                            if (Objects.equals(channel.getLabel(), scn.name.substring(4))) {
-                                YandexStationScenarios yaScn = new YandexStationScenarios();
-                                yaScn.addScenario(scn, channel, encode(context.x));
-                                scenarioList.put(context.x, yaScn);
-                                String json = yaScn.updateScenario(encode(context.x));
-                                ApiResponse response = api.sendPutJsonRequest(SCENARIOUS_URL + "/" + scn.id, json, "");
-                                if (response.httpCode == 403) {
-                                    response = api.sendPutJsonRequest(SCENARIOUS_URL + "/" + scn.id, json, "update");
-                                }
-                                logger.debug("response script update: {}", response.response);
-                                context.x++;
-                                isNew = false;
-                            }
-                        }
-                    }
-                    if (isNew) {
-                        logger.debug("Channel {} is new. Creating...", channel.getLabel());
-                        YandexStationScenarios yaScn = new YandexStationScenarios();
-                        String json = yaScn.createScenario(channel, encode(context.x));
-                        try {
-                            ApiResponse response = api.sendPostJsonRequest(SCENARIOUS_URL, json, "");
-                            logger.debug("response script creation: {}", response.response);
-                        } catch (ApiException ignored) {
-                        }
-                        scenarioList.put(context.x, yaScn);
-                        context.x++;
-                        isNew = false;
-                    }
-                });
-                for (APIScenarioResponse.Scenarios scn : scenario.scenarios) {
-                    var ref = new Object() {
-                        boolean present = false;
-                    };
-                    scenarioList.forEach((k, v) -> {
-                        if (v.getScn() != null) {
-                            if (v.getScn().id.equals(scn.id)) {
-                                ref.present = true;
-                            }
-                        }
-                    });
-                    if (!ref.present) {
-                        if (scn.name.startsWith(SEPARATOR_CHARS)) {
-                            ApiResponse response = api.sendDeleteJsonRequest(SCENARIOUS_URL + "/" + scn.id);
-                            logger.debug("response script delete: {}", response.response);
-                        }
-                    }
-                }
+                initScenarios();
             } catch (ApiException e) {
                 logger.debug("Error {}", e.getMessage());
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
-                try {
-                    if (api.refreshCookie()) {
-                        url = api.getWssUrl();
-                        scenario = api.getScenarios();
-                        device = api.getDevices();
-                    }
-                } catch (ApiException ex) {
-                    throw new RuntimeException(ex);
-                }
             }
-            if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
-                refreshPollingJob = scheduler.scheduleWithFixedDelay(() -> ping(), 0, 1, TimeUnit.MINUTES);
-            }
+
             initJob = connect(0);
+        }
+    }
+
+    private void startRefreshPollingJob() {
+        if (refreshPollingJob == null || refreshPollingJob.isCancelled()) {
+            refreshPollingJob = scheduler.scheduleWithFixedDelay(() -> ping(), 0, 1, TimeUnit.MINUTES);
         }
     }
 
@@ -193,11 +239,12 @@ public class YandexScenariosHandler extends BaseThingHandler {
     }
 
     private Future<?> connect(int wait) {
-        logger.warn("Try connect after: {} sec", wait);
+        logger.warn("Yandex Scenario try connect websocket in {} sec", wait);
         return scheduler.schedule(() -> {
             boolean thingReachable = connectStation(url);
             if (thingReachable) {
                 updateStatus(ThingStatus.ONLINE);
+                startRefreshPollingJob();
             }
         }, wait, TimeUnit.SECONDS);
     }
@@ -278,7 +325,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
             for (StackTraceElement s : e.getStackTrace()) {
                 sb.append(s.toString()).append("\n");
             }
-            logger.error("Connection error: {}. Stacktrace: \n{}", e.getMessage(), sb.toString());
+            logger.error("Connection error: {}. Stacktrace: \n{}", e.getMessage(), sb);
             reconnectWebsocket();
             return false;
         }
@@ -305,17 +352,15 @@ public class YandexScenariosHandler extends BaseThingHandler {
     }
 
     private void reconnectWebsocket() {
-        logger.debug("Try to reconnect");
+        logger.debug("Yandex Scenario Handler try to reconnect websocket");
         try {
-            url = api.getWssUrl();
+            url = quasar.getWssUrl();
         } catch (ApiException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
         }
-        Future<?> job = initJob;
-        if (job != null) {
-            job.cancel(true);
-            initJob = null;
-        }
+
+        cancelInitJob();
+        cancelPollingJob();
         initJob = connect(reconnectInterval);
     }
 
@@ -358,25 +403,40 @@ public class YandexScenariosHandler extends BaseThingHandler {
     }
 
     private void ping() {
-        // YandexStationCommand sendCommand = new YandexStationCommand(CMD_PING);
-        // YandexStationSendPacket yandexPacket = new YandexStationSendPacket(device_token, sendCommand);
-        // logger.debug("Send packet: {}", yandexPacket);
         yandexStationWebsocket.sendMessage("{\"ping\"}");
+    }
+
+    private void cancelInitJob() {
+        Future<?> job = initJob;
+        if (job != null) {
+            job.cancel(true);
+            initJob = null;
+        }
+    }
+
+    private void cancelPollingJob() {
+        Future<?> job = refreshPollingJob;
+        if (job != null) {
+            job.cancel(true);
+            refreshPollingJob = null;
+        }
     }
 
     @Override
     public void dispose() {
         dispose = true;
-        logger.debug("dispose");
+        logger.debug("{} dispose", getThing().getLabel());
         try {
             webSocketClient.stop();
-            Future<?> job = initJob;
-            if (job != null) {
-                job.cancel(true);
-                initJob = null;
-            }
+            cancelInitJob();
+            cancelPollingJob();
         } catch (Exception ignored) {
         }
         super.dispose();
+    }
+
+    @Override
+    public void handleRemoval() {
+        super.handleRemoval();
     }
 }
