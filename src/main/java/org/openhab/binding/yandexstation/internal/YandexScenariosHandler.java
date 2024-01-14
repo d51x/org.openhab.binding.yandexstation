@@ -13,9 +13,15 @@
 package org.openhab.binding.yandexstation.internal;
 
 import static org.openhab.binding.yandexstation.internal.YandexStationScenarios.SEPARATOR_CHARS;
+import static org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi.FILE_SCENARIOS;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +90,20 @@ public class YandexScenariosHandler extends BaseThingHandler {
     public YandexScenariosHandler(Thing thing, YandexApiFactory apiFactory) throws ApiException {
         super(thing);
         this.quasar = (QuasarApi) apiFactory.getApiOnline(Objects.requireNonNull(thing.getBridgeUID()).getId());
+    }
+
+    private void saveScenariosToFile() {
+        File f = quasar.getFile(FILE_SCENARIOS);
+        if (f.exists()) {
+            f.delete();
+        }
+        Arrays.stream(scenarioResponse.scenarios).forEach(scenario -> {
+            try {
+                Files.writeString(f.toPath(), scenario.id + ": " + scenario.name, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private void updateScenarios() throws ApiException {
@@ -156,6 +176,8 @@ public class YandexScenariosHandler extends BaseThingHandler {
     private void initScenarios() throws ApiException {
         url = quasar.getWssUrl();
         scenarioResponse = quasar.getScenarios();
+        saveScenariosToFile();
+
         device = quasar.getDevices();
         updateScenarios();
         deleteScenarios();
@@ -180,14 +202,6 @@ public class YandexScenariosHandler extends BaseThingHandler {
             } catch (ApiException e) {
                 logger.debug("Error {}", e.getMessage());
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
-                // try {
-                // if (quasar.refreshCookie()) {
-                // initScenarios();
-                // }
-                // } catch (ApiException ex) {
-                // // throw new RuntimeException(ex);
-                // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
-                // }
             }
 
             initJob = connect(0);
@@ -411,7 +425,7 @@ public class YandexScenariosHandler extends BaseThingHandler {
     @Override
     public void dispose() {
         dispose = true;
-        logger.debug("Yandex Scenarios Handler dispose");
+        logger.debug("{} dispose", getThing().getLabel());
         try {
             webSocketClient.stop();
             cancelInitJob();
@@ -419,5 +433,10 @@ public class YandexScenariosHandler extends BaseThingHandler {
         } catch (Exception ignored) {
         }
         super.dispose();
+    }
+
+    @Override
+    public void handleRemoval() {
+        super.handleRemoval();
     }
 }

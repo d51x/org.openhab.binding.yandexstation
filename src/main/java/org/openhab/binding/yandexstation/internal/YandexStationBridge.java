@@ -72,26 +72,27 @@ public class YandexStationBridge extends BaseBridgeHandler {
 
     @Override
     public void handleRemoval() {
+        logger.debug("{} removing ...", getThing().getLabel());
         super.handleRemoval();
-        logger.debug("thing removed");
         quasarApi.deleteCookieFile();
         quasarApi.deleteCaptchaFile();
         quasarApi.deleteSessionFile();
         quasarApi.deleteXTokenFile();
         quasarApi.deleteMusicTokenFile();
         quasarApi.deleteCsrfTokenFile();
+        quasarApi.deleteScenariosFile();
     }
 
     @Override
     protected void updateConfiguration(Configuration configuration) {
         super.updateConfiguration(configuration);
         logger.debug("thing updateConfiguration");
-        if (configuration.containsKey("cookies")) {
-            Object cookies = configuration.get("cookies");
-            if (cookies == null) {
-                quasarApi.deleteCookieFile();
-            }
-        }
+        // if (configuration.containsKey("cookies")) {
+        // Object cookies = configuration.get("cookies");
+        // if (cookies == null) {
+        // quasarApi.deleteCookieFile();
+        // }
+        // }
     }
 
     @Override
@@ -103,7 +104,7 @@ public class YandexStationBridge extends BaseBridgeHandler {
     @Override
     public void dispose() {
         super.dispose();
-        logger.debug("thing disabled");
+        logger.debug("{} disabled", getThing().getLabel());
     }
 
     @Override

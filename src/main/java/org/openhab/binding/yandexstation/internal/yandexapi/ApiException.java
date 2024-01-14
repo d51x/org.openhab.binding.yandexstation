@@ -39,6 +39,16 @@ public class ApiException extends Exception {
      * Instantiates a new Api exception.
      *
      * @param message the message
+     */
+    public ApiException(ApiResponse response, String message) {
+        super(message);
+        this.response = response;
+    }
+
+    /**
+     * Instantiates a new Api exception.
+     *
+     * @param message the message
      * @param e the e
      */
     public ApiException(String message, Throwable e) {
