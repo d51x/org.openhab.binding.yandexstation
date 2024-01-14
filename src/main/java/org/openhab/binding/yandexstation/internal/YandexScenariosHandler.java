@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -34,6 +34,10 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Channel;
@@ -44,15 +48,11 @@ import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.types.Command;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
-import org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The {@link YandexScenariosHandler} is describing implementaion of api interface.

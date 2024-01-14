@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -23,6 +23,8 @@ import java.util.Set;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
@@ -34,9 +36,6 @@ import org.openhab.core.thing.type.ThingType;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
-import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 
 /**
  * The {@link YandexStationHandlerFactory} is responsible for creating things and thing

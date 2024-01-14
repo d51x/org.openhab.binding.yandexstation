@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -27,6 +27,11 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiTokenResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -34,11 +39,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiTokenResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The {@link YandexApiImpl} is describing implementaion of api interface.

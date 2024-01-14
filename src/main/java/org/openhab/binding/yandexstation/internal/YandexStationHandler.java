@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -58,6 +58,20 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.openhab.binding.yandexstation.internal.actions.things.YandexStationThingActions;
+import org.openhab.binding.yandexstation.internal.commands.FormUpdate;
+import org.openhab.binding.yandexstation.internal.commands.FormUpdateSlot;
+import org.openhab.binding.yandexstation.internal.commands.ServerActionEvent;
+import org.openhab.binding.yandexstation.internal.commands.ServerActionPayload;
+import org.openhab.binding.yandexstation.internal.commands.YandexStationCommand;
+import org.openhab.binding.yandexstation.internal.commands.YandexStationSendPacket;
+import org.openhab.binding.yandexstation.internal.dto.YandexStationPlayerState;
+import org.openhab.binding.yandexstation.internal.dto.YandexStationResponse;
+import org.openhab.binding.yandexstation.internal.dto.YandexStationState;
+import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.NextPreviousType;
@@ -76,24 +90,10 @@ import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
-
-import com.google.gson.Gson;
-import org.openhab.binding.yandexstation.internal.actions.things.YandexStationThingActions;
-import org.openhab.binding.yandexstation.internal.commands.FormUpdate;
-import org.openhab.binding.yandexstation.internal.commands.FormUpdateSlot;
-import org.openhab.binding.yandexstation.internal.commands.ServerActionEvent;
-import org.openhab.binding.yandexstation.internal.commands.ServerActionPayload;
-import org.openhab.binding.yandexstation.internal.commands.YandexStationCommand;
-import org.openhab.binding.yandexstation.internal.commands.YandexStationSendPacket;
-import org.openhab.binding.yandexstation.internal.dto.YandexStationPlayerState;
-import org.openhab.binding.yandexstation.internal.dto.YandexStationResponse;
-import org.openhab.binding.yandexstation.internal.dto.YandexStationState;
-import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
 
 /**
  * The {@link YandexStationHandler} is responsible for handling commands, which are

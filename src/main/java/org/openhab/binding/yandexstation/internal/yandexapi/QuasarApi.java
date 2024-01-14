@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -9,6 +9,7 @@
  * http://www.eclipse.org/legal/epl-2.0
  *
  * SPDX-License-Identifier: EPL-2.0
+ *
  */
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
@@ -43,7 +44,12 @@ import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.HttpCookieStore;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 import org.openhab.core.OpenHAB;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -53,11 +59,6 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The {@link QuasarApi} is describing implementaion of api interface.
