@@ -19,15 +19,16 @@ import java.util.concurrent.ScheduledFuture;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.yandexstation.internal.YandexStationBindingConstants;
-import org.openhab.binding.yandexstation.internal.YandexStationBridge;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.config.discovery.AbstractDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
 import org.openhab.core.config.discovery.DiscoveryService;
 import org.openhab.core.thing.ThingUID;
 import org.osgi.service.component.annotations.Component;
+
+import org.openhab.binding.yandexstation.internal.YandexStationBindingConstants;
+import org.openhab.binding.yandexstation.internal.YandexStationBridge;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

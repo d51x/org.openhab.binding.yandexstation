@@ -14,6 +14,7 @@ package org.openhab.binding.yandexstation.internal.yandexapi;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jetty.http.HttpFields;
+
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 
 /**

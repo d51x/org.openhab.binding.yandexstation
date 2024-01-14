@@ -13,6 +13,7 @@
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+
 import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 
 /**

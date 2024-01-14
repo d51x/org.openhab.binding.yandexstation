@@ -12,7 +12,9 @@
  */
 package org.openhab.binding.yandexstation.internal;
 
-import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.*;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_BRIDGE;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_SCENARIO;
+import static org.openhab.binding.yandexstation.internal.YandexStationBindingConstants.THING_TYPE_STATION;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +23,6 @@ import java.util.Set;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
-import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
@@ -34,6 +34,9 @@ import org.openhab.core.thing.type.ThingType;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
 
 /**
  * The {@link YandexStationHandlerFactory} is responsible for creating things and thing

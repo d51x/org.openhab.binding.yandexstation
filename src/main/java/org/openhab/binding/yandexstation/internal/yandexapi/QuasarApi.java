@@ -12,8 +12,6 @@
  */
 package org.openhab.binding.yandexstation.internal.yandexapi;
 
-import static org.openhab.binding.yandexstation.internal.yandexapi.CookieUtils.*;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -25,7 +23,11 @@ import java.net.HttpCookie;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -41,20 +43,21 @@ import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.HttpCookieStore;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
 import org.openhab.core.OpenHAB;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APICloudDevicesResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.APIScenarioResponse;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link QuasarApi} is describing implementaion of api interface.

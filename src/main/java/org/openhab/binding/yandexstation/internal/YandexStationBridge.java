@@ -16,9 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.yandexstation.internal.discovery.YandexStationDiscoveryService;
-import org.openhab.binding.yandexstation.internal.yandexapi.*;
-import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.openhab.core.config.core.Configuration;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
@@ -26,6 +23,14 @@ import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseBridgeHandler;
 import org.openhab.core.types.Command;
+
+import org.openhab.binding.yandexstation.internal.discovery.YandexStationDiscoveryService;
+import org.openhab.binding.yandexstation.internal.yandexapi.ApiException;
+import org.openhab.binding.yandexstation.internal.yandexapi.QuasarApi;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiFactory;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexApiImpl;
+import org.openhab.binding.yandexstation.internal.yandexapi.YandexSession;
+import org.openhab.binding.yandexstation.internal.yandexapi.response.ApiDeviceResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

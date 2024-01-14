@@ -19,14 +19,15 @@ import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.yandexstation.internal.actions.types.SayTextActionType;
-import org.openhab.binding.yandexstation.internal.actions.types.VoiceCommandActionType;
 import org.openhab.core.automation.Action;
 import org.openhab.core.automation.Module;
 import org.openhab.core.automation.handler.BaseModuleHandlerFactory;
 import org.openhab.core.automation.handler.ModuleHandler;
 import org.openhab.core.automation.handler.ModuleHandlerFactory;
 import org.osgi.service.component.annotations.Component;
+
+import org.openhab.binding.yandexstation.internal.actions.types.SayTextActionType;
+import org.openhab.binding.yandexstation.internal.actions.types.VoiceCommandActionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
